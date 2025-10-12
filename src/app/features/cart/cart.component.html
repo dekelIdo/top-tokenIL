@@ -1,0 +1,103 @@
+<div class="cart-container" *ngIf="(cart$ | async) as cart; else emptyCart">
+  <div class="cart-header">
+    <h1>עגלת קניות</h1>
+    <p class="cart-subtitle">{{ itemCount }} פריט{{ itemCount !== 1 ? 'ים' : '' }} בעגלה</p>
+  </div>
+
+  <div class="cart-items">
+    <mat-card class="cart-item" *ngFor="let item of cart; trackBy: trackByItem">
+      <div class="item-image">
+        <img [src]="item.imageUrl" [alt]="item.name" class="cart-img" />
+        <span class="platform-badge">{{ item.platform }}</span>
+      </div>
+      
+      <div class="cart-info">
+        <div class="cart-name">{{ item.name }}</div>
+        <div class="cart-meta">{{ formatAmount(item.price) }} טוקנים לחבילה</div>
+        <div class="cart-price">₪{{ item.price | number }}</div>
+      </div>
+
+      <div class="quantity-controls">
+        <button mat-icon-button 
+                (click)="updateQuantity(item.id, item.quantity - 1)"
+                [disabled]="item.quantity <= 1"
+                class="quantity-btn">
+          <mat-icon>remove</mat-icon>
+        </button>
+        <span class="quantity-display">{{ item.quantity }}</span>
+        <button mat-icon-button 
+                (click)="updateQuantity(item.id, item.quantity + 1)"
+                [disabled]="item.quantity >= 10"
+                class="quantity-btn">
+          <mat-icon>add</mat-icon>
+        </button>
+      </div>
+
+      <div class="item-total">
+        <span class="total-label">סה\'כ:</span>
+        <span class="total-amount">₪{{ (item.price * item.quantity) | number }}</span>
+      </div>
+
+      <button mat-icon-button 
+              color="warn" 
+              (click)="remove(item.id)" 
+              aria-label="הסר פריט"
+              class="remove-btn">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </mat-card>
+  </div>
+
+  <div class="cart-summary">
+    <div class="summary-row">
+      <span class="summary-label">סכום ביניים:</span>
+      <span class="summary-value">₪{{ total | number }}</span>
+    </div>
+    <div class="summary-row">
+      <span class="summary-label">פריטים:</span>
+      <span class="summary-value">{{ itemCount }}</span>
+    </div>
+    <div class="summary-row total-row">
+      <span class="summary-label">סה\'כ:</span>
+      <span class="summary-value">₪{{ total | number }}</span>
+    </div>
+  </div>
+
+  <div class="cart-actions">
+    <button mat-raised-button 
+            color="primary" 
+            class="checkout-btn" 
+            (click)="proceedToCheckout()"
+            [disabled]="cart.length === 0">
+      <mat-icon>shopping_cart_checkout</mat-icon>
+      המשך לתשלום
+    </button>
+    <button mat-button 
+            color="warn" 
+            (click)="clear()"
+            [disabled]="cart.length === 0">
+      <mat-icon>clear_all</mat-icon>
+      רוקן עגלה
+    </button>
+    <button mat-button 
+            (click)="goToCatalog()">
+      <mat-icon>arrow_back</mat-icon>
+      המשך בקניות
+    </button>
+  </div>
+</div>
+
+<ng-template #emptyCart>
+  <div class="empty-cart">
+    <mat-icon class="empty-icon">shopping_cart</mat-icon>
+    <h2>העגלה ריקה</h2>
+    <p>נראה שעדיין לא הוספת חבילות לעגלה.</p>
+    <button mat-raised-button 
+            color="primary" 
+            (click)="goToCatalog()"
+            class="browse-btn">
+      <mat-icon>store</mat-icon>
+      עיין בחבילות
+    </button>
+  </div>
+</ng-template>

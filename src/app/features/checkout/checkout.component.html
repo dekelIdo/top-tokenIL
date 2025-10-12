@@ -1,0 +1,42 @@
+<div class="checkout-container">
+  <mat-card class="checkout-form-card">
+    <form [formGroup]="form" (ngSubmit)="pay()">
+      <h2>תשלום</h2>
+      <mat-form-field appearance="outline">
+        <mat-label>שם מלא</mat-label>
+        <input matInput formControlName="name" required />
+        <mat-error *ngIf="form.get('name')?.touched && form.get('name')?.invalid">שם הוא שדה חובה</mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>אימייל</mat-label>
+        <input matInput formControlName="email" required />
+        <mat-error *ngIf="form.get('email')?.touched && form.get('email')?.invalid">אימייל תקין הוא שדה חובה</mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>מזהה רשת פלייסטיישן</mat-label>
+        <input matInput formControlName="psnId" required />
+        <mat-error *ngIf="form.get('psnId')?.touched && form.get('psnId')?.invalid">מזהה PSN הוא שדה חובה</mat-error>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>טלפון (אופציונלי)</mat-label>
+        <input matInput formControlName="phone" />
+      </mat-form-field>
+      <mat-checkbox formControlName="terms">אני מסכים לתנאים וההגבלות</mat-checkbox>
+      <mat-error *ngIf="form.get('terms')?.touched && form.get('terms')?.invalid">עליך להסכים לתנאים</mat-error>
+      <div class="checkout-summary">
+        <h3>סיכום הזמנה</h3>
+        <div *ngFor="let item of cart" class="summary-item">
+          <span>{{ item.name }}</span>
+          <span>₪{{ item.price }}</span>
+        </div>
+        <div class="summary-total">
+          <span>סה"כ:</span>
+          <span>₪{{ total }}</span>
+        </div>
+      </div>
+      <button mat-raised-button color="primary" type="submit" [disabled]="loading">שלם עכשיו</button>
+      <mat-spinner *ngIf="loading" diameter="32"></mat-spinner>
+      <mat-error *ngIf="error">{{ error }}</mat-error>
+    </form>
+  </mat-card>
+</div>
