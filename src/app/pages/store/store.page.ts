@@ -141,13 +141,15 @@ interface StoreViewModel {
       align-items: end;
       margin-block-end: var(--tt-space-5);
     }
+    /* Search takes its own row; the five selects then divide the next one
+       evenly, instead of one of them being stranded on a row of its own. */
     .grow { grid-column: 1 / -1; }
     .count { margin-block-end: var(--tt-space-3); }
     /* One skeleton row's worth of space, so the first response does not jump. */
     .tt-grid { min-block-size: 358px; }
     .more { display: flex; justify-content: center; margin-block-start: var(--tt-space-5); }
     @media (min-width: 720px) {
-      .grow { grid-column: span 2; }
+      .filters { grid-template-columns: repeat(5, 1fr); }
     }
   `],
 })
