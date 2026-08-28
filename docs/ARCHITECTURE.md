@@ -1,6 +1,8 @@
 # Top Token — Architecture Report
 
 Companion to `ARCHITECTURE-AUDIT.md`, which describes the codebase this replaced.
+Updated in Phase 3 with the HTTP data layer; see `docs/README.md` for the full
+document set.
 
 ## 1. Shape of the system
 
@@ -45,7 +47,10 @@ src/
     data/
       api/            abstract API classes (the boundary)
       mock/           seed data + in-memory implementations
-      providers.ts    the single binding point
+      http/           REST client for docs/API-CONTRACT.md
+        dto/          wire types — nothing outside mappers/ may import these
+        mappers/      DTO -> domain, with safe enum coercion and defaults
+      providers.ts    the single binding point, switched by environment.apiMode
     state/            facades + cart local persistence
     core/             logger, analytics, i18n, error handling, toasts
     ui/               design-system components and pipes
@@ -146,8 +151,10 @@ first in-app navigation is instant.
 1. **No tests.** Zero spec files, as before. The highest-value first targets are the
    pure ones: `computeTotals`, `Money` arithmetic, `requirementsForCart`,
    `validateCheckoutValues` and `CartStorageService`'s hostile-input parsing.
-2. **No HTTP implementation.** `provideDataLayer()` throws by design if
-   `mockApiEnabled` is false. The `Http*ApiService` classes still have to be written.
+2. **No backend.** The HTTP client exists and is complete (Phase 3), but there is
+   no server implementing `docs/API-CONTRACT.md`. `environment.apiMode` is
+   `mock` in every shipped configuration; `staging` is wired to `http` and builds,
+   but points at a host that does not exist yet.
 3. **Order state is in-memory.** The mock backend loses orders on reload, so
    `/account/orders` is empty after a refresh. The account page says so; a real
    backend fixes it.
@@ -176,8 +183,9 @@ pure functions, they are where a real bug costs real money, and they cost hours.
 
 Then, in order:
 
-1. `Http*ApiService` implementations against an agreed API contract, bound in
-   `data/providers.ts` — the architecture's central claim, unproven until exercised.
+1. The backend itself, built against `docs/API-CONTRACT.md`. The client half is
+   done; the architecture's central claim stays unproven until a real server
+   answers it.
 2. A real backend for orders and fulfillment, which unlocks the account area.
 3. Passwordless authentication and a guard for `/account/*`.
 4. A payment provider, replacing the simulator behind the existing abstraction.

@@ -1,16 +1,18 @@
 import { RegionCode } from '../app/domain';
 import { AppEnvironment } from './environment.model';
 
-/** Default (production-shaped) configuration. Replaced per build configuration. */
+/** Default configuration. Replaced per build configuration by angular.json. */
 export const environment: AppEnvironment = {
-  name: 'production',
-  production: true,
+  name: 'development',
+  production: false,
   apiBaseUrl: '/api',
-  mockApiEnabled: true,
+  apiVersion: 'v1',
+  apiMode: 'mock',
+  requestTimeoutMs: 15_000,
   paymentsEnabled: true,
   analyticsEnabled: false,
   supportEnabled: true,
   defaultLocale: 'he',
   defaultRegion: RegionCode.Israel,
-  debugLogging: false,
+  debugLogging: true,
 };

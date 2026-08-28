@@ -2,15 +2,20 @@ import { RegionCode } from '../app/domain';
 import { AppEnvironment } from './environment.model';
 
 /**
- * `mockApiEnabled` stays true until a real backend exists. Flipping it to false
- * before the HTTP implementations are written fails fast at startup rather than
- * silently serving an empty store.
+ * Production.
+ *
+ * `apiMode` is 'mock' today because no backend exists yet; the current public
+ * build is a functional demonstration and says so in its footer. Flipping this
+ * to 'http' is the single switch that puts the real backend behind the app, and
+ * it must not be flipped until that backend serves docs/API-CONTRACT.md.
  */
 export const environment: AppEnvironment = {
   name: 'production',
   production: true,
   apiBaseUrl: '/api',
-  mockApiEnabled: true,
+  apiVersion: 'v1',
+  apiMode: 'mock',
+  requestTimeoutMs: 15_000,
   paymentsEnabled: true,
   analyticsEnabled: false,
   supportEnabled: true,

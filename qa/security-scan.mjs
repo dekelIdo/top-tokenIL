@@ -84,8 +84,10 @@ for (const { file, text } of sources) {
 check('no secret-shaped literals in src', secretHits.length === 0, secretHits.slice(0, 3).join(' | '));
 
 // Environment files must carry config only.
+// Comments are stripped first: these files deliberately *document* that they
+// must never hold a secret, and that prose is not itself a finding.
 const envFiles = sources.filter(({ file }) => file.includes('environments'));
-const envSecret = envFiles.filter(({ text }) => /secret|privateKey|password|sk_/i.test(text.replace(/No API secret[\s\S]*?here\./i, '')));
+const envSecret = envFiles.filter(({ text }) => /secret|privateKey|password|sk_/i.test(stripComments(text)));
 check('environment files contain no secrets', envSecret.length === 0,
   envSecret.map((s) => s.file).join(', '));
 
