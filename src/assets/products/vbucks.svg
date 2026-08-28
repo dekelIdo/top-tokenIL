@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" role="img" aria-label="Game currency">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a05cff"/><stop offset="1" stop-color="#4f8cff"/>
+    </linearGradient>
+  </defs>
+  <rect width="240" height="180" fill="none"/>
+  <path d="M120 40l58 30v56l-58 30-58-30V70z" fill="url(#g)"/>
+  <path d="M120 40l58 30v56l-58 30-58-30V70z" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="2"/>
+  <path d="M96 76l24 52 24-52h-16l-8 20-8-20z" fill="#fff" opacity=".92"/>
+</svg>

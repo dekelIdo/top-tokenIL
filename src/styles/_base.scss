@@ -1,0 +1,326 @@
+// -----------------------------------------------------------------------------
+// Base layer: reset, typography and the shared primitives (buttons, inputs,
+// cards, badges, alerts, skeletons) that the design system is built from.
+//
+// RTL: every directional rule below uses logical properties (margin-inline,
+// padding-inline, inset-inline, border-inline-start). Nothing here assumes
+// left-to-right, so the same stylesheet is correct in Hebrew and in English.
+// -----------------------------------------------------------------------------
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--tt-bg);
+  color: var(--tt-text);
+  font-family: var(--tt-font);
+  font-size: var(--tt-text-md);
+  line-height: var(--tt-leading);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  margin: 0 0 var(--tt-space-3);
+  font-family: var(--tt-font-display);
+  line-height: var(--tt-leading-tight);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+h1 { font-size: var(--tt-text-3xl); }
+h2 { font-size: var(--tt-text-2xl); }
+h3 { font-size: var(--tt-text-xl); }
+
+p { margin: 0 0 var(--tt-space-3); }
+
+a {
+  color: var(--tt-brand-400);
+  text-decoration: none;
+}
+
+a:hover { text-decoration: underline; }
+
+img { max-width: 100%; display: block; }
+
+:focus-visible {
+  outline: 2px solid var(--tt-brand-500);
+  outline-offset: 2px;
+  border-radius: var(--tt-radius-sm);
+}
+
+// Respect the operating-system preference — animation is decoration here, never
+// the only signal that something changed.
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+// --- Layout ------------------------------------------------------------------
+
+.tt-container {
+  inline-size: 100%;
+  max-inline-size: var(--tt-container);
+  margin-inline: auto;
+  padding-inline: var(--tt-space-4);
+}
+
+.tt-section {
+  padding-block: var(--tt-space-7);
+}
+
+.tt-section__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--tt-space-4);
+  margin-block-end: var(--tt-space-5);
+  flex-wrap: wrap;
+}
+
+.tt-grid {
+  display: grid;
+  gap: var(--tt-space-4);
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+
+.tt-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tt-space-4);
+}
+
+.tt-row {
+  display: flex;
+  align-items: center;
+  gap: var(--tt-space-2);
+  flex-wrap: wrap;
+}
+
+.tt-muted { color: var(--tt-text-muted); }
+.tt-faint { color: var(--tt-text-faint); font-size: var(--tt-text-sm); }
+.tt-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: var(--tt-text-xs);
+  font-weight: 700;
+  color: var(--tt-brand-400);
+}
+
+// --- Surfaces ----------------------------------------------------------------
+
+.tt-card {
+  background: var(--tt-surface);
+  border: 1px solid var(--tt-border);
+  border-radius: var(--tt-radius-lg);
+  box-shadow: var(--tt-shadow-1);
+}
+
+.tt-card--pad { padding: var(--tt-space-5); }
+
+.tt-panel {
+  background: var(--tt-surface-2);
+  border: 1px solid var(--tt-border);
+  border-radius: var(--tt-radius-md);
+  padding: var(--tt-space-4);
+}
+
+// --- Buttons -----------------------------------------------------------------
+
+.tt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--tt-space-2);
+  padding: 0.7rem 1.25rem;
+  border: 1px solid transparent;
+  border-radius: var(--tt-radius-pill);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform var(--tt-duration-fast) var(--tt-ease),
+              background-color var(--tt-duration) var(--tt-ease),
+              border-color var(--tt-duration) var(--tt-ease);
+  background: var(--tt-surface-3);
+  color: var(--tt-text);
+}
+
+.tt-btn:hover:not(:disabled) { transform: translateY(-1px); }
+.tt-btn:active:not(:disabled) { transform: translateY(0); }
+
+.tt-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tt-btn--primary {
+  background: var(--tt-brand-500);
+  color: var(--tt-text-on-brand);
+}
+
+.tt-btn--primary:hover:not(:disabled) { background: var(--tt-brand-400); }
+
+.tt-btn--ghost {
+  background: transparent;
+  border-color: var(--tt-border-strong);
+  color: var(--tt-text);
+}
+
+.tt-btn--quiet {
+  background: transparent;
+  color: var(--tt-text-muted);
+  padding-inline: var(--tt-space-3);
+}
+
+.tt-btn--block { inline-size: 100%; }
+.tt-btn--sm { padding: 0.4rem 0.85rem; font-size: var(--tt-text-sm); }
+
+// --- Badges ------------------------------------------------------------------
+
+.tt-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tt-space-1);
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--tt-radius-pill);
+  font-size: var(--tt-text-xs);
+  font-weight: 600;
+  background: var(--tt-surface-3);
+  color: var(--tt-text-muted);
+  border: 1px solid var(--tt-border);
+  white-space: nowrap;
+}
+
+.tt-badge--brand { background: var(--tt-brand-tint); color: var(--tt-brand-400); border-color: transparent; }
+.tt-badge--accent { background: var(--tt-accent-tint); color: #c3b4ff; border-color: transparent; }
+.tt-badge--success { background: var(--tt-success-tint); color: var(--tt-success); border-color: transparent; }
+.tt-badge--warning { background: var(--tt-warning-tint); color: var(--tt-warning); border-color: transparent; }
+.tt-badge--danger { background: var(--tt-danger-tint); color: var(--tt-danger); border-color: transparent; }
+.tt-badge--info { background: var(--tt-info-tint); color: var(--tt-info); border-color: transparent; }
+
+// --- Alerts ------------------------------------------------------------------
+
+.tt-alert {
+  display: flex;
+  gap: var(--tt-space-3);
+  padding: var(--tt-space-4);
+  border-radius: var(--tt-radius-md);
+  border: 1px solid var(--tt-border);
+  border-inline-start: 3px solid var(--tt-info);
+  background: var(--tt-surface-2);
+  font-size: var(--tt-text-sm);
+}
+
+.tt-alert--warning { border-inline-start-color: var(--tt-warning); }
+.tt-alert--danger { border-inline-start-color: var(--tt-danger); }
+.tt-alert--success { border-inline-start-color: var(--tt-success); }
+
+// --- Skeletons ---------------------------------------------------------------
+
+.tt-skeleton {
+  border-radius: var(--tt-radius-md);
+  background: linear-gradient(
+    90deg,
+    var(--tt-surface-2) 25%,
+    var(--tt-surface-3) 37%,
+    var(--tt-surface-2) 63%
+  );
+  background-size: 400% 100%;
+  animation: tt-shimmer 1.4s ease infinite;
+}
+
+@keyframes tt-shimmer {
+  from { background-position: 100% 50%; }
+  to { background-position: 0 50%; }
+}
+
+// --- Forms -------------------------------------------------------------------
+
+.tt-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tt-space-2);
+}
+
+.tt-label {
+  font-size: var(--tt-text-sm);
+  font-weight: 600;
+}
+
+.tt-input,
+.tt-textarea,
+.tt-select {
+  inline-size: 100%;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--tt-radius-md);
+  border: 1px solid var(--tt-border-strong);
+  background: var(--tt-surface-2);
+  color: var(--tt-text);
+  font: inherit;
+  transition: border-color var(--tt-duration) var(--tt-ease);
+}
+
+.tt-input:focus,
+.tt-textarea:focus,
+.tt-select:focus {
+  border-color: var(--tt-brand-500);
+  outline: none;
+}
+
+.tt-textarea { min-block-size: 96px; resize: vertical; }
+
+.tt-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--tt-space-3);
+  font-size: var(--tt-text-sm);
+  cursor: pointer;
+}
+
+.tt-check input { margin-block-start: 0.25rem; accent-color: var(--tt-brand-500); }
+
+.tt-error {
+  color: var(--tt-danger);
+  font-size: var(--tt-text-sm);
+}
+
+.tt-hint {
+  color: var(--tt-text-faint);
+  font-size: var(--tt-text-xs);
+}
+
+// --- Accessibility -----------------------------------------------------------
+
+.tt-visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.tt-skip-link {
+  position: absolute;
+  inset-block-start: -100%;
+  inset-inline-start: var(--tt-space-4);
+  z-index: 100;
+  padding: var(--tt-space-3) var(--tt-space-4);
+  background: var(--tt-brand-500);
+  color: var(--tt-text-on-brand);
+  border-radius: 0 0 var(--tt-radius-md) var(--tt-radius-md);
+}
+
+.tt-skip-link:focus { inset-block-start: 0; }

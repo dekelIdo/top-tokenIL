@@ -1,0 +1,349 @@
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { EMPTY, combineLatest } from 'rxjs';
+import { catchError, map, shareReplay, switchMap, tap } from 'rxjs/operators';
+
+import { AnalyticsEvent, AnalyticsService } from '../../core/analytics';
+import { LocalizePipe } from '../../core/i18n';
+import {
+  AppError, FulfillmentMethod, Offer, Platform, Product, ProductDetail, ProductVariant, Region,
+  isPurchasable, toAppError,
+} from '../../domain';
+import { ReviewApiService } from '../../data/api';
+import { CartFacade, CatalogFacade, CatalogLookups } from '../../state';
+import {
+  ErrorStateComponent, FulfillmentBadgeComponent, MoneyPipe, PlatformBadgeComponent,
+  ProductCardComponent, QuantitySelectorComponent, RegionBadgeComponent, ReviewCardComponent,
+  StarRatingComponent, StockBadgeComponent, CompactNumberPipe,
+} from '../../ui';
+
+interface ProductViewModel {
+  readonly detail: ProductDetail;
+  readonly lookups: CatalogLookups;
+  readonly related: readonly Product[];
+}
+
+/**
+ * Product detail.
+ *
+ * The page is built around the offer, not the product: the customer picks a
+ * variant, a platform and a region, and those three choices resolve to exactly
+ * one offer with its own price, stock, delivery method and terms. Region is shown
+ * prominently, with its restriction spelled out, because a mismatched region is
+ * the one mistake this store cannot undo for a customer.
+ */
+@Component({
+  selector: 'tt-product-detail-page',
+  standalone: true,
+  imports: [
+    CommonModule, RouterLink, LocalizePipe, MoneyPipe, CompactNumberPipe,
+    PlatformBadgeComponent, RegionBadgeComponent, FulfillmentBadgeComponent, StockBadgeComponent,
+    QuantitySelectorComponent, StarRatingComponent, ReviewCardComponent, ProductCardComponent,
+    ErrorStateComponent,
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div class="tt-container tt-section">
+      <tt-error-state *ngIf="error() as appError; else content" [error]="appError"></tt-error-state>
+
+      <ng-template #content>
+        <ng-container *ngIf="vm$ | async as vm; else loading">
+          <nav class="crumbs tt-faint">
+            <a routerLink="/store">חנות</a> / <span>{{ vm.detail.product.name | t }}</span>
+          </nav>
+
+          <div class="layout">
+            <div class="media tt-card">
+              <img *ngIf="vm.detail.product.images[0] as image" [src]="image.url" [alt]="image.alt" />
+            </div>
+
+            <div class="info">
+              <h1>{{ vm.detail.product.name | t }}</h1>
+              <tt-star-rating *ngIf="vm.detail.product.ratingAverage !== undefined"
+                              [rating]="vm.detail.product.ratingAverage"
+                              [count]="vm.detail.product.ratingCount">
+              </tt-star-rating>
+              <p class="tt-muted">{{ vm.detail.product.description | t }}</p>
+
+              <!-- Variant -->
+              <div class="chooser">
+                <span class="tt-label">בחירת חבילה</span>
+                <div class="chips">
+                  <button type="button"
+                          *ngFor="let variant of vm.detail.product.variants"
+                          class="chip"
+                          [class.on]="variant.id === variantId()"
+                          (click)="selectVariant(variant)">
+                    <span>{{ variant.name | t }}</span>
+                    <small *ngIf="variant.quantityValue !== undefined" class="tt-faint">
+                      {{ variant.quantityValue | compactNumber }} {{ variant.quantityUnit | t }}
+                    </small>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Platform -->
+              <div class="chooser" *ngIf="platformsFor(vm) as options">
+                <span class="tt-label">פלטפורמה</span>
+                <div class="chips">
+                  <button type="button" *ngFor="let platform of options" class="chip"
+                          [class.on]="platform.id === platformId()"
+                          (click)="platformId.set(platform.id)">
+                    {{ platform.name | t }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Region -->
+              <div class="chooser" *ngIf="regionsFor(vm) as options">
+                <span class="tt-label">אזור החנות</span>
+                <div class="chips">
+                  <button type="button" *ngFor="let region of options" class="chip"
+                          [class.on]="region.id === regionId()"
+                          (click)="regionId.set(region.id)">
+                    {{ region.flagEmoji }} {{ region.name | t }}
+                  </button>
+                </div>
+              </div>
+
+              <ng-container *ngIf="offerFor(vm) as offer">
+                <div class="tt-alert tt-alert--warning"
+                     *ngIf="regionOf(vm, offer) as region"
+                     [class.tt-alert--warning]="!region.isRegionFree">
+                  <span aria-hidden="true">🌍</span>
+                  <span>
+                    <strong>אזור: {{ region.name | t }}</strong>
+                    <span class="tt-faint" *ngIf="region.restrictionNotice">{{ region.restrictionNotice | t }}</span>
+                    <span class="tt-faint" *ngIf="region.isRegionFree">מוצר ללא נעילת אזור.</span>
+                  </span>
+                </div>
+
+                <div class="tt-row badges">
+                  <tt-platform-badge [platform]="platformOf(vm, offer)"></tt-platform-badge>
+                  <tt-region-badge [region]="regionOf(vm, offer)"></tt-region-badge>
+                  <tt-fulfillment-badge [descriptor]="vm.lookups.fulfillment.get(offer.fulfillmentMethod)">
+                  </tt-fulfillment-badge>
+                  <tt-stock-badge [status]="offer.inventory.status" [remaining]="offer.inventory.remaining">
+                  </tt-stock-badge>
+                </div>
+
+                <p class="delivery tt-muted">
+                  {{ vm.lookups.fulfillment.get(offer.fulfillmentMethod)?.description | t }}
+                </p>
+
+                <div class="buy tt-card tt-card--pad">
+                  <div class="price-row">
+                    <span class="price">{{ offer.price.current | money }}</span>
+                    <span class="was tt-faint" *ngIf="offer.price.compareAt">{{ offer.price.compareAt | money }}</span>
+                    <span class="tt-badge tt-badge--brand" *ngIf="offer.price.discountPercent">
+                      −{{ offer.price.discountPercent }}%
+                    </span>
+                  </div>
+
+                  <div class="tt-row">
+                    <tt-quantity-selector [value]="quantity()"
+                                          [max]="offer.inventory.maxPerOrder ?? 10"
+                                          (valueChange)="quantity.set($event)">
+                    </tt-quantity-selector>
+
+                    <button type="button" class="tt-btn tt-btn--primary grow"
+                            [disabled]="!canBuy(offer) || cart.busy()"
+                            (click)="addToCart(offer)">
+                      הוספה לעגלה
+                    </button>
+                    <button type="button" class="tt-btn tt-btn--ghost"
+                            [disabled]="!canBuy(offer) || cart.busy()"
+                            (click)="buyNow(offer)">
+                      קנייה מיידית
+                    </button>
+                  </div>
+
+                  <p class="tt-hint" *ngIf="!canBuy(offer)">המוצר אינו זמין לרכישה כרגע.</p>
+                  <p class="tt-hint" *ngIf="offer.terms">{{ offer.terms | t }}</p>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+
+          <section class="tt-section" *ngIf="(reviews$ | async) as reviews">
+            <div class="tt-section__head" *ngIf="reviews.length > 0"><h2>ביקורות</h2></div>
+            <div class="tt-grid" *ngIf="reviews.length > 0">
+              <tt-review-card *ngFor="let review of reviews" [review]="review"></tt-review-card>
+            </div>
+          </section>
+
+          <section class="tt-section" *ngIf="vm.related.length > 0">
+            <div class="tt-section__head"><h2>מוצרים נוספים</h2></div>
+            <div class="tt-grid">
+              <tt-product-card *ngFor="let product of vm.related" [product]="product" [lookups]="vm.lookups">
+              </tt-product-card>
+            </div>
+          </section>
+        </ng-container>
+      </ng-template>
+
+      <ng-template #loading>
+        <div class="layout">
+          <div class="tt-skeleton media"></div>
+          <div class="tt-stack info-skeleton">
+            <div class="tt-skeleton" style="height:38px;width:60%"></div>
+            <div class="tt-skeleton" style="height:14px"></div>
+            <div class="tt-skeleton" style="height:14px;width:80%"></div>
+            <div class="tt-skeleton" style="height:76px"></div>
+            <div class="tt-skeleton" style="height:76px"></div>
+            <div class="tt-skeleton" style="height:150px"></div>
+          </div>
+        </div>
+      </ng-template>
+    </div>
+  `,
+  styles: [`
+    .crumbs { margin-block-end: var(--tt-space-3); }
+    .layout { display: grid; gap: var(--tt-space-5); grid-template-columns: 1fr; }
+    @media (min-width: 900px) { .layout { grid-template-columns: 380px 1fr; align-items: start; } }
+    .media { display: grid; place-items: center; padding: var(--tt-space-6); min-block-size: 280px; }
+    .info-skeleton { min-block-size: 520px; }
+    .media img { max-block-size: 220px; object-fit: contain; }
+    .info { display: flex; flex-direction: column; gap: var(--tt-space-3); }
+    h1 { margin: 0; }
+    .chooser { display: flex; flex-direction: column; gap: var(--tt-space-2); }
+    .chips { display: flex; flex-wrap: wrap; gap: var(--tt-space-2); }
+    .chip {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      padding: var(--tt-space-2) var(--tt-space-4);
+      border-radius: var(--tt-radius-md);
+      border: 1px solid var(--tt-border-strong);
+      background: var(--tt-surface-2);
+      color: var(--tt-text);
+      font: inherit;
+      cursor: pointer;
+      transition: border-color var(--tt-duration) var(--tt-ease), background-color var(--tt-duration) var(--tt-ease);
+    }
+    .chip.on { border-color: var(--tt-brand-500); background: var(--tt-brand-tint); }
+    .badges { gap: var(--tt-space-1); }
+    .delivery { font-size: var(--tt-text-sm); margin: 0; }
+    .price-row { display: flex; align-items: baseline; gap: var(--tt-space-2); margin-block-end: var(--tt-space-3); }
+    .price { font-size: var(--tt-text-2xl); font-weight: 800; }
+    .was { text-decoration: line-through; }
+    .grow { flex: 1; }
+    .tt-alert span span { display: block; }
+  `],
+})
+export class ProductDetailPage {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly catalog = inject(CatalogFacade);
+  private readonly reviewApi = inject(ReviewApiService);
+  private readonly analytics = inject(AnalyticsService);
+  readonly cart = inject(CartFacade);
+
+  readonly error = signal<AppError | undefined>(undefined);
+  readonly variantId = signal<string>('');
+  readonly platformId = signal<string>('');
+  readonly regionId = signal<string>('');
+  readonly quantity = signal(1);
+
+  private readonly slug$ = this.route.paramMap.pipe(map((params) => params.get('productSlug') ?? ''));
+
+  readonly vm$ = this.slug$.pipe(
+    switchMap((slug) => combineLatest([
+      this.catalog.productBySlug(slug),
+      this.catalog.lookups$,
+      this.catalog.relatedProducts(slug, 4),
+    ])),
+    tap(([detail]) => this.initSelection(detail)),
+    map(([detail, lookups, related]): ProductViewModel => ({ detail, lookups, related })),
+    catchError((error: unknown) => {
+      this.error.set(toAppError(error));
+      return EMPTY;
+    }),
+    // The template and the reviews stream both consume this; share the request.
+    shareReplay({ bufferSize: 1, refCount: true }),
+  );
+
+  readonly reviews$ = this.vm$.pipe(
+    switchMap((vm) => this.reviewApi.getReviews({ page: 1, pageSize: 4 }, vm.detail.product.id)),
+    map((page) => page.items),
+  );
+
+  /** Seeds the selection from the route (deep link to a variant) or the first offer. */
+  private initSelection(detail: ProductDetail): void {
+    if (this.variantId() && detail.offers.some((offer) => offer.variantId === this.variantId())) {
+      return;
+    }
+    const routeVariant = this.route.snapshot.paramMap.get('variantId');
+    const first = detail.offers[0];
+    const variant = routeVariant && detail.offers.some((offer) => offer.variantId === routeVariant)
+      ? routeVariant
+      : first?.variantId ?? '';
+    const offer = detail.offers.find((candidate) => candidate.variantId === variant) ?? first;
+    this.variantId.set(variant);
+    this.platformId.set(offer?.platformId ?? '');
+    this.regionId.set(offer?.regionId ?? '');
+    this.analytics.track(AnalyticsEvent.ProductView, {
+      productId: detail.product.id,
+      type: detail.product.type,
+    });
+  }
+
+  selectVariant(variant: ProductVariant): void {
+    this.variantId.set(variant.id);
+    this.analytics.track(AnalyticsEvent.ProductSelected, { variantId: variant.id });
+    // Keep the platform/region choice when the new variant still offers it.
+    this.quantity.set(1);
+  }
+
+  platformsFor(vm: ProductViewModel): readonly Platform[] {
+    const ids = [...new Set(this.offersForVariant(vm).map((offer) => offer.platformId))];
+    return ids.map((id) => vm.lookups.platforms.get(id)).filter((value): value is Platform => value !== undefined);
+  }
+
+  regionsFor(vm: ProductViewModel): readonly Region[] {
+    const ids = [...new Set(this.offersForVariant(vm)
+      .filter((offer) => !this.platformId() || offer.platformId === this.platformId())
+      .map((offer) => offer.regionId))];
+    return ids.map((id) => vm.lookups.regions.get(id)).filter((value): value is Region => value !== undefined);
+  }
+
+  /** The single offer the three selections resolve to, with sensible fallbacks. */
+  offerFor(vm: ProductViewModel): Offer | undefined {
+    const candidates = this.offersForVariant(vm);
+    return candidates.find((offer) => offer.platformId === this.platformId() && offer.regionId === this.regionId())
+      ?? candidates.find((offer) => offer.platformId === this.platformId())
+      ?? candidates[0];
+  }
+
+  platformOf(vm: ProductViewModel, offer: Offer): Platform | undefined {
+    return vm.lookups.platforms.get(offer.platformId);
+  }
+
+  regionOf(vm: ProductViewModel, offer: Offer): Region | undefined {
+    return vm.lookups.regions.get(offer.regionId);
+  }
+
+  canBuy(offer: Offer): boolean {
+    return offer.active
+      && isPurchasable(offer.inventory)
+      && offer.fulfillmentMethod !== FulfillmentMethod.NotSupported;
+  }
+
+  addToCart(offer: Offer): void {
+    this.cart.add({ offerId: offer.id, quantity: this.quantity() }).subscribe();
+  }
+
+  buyNow(offer: Offer): void {
+    this.cart.add({ offerId: offer.id, quantity: this.quantity() }).subscribe((item) => {
+      if (item) {
+        void this.router.navigate(['/checkout']);
+      }
+    });
+  }
+
+  private offersForVariant(vm: ProductViewModel): readonly Offer[] {
+    return vm.detail.offers.filter((offer) => offer.variantId === this.variantId());
+  }
+}

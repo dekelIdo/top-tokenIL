@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" role="img" aria-label="Virtual currency">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff4d6d"/><stop offset="1" stop-color="#ff8a3d"/>
+    </linearGradient>
+  </defs>
+  <rect width="240" height="180" fill="none"/>
+  <circle cx="120" cy="90" r="44" fill="url(#g)"/>
+  <g fill="none" stroke="#0a0d14" stroke-width="3" opacity=".55">
+    <circle cx="120" cy="90" r="44"/>
+    <path d="M76 90h88M120 46v88M88 58c18 18 18 46 0 64M152 58c-18 18-18 46 0 64"/>
+  </g>
+</svg>

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" role="img" aria-label="In-game service">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#00e5a0"/><stop offset="1" stop-color="#4f8cff"/>
+    </linearGradient>
+  </defs>
+  <rect width="240" height="180" fill="none"/>
+  <circle cx="120" cy="68" r="22" fill="url(#g)"/>
+  <path d="M78 138c0-23 19-34 42-34s42 11 42 34z" fill="url(#g)" opacity=".85"/>
+  <circle cx="168" cy="112" r="20" fill="#0a0d14"/>
+  <path d="M168 100v12l8 6" fill="none" stroke="#00e5a0" stroke-width="4" stroke-linecap="round"/>
+</svg>

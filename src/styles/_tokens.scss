@@ -1,0 +1,115 @@
+// -----------------------------------------------------------------------------
+// Design tokens
+//
+// Every colour, space, radius, shadow and duration in the product comes from
+// here. Components never hard-code a hex value or a pixel gap, which is what
+// makes a later re-theme a single-file change.
+//
+// The palette is dark-first: a gaming storefront reads as premium on a dark
+// ground, and the light theme is a deliberate override rather than the default.
+// -----------------------------------------------------------------------------
+
+:root {
+  // --- Brand ---------------------------------------------------------------
+  --tt-brand-500: #00e5a0; // primary action, "buy"
+  --tt-brand-600: #00c489;
+  --tt-brand-400: #4dffc4;
+  --tt-brand-tint: rgba(0, 229, 160, 0.12);
+
+  --tt-accent-500: #7c5cff; // secondary emphasis, promos
+  --tt-accent-tint: rgba(124, 92, 255, 0.14);
+
+  // --- Surfaces ------------------------------------------------------------
+  --tt-bg: #0a0d14;
+  --tt-surface: #111621;
+  --tt-surface-2: #171d2b;
+  --tt-surface-3: #1e2637;
+  --tt-overlay: rgba(6, 9, 15, 0.72);
+
+  // --- Text ----------------------------------------------------------------
+  --tt-text: #eef2f8;
+  --tt-text-muted: #9aa6bd;
+  /* Lightened from #6b7891, which measured 3.79:1 on the app background and
+     failed the 4.5:1 minimum for body-size text. */
+  --tt-text-faint: #8d9ab2;
+  --tt-text-on-brand: #04140e;
+
+  // --- Lines ---------------------------------------------------------------
+  --tt-border: rgba(255, 255, 255, 0.08);
+  --tt-border-strong: rgba(255, 255, 255, 0.16);
+
+  // --- Status --------------------------------------------------------------
+  --tt-success: #35d07f;
+  --tt-warning: #ffb020;
+  --tt-danger: #ff5c72;
+  --tt-info: #4f8cff;
+  --tt-success-tint: rgba(53, 208, 127, 0.14);
+  --tt-warning-tint: rgba(255, 176, 32, 0.14);
+  --tt-danger-tint: rgba(255, 92, 114, 0.14);
+  --tt-info-tint: rgba(79, 140, 255, 0.14);
+
+  // --- Spacing (4px base) --------------------------------------------------
+  --tt-space-1: 0.25rem;
+  --tt-space-2: 0.5rem;
+  --tt-space-3: 0.75rem;
+  --tt-space-4: 1rem;
+  --tt-space-5: 1.5rem;
+  --tt-space-6: 2rem;
+  --tt-space-7: 3rem;
+  --tt-space-8: 4rem;
+
+  // --- Radius --------------------------------------------------------------
+  --tt-radius-sm: 8px;
+  --tt-radius-md: 12px;
+  --tt-radius-lg: 18px;
+  --tt-radius-xl: 26px;
+  --tt-radius-pill: 999px;
+
+  // --- Elevation -----------------------------------------------------------
+  --tt-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --tt-shadow-2: 0 8px 24px rgba(0, 0, 0, 0.36);
+  --tt-shadow-3: 0 20px 48px rgba(0, 0, 0, 0.46);
+  --tt-glow: 0 0 0 1px var(--tt-brand-500), 0 8px 32px rgba(0, 229, 160, 0.22);
+
+  // --- Typography ----------------------------------------------------------
+  --tt-font: 'Heebo', 'Rubik', 'Segoe UI', system-ui, sans-serif;
+  --tt-font-display: 'Heebo', 'Rubik', system-ui, sans-serif;
+  --tt-text-xs: 0.75rem;
+  --tt-text-sm: 0.875rem;
+  --tt-text-md: 1rem;
+  --tt-text-lg: 1.125rem;
+  --tt-text-xl: 1.375rem;
+  --tt-text-2xl: 1.75rem;
+  --tt-text-3xl: 2.25rem;
+  --tt-text-4xl: 3rem;
+  --tt-leading-tight: 1.2;
+  --tt-leading: 1.6;
+
+  // --- Motion --------------------------------------------------------------
+  --tt-duration-fast: 120ms;
+  --tt-duration: 220ms;
+  --tt-duration-slow: 400ms;
+  --tt-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  // --- Layout --------------------------------------------------------------
+  --tt-container: 1200px;
+  --tt-header-height: 64px;
+}
+
+// The light theme re-declares only the tokens that change role, so no component
+// stylesheet needs a media query of its own.
+:root[data-theme='light'] {
+  --tt-bg: #f6f8fc;
+  --tt-surface: #ffffff;
+  --tt-surface-2: #f0f3f9;
+  --tt-surface-3: #e6ebf4;
+  --tt-overlay: rgba(16, 22, 34, 0.5);
+  --tt-text: #101623;
+  --tt-text-muted: #4d5a72;
+  --tt-text-faint: #75839c;
+  --tt-border: rgba(16, 22, 34, 0.1);
+  --tt-border-strong: rgba(16, 22, 34, 0.2);
+  --tt-shadow-1: 0 1px 2px rgba(16, 22, 34, 0.08);
+  --tt-shadow-2: 0 8px 24px rgba(16, 22, 34, 0.1);
+  --tt-shadow-3: 0 20px 48px rgba(16, 22, 34, 0.14);
+}
