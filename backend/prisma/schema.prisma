@@ -1,0 +1,867 @@
+// Top Token — PostgreSQL schema (Phase 4A)
+//
+// Derived from docs/DATABASE-DESIGN.md. Only tables with a live purpose in this
+// phase are present; the design document lists a few more (inventory_units for
+// serialised code pools, refunds) that Phase 4B will add when real fulfillment
+// and refunds arrive.
+//
+// Money is ALWAYS an integer count of minor units plus a currency. `Int` rather
+// than `BigInt`: the maximum is ~2.1 billion agorot (21M ILS) per row, far above
+// any single line, and it serialises to JSON without BigInt gymnastics.
+//
+// Deviation from the design doc: it suggested CHECK constraints over TEXT rather
+// than native enums, to avoid a table rewrite when adding a value. Prisma models
+// enums natively and modern PostgreSQL adds an enum value without a rewrite, so
+// the type safety is worth more than the avoided caution. Documented in
+// docs/BACKEND-IMPLEMENTATION.md.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum PlatformKind {
+  PLAYSTATION_5
+  PLAYSTATION_4
+  XBOX
+  PC
+  MOBILE
+  MULTI_PLATFORM
+}
+
+enum PlatformFamily {
+  PLAYSTATION
+  XBOX
+  PC
+  MOBILE
+  ANY
+}
+
+enum RegionCode {
+  IL
+  US
+  UK
+  EU
+  GLOBAL
+}
+
+enum ProductType {
+  DIGITAL_CODE
+  GIFT_CARD
+  SUBSCRIPTION
+  GAME_CURRENCY
+  DLC
+  GAME
+  PLAYER_SERVICE
+  ACCOUNT_SERVICE
+  OTHER
+}
+
+enum InventoryStatus {
+  IN_STOCK
+  LOW_STOCK
+  OUT_OF_STOCK
+  PRE_ORDER
+  DISCONTINUED
+}
+
+enum FulfillmentMethod {
+  DIGITAL_CODE
+  AUTOMATED_API
+  MANUAL_REVIEW
+  MANUAL_DELIVERY
+  IN_GAME_SERVICE
+  NOT_SUPPORTED
+}
+
+enum FulfillmentStatus {
+  PENDING
+  PROCESSING
+  WAITING_FOR_CUSTOMER
+  READY
+  DELIVERED
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum ReservationStatus {
+  HELD
+  COMMITTED
+  RELEASED
+  EXPIRED
+}
+
+enum CheckoutSessionStatus {
+  OPEN
+  VALIDATING
+  READY_FOR_PAYMENT
+  PAYMENT_PENDING
+  COMPLETED
+  EXPIRED
+  CANCELLED
+}
+
+enum OrderStatus {
+  PENDING
+  PAYMENT_PROCESSING
+  PAID
+  PROCESSING
+  FULFILLING
+  DELIVERED
+  PAYMENT_FAILED
+  CANCELLED
+  FULFILLMENT_FAILED
+  REFUND_PENDING
+  REFUNDED
+}
+
+enum PaymentStatus {
+  CREATED
+  REQUIRES_ACTION
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  EXPIRED
+}
+
+enum PaymentProviderId {
+  MOCK
+  ISRAEL_CARD
+  BIT
+  PAYPAL
+  APPLE_PAY
+  GOOGLE_PAY
+}
+
+enum PromotionKind {
+  PERCENT_OFF
+  AMOUNT_OFF
+  BUNDLE_DEAL
+  PRIORITY_DELIVERY
+}
+
+enum SupportTopic {
+  ORDER_STATUS
+  DELIVERY_PROBLEM
+  PAYMENT_PROBLEM
+  REFUND_REQUEST
+  REGION_PROBLEM
+  GENERAL
+}
+
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_FOR_CUSTOMER
+  RESOLVED
+  CLOSED
+}
+
+enum CustomerStatus {
+  ACTIVE
+  SUSPENDED
+  CLOSED
+}
+
+enum ActorType {
+  CUSTOMER
+  SYSTEM
+  OPERATOR
+  PROVIDER
+}
+
+enum IdempotencyStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+// ---------------------------------------------------------------------------
+// Catalog
+// ---------------------------------------------------------------------------
+
+model Game {
+  id               String   @id
+  slug             String   @unique
+  name             Json
+  publisher        String
+  shortDescription Json     @map("short_description")
+  accentColor      String?  @map("accent_color")
+  coverUrl         String?  @map("cover_url")
+  heroUrl          String?  @map("hero_url")
+  platformIds      String[] @map("platform_ids")
+  active           Boolean  @default(true)
+  featured         Boolean  @default(false)
+  sortOrder        Int      @default(0) @map("sort_order")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  products Product[]
+
+  @@index([active, sortOrder])
+  @@map("games")
+}
+
+model Platform {
+  id        String         @id
+  kind      PlatformKind
+  family    PlatformFamily
+  name      Json
+  shortName Json           @map("short_name")
+  sortOrder Int            @default(0) @map("sort_order")
+
+  offers          Offer[]
+  checkoutItems   CheckoutItem[]
+  orderItems      OrderItem[]
+
+  @@map("platforms")
+}
+
+model Region {
+  id                String     @id
+  code              RegionCode @unique
+  name              Json
+  market            String?
+  currency          String     @db.Char(3)
+  flagEmoji         String?    @map("flag_emoji")
+  isRegionFree      Boolean    @map("is_region_free")
+  // Required whenever isRegionFree is false — enforced by a CHECK constraint
+  // added in the migration. A region-locked region with no customer-facing
+  // notice is a silent trap, so the database refuses it.
+  restrictionNotice Json?      @map("restriction_notice")
+
+  offers           Offer[]
+  checkoutSessions CheckoutSession[]
+  checkoutItems    CheckoutItem[]
+  orders           Order[]
+  orderItems       OrderItem[]
+
+  @@map("regions")
+}
+
+model Product {
+  id               String      @id
+  gameId           String      @map("game_id")
+  slug             String      @unique
+  type             ProductType
+  name             Json
+  shortDescription Json        @map("short_description")
+  description      Json
+  images           Json        @default("[]")
+  metadata         Json        @default("{}")
+  tags             String[]    @default([])
+  platformIds      String[]    @map("platform_ids")
+  regionIds        String[]    @map("region_ids")
+  active           Boolean     @default(true)
+  featured         Boolean     @default(false)
+  ratingAverage    Float?      @map("rating_average")
+  ratingCount      Int         @default(0) @map("rating_count")
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+
+  game       Game             @relation(fields: [gameId], references: [id])
+  variants   ProductVariant[]
+  offers     Offer[]
+  reviews    Review[]
+  orderItems OrderItem[]
+
+  @@index([gameId, active])
+  @@index([active, featured])
+  @@map("products")
+}
+
+model ProductVariant {
+  id            String   @id
+  productId     String   @map("product_id")
+  name          Json
+  sku           String   @unique
+  quantityValue Int?     @map("quantity_value")
+  quantityUnit  Json?    @map("quantity_unit")
+  metadata      Json     @default("{}")
+  sortOrder     Int      @default(0) @map("sort_order")
+  active        Boolean  @default(true)
+
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  offers     Offer[]
+  orderItems OrderItem[]
+
+  @@index([productId, sortOrder])
+  @@map("product_variants")
+}
+
+/// The unit of commerce: variant x platform x region, with its own price,
+/// inventory, delivery method and checkout requirements.
+model Offer {
+  id                   String            @id
+  productId            String            @map("product_id")
+  variantId            String            @map("variant_id")
+  platformId           String            @map("platform_id")
+  regionId             String            @map("region_id")
+  priceAmountMinor     Int               @map("price_amount_minor")
+  priceCurrency        String            @db.Char(3) @map("price_currency")
+  compareAtMinor       Int?              @map("compare_at_minor")
+  fulfillmentMethod    FulfillmentMethod @map("fulfillment_method")
+  checkoutRequirements Json              @default("[]") @map("checkout_requirements")
+  terms                Json?
+  maxPerOrder          Int               @default(10) @map("max_per_order")
+  active               Boolean           @default(true)
+  createdAt            DateTime          @default(now()) @map("created_at")
+  updatedAt            DateTime          @updatedAt @map("updated_at")
+
+  product       Product        @relation(fields: [productId], references: [id])
+  variant       ProductVariant @relation(fields: [variantId], references: [id])
+  platform      Platform       @relation(fields: [platformId], references: [id])
+  region        Region         @relation(fields: [regionId], references: [id])
+  inventory     Inventory?
+  reservations  InventoryReservation[]
+  cartItems     CartItem[]
+  checkoutItems CheckoutItem[]
+  orderItems    OrderItem[]
+
+  // One offer per commercial configuration: otherwise "the" price of a variant
+  // on a platform in a region would be ambiguous.
+  @@unique([variantId, platformId, regionId], name: "offer_configuration")
+  @@index([productId, active])
+  @@index([priceAmountMinor])
+  @@map("offers")
+}
+
+// ---------------------------------------------------------------------------
+// Inventory
+// ---------------------------------------------------------------------------
+
+model Inventory {
+  offerId String @id @map("offer_id")
+  status  InventoryStatus
+  /// NULL means unlimited — a manual service has no unit count.
+  quantityAvailable Int?     @map("quantity_available")
+  quantityReserved  Int      @default(0) @map("quantity_reserved")
+  quantitySold      Int      @default(0) @map("quantity_sold")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  offer Offer @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  @@map("inventory")
+}
+
+model InventoryReservation {
+  id                String            @id
+  offerId           String            @map("offer_id")
+  checkoutSessionId String            @map("checkout_session_id")
+  orderId           String?           @map("order_id")
+  quantity          Int
+  status            ReservationStatus
+  expiresAt         DateTime          @map("expires_at")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+
+  offer           Offer           @relation(fields: [offerId], references: [id])
+  checkoutSession CheckoutSession @relation(fields: [checkoutSessionId], references: [id], onDelete: Cascade)
+  order           Order?          @relation(fields: [orderId], references: [id])
+
+  @@index([status, expiresAt])
+  @@index([offerId, status])
+  @@map("inventory_reservations")
+}
+
+// ---------------------------------------------------------------------------
+// Customers and sessions
+// ---------------------------------------------------------------------------
+
+/// No password column exists and none may ever be added. Authentication is an
+/// emailed one-time code; there is nothing here to phish, reuse or leak.
+model Customer {
+  id                  String         @id
+  email               String         @unique
+  displayName         String?        @map("display_name")
+  phone               String?
+  preferredLocale     String         @default("he") @map("preferred_locale")
+  preferredRegion     RegionCode     @default(IL) @map("preferred_region")
+  status              CustomerStatus @default(ACTIVE)
+  emailVerified       Boolean        @default(false) @map("email_verified")
+  marketingConsent    Boolean        @default(false) @map("marketing_consent")
+  marketingConsentAt  DateTime?      @map("marketing_consent_at")
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
+
+  sessions         CustomerSession[]
+  carts            Cart[]
+  checkoutSessions CheckoutSession[]
+  orders           Order[]
+  reviews          Review[]
+  supportTickets   SupportTicket[]
+
+  @@map("customers")
+}
+
+/// One-time sign-in codes. Only the hash is stored; the plaintext exists solely
+/// in the email that carried it.
+model AuthCode {
+  id         String    @id
+  email      String
+  codeHash   String    @map("code_hash")
+  attempts   Int       @default(0)
+  consumedAt DateTime? @map("consumed_at")
+  expiresAt  DateTime  @map("expires_at")
+  requestIp  String?   @map("request_ip")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  @@index([email, expiresAt])
+  @@map("auth_codes")
+}
+
+/// Browser sessions. `tokenHash` is a hash of the cookie value — the cookie
+/// itself is never stored, so a database leak does not yield live sessions.
+///
+/// A session exists for anonymous visitors too: it is what ties an anonymous
+/// order to the browser that created it, which is how order authorization works
+/// before someone signs in.
+model CustomerSession {
+  id          String    @id
+  customerId  String?   @map("customer_id")
+  tokenHash   String    @unique @map("token_hash")
+  userAgent   String?   @map("user_agent")
+  ip          String?
+  expiresAt   DateTime  @map("expires_at")
+  revokedAt   DateTime? @map("revoked_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  lastSeenAt  DateTime  @default(now()) @map("last_seen_at")
+
+  customer         Customer?         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  carts            Cart[]
+  checkoutSessions CheckoutSession[]
+  orders           Order[]
+
+  @@index([customerId, revokedAt])
+  @@map("customer_sessions")
+}
+
+// ---------------------------------------------------------------------------
+// Cart
+// ---------------------------------------------------------------------------
+
+/// Cart lines store no price. The cart is a list of intentions; pricing is
+/// derived on read from the offer. This is the schema-level expression of
+/// "the client never decides what a customer pays".
+model Cart {
+  id         String   @id
+  customerId String?  @map("customer_id")
+  sessionId  String?  @map("session_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  customer Customer?        @relation(fields: [customerId], references: [id])
+  session  CustomerSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  items    CartItem[]
+
+  @@index([sessionId])
+  @@map("carts")
+}
+
+model CartItem {
+  id       String   @id
+  cartId   String   @map("cart_id")
+  offerId  String   @map("offer_id")
+  quantity Int
+  addedAt  DateTime @default(now()) @map("added_at")
+
+  cart  Cart  @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  offer Offer @relation(fields: [offerId], references: [id])
+
+  @@unique([cartId, offerId], name: "cart_one_line_per_offer")
+  @@map("cart_items")
+}
+
+// ---------------------------------------------------------------------------
+// Checkout
+// ---------------------------------------------------------------------------
+
+/// The commercial snapshot. `pricingSnapshot` and the frozen line prices are
+/// written once and never updated, so a catalog price change cannot alter an
+/// in-flight or historical purchase.
+model CheckoutSession {
+  id                   String                @id
+  customerId           String?               @map("customer_id")
+  sessionId            String?               @map("session_id")
+  status               CheckoutSessionStatus @default(OPEN)
+  pricingSnapshot      Json                  @map("pricing_snapshot")
+  requirementsSnapshot Json                  @map("requirements_snapshot")
+  currency             String                @db.Char(3)
+  regionId             String                @map("region_id")
+  subtotalMinor        Int                   @map("subtotal_minor")
+  discountMinor        Int                   @default(0) @map("discount_minor")
+  totalMinor           Int                   @map("total_minor")
+  couponCode           String?               @map("coupon_code")
+  contactValues        Json?                 @map("contact_values")
+  expiresAt            DateTime              @map("expires_at")
+  createdAt            DateTime              @default(now()) @map("created_at")
+  updatedAt            DateTime              @updatedAt @map("updated_at")
+
+  customer     Customer?              @relation(fields: [customerId], references: [id])
+  session      CustomerSession?       @relation(fields: [sessionId], references: [id])
+  region       Region                 @relation(fields: [regionId], references: [id])
+  items        CheckoutItem[]
+  reservations InventoryReservation[]
+  order        Order?
+  paymentIntents PaymentIntent[]
+
+  @@index([status, expiresAt])
+  @@map("checkout_sessions")
+}
+
+model CheckoutItem {
+  id                String            @id
+  checkoutSessionId String            @map("checkout_session_id")
+  offerId           String            @map("offer_id")
+  quantity          Int
+  unitPriceMinor    Int               @map("unit_price_minor")
+  totalPriceMinor   Int               @map("total_price_minor")
+  regionId          String            @map("region_id")
+  platformId        String            @map("platform_id")
+  fulfillmentMethod FulfillmentMethod @map("fulfillment_method")
+  displayName       Json              @map("display_name")
+  displayVariant    Json              @map("display_variant")
+  imageUrl          String?           @map("image_url")
+
+  checkoutSession CheckoutSession @relation(fields: [checkoutSessionId], references: [id], onDelete: Cascade)
+  offer           Offer           @relation(fields: [offerId], references: [id])
+  region          Region          @relation(fields: [regionId], references: [id])
+  platform        Platform        @relation(fields: [platformId], references: [id])
+
+  @@map("checkout_items")
+}
+
+// ---------------------------------------------------------------------------
+// Orders
+// ---------------------------------------------------------------------------
+
+model Order {
+  id                String      @id
+  orderNumber       String      @unique @map("order_number")
+  customerId        String?     @map("customer_id")
+  sessionId         String?     @map("session_id")
+  checkoutSessionId String      @unique @map("checkout_session_id")
+  contactEmail      String      @map("contact_email")
+  status            OrderStatus @default(PENDING)
+  regionId          String      @map("region_id")
+  currency          String      @db.Char(3)
+  subtotalMinor     Int         @map("subtotal_minor")
+  discountMinor     Int         @default(0) @map("discount_minor")
+  totalMinor        Int         @map("total_minor")
+  refundedMinor     Int         @default(0) @map("refunded_minor")
+  pricingSnapshot   Json        @map("pricing_snapshot")
+  checkoutValues    Json        @default("{}") @map("checkout_values")
+  couponCode        String?     @map("coupon_code")
+  statusMessage     Json?       @map("status_message")
+  metadata          Json        @default("{}")
+  createdAt         DateTime    @default(now()) @map("created_at")
+  updatedAt         DateTime    @updatedAt @map("updated_at")
+
+  customer        Customer?              @relation(fields: [customerId], references: [id])
+  session         CustomerSession?       @relation(fields: [sessionId], references: [id])
+  checkoutSession CheckoutSession        @relation(fields: [checkoutSessionId], references: [id])
+  region          Region                 @relation(fields: [regionId], references: [id])
+  items           OrderItem[]
+  fulfillments    Fulfillment[]
+  paymentIntents  PaymentIntent[]
+  reservations    InventoryReservation[]
+  redemptions     CouponRedemption[]
+
+  @@index([customerId, createdAt])
+  @@index([sessionId, createdAt])
+  @@index([status])
+  @@map("orders")
+}
+
+/// Names and prices are copied, not joined: renaming a product must not rewrite
+/// what a customer sees they bought.
+model OrderItem {
+  id                String            @id
+  orderId           String            @map("order_id")
+  offerId           String            @map("offer_id")
+  productId         String            @map("product_id")
+  variantId         String            @map("variant_id")
+  platformId        String            @map("platform_id")
+  regionId          String            @map("region_id")
+  quantity          Int
+  unitPriceMinor    Int               @map("unit_price_minor")
+  totalPriceMinor   Int               @map("total_price_minor")
+  displayName       Json              @map("display_name")
+  displayVariant    Json              @map("display_variant")
+  imageUrl          String?           @map("image_url")
+  fulfillmentMethod FulfillmentMethod @map("fulfillment_method")
+  fulfillmentStatus FulfillmentStatus @default(PENDING) @map("fulfillment_status")
+
+  order       Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  offer       Offer          @relation(fields: [offerId], references: [id])
+  product     Product        @relation(fields: [productId], references: [id])
+  variant     ProductVariant @relation(fields: [variantId], references: [id])
+  platform    Platform       @relation(fields: [platformId], references: [id])
+  region      Region         @relation(fields: [regionId], references: [id])
+  fulfillment Fulfillment?
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+// ---------------------------------------------------------------------------
+// Payments
+// ---------------------------------------------------------------------------
+
+/// No card number, expiry or CVV is stored, here or anywhere. The only payment
+/// identifiers held are the provider's own opaque references.
+model PaymentIntent {
+  id                String            @id
+  orderId           String            @map("order_id")
+  checkoutSessionId String            @map("checkout_session_id")
+  provider          PaymentProviderId
+  providerIntentId  String?           @map("provider_intent_id")
+  amountMinor       Int               @map("amount_minor")
+  currency          String            @db.Char(3)
+  status            PaymentStatus     @default(CREATED)
+  failureCode       String?           @map("failure_code")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+
+  order           Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  checkoutSession CheckoutSession @relation(fields: [checkoutSessionId], references: [id])
+  events          PaymentEvent[]
+
+  @@index([orderId, status])
+  @@map("payment_intents")
+}
+
+model PaymentEvent {
+  id              String        @id
+  paymentIntentId String        @map("payment_intent_id")
+  provider        PaymentProviderId
+  providerEventId String        @map("provider_event_id")
+  type            String
+  statusBefore    PaymentStatus? @map("status_before")
+  statusAfter     PaymentStatus? @map("status_after")
+  payloadRedacted Json          @map("payload_redacted")
+  receivedAt      DateTime      @default(now()) @map("received_at")
+
+  paymentIntent PaymentIntent @relation(fields: [paymentIntentId], references: [id], onDelete: Cascade)
+
+  // Webhook replay protection at the storage layer.
+  @@unique([provider, providerEventId], name: "payment_event_provider_unique")
+  @@map("payment_events")
+}
+
+// ---------------------------------------------------------------------------
+// Fulfillment
+// ---------------------------------------------------------------------------
+
+model Fulfillment {
+  id               String            @id
+  orderId          String            @map("order_id")
+  orderItemId      String            @unique @map("order_item_id")
+  method           FulfillmentMethod
+  status           FulfillmentStatus @default(PENDING)
+  provider         String?
+  providerJobId    String?           @map("provider_job_id")
+  attempts         Int               @default(0)
+  estimatedReadyAt DateTime?         @map("estimated_ready_at")
+  deliveredAt      DateTime?         @map("delivered_at")
+  /// Withheld until the order is paid; the service refuses to read it earlier.
+  deliveryPayload  Json?             @map("delivery_payload")
+  failureReason    Json?             @map("failure_reason")
+  operatorId       String?           @map("operator_id")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  order     Order              @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem OrderItem          @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  events    FulfillmentEvent[]
+
+  @@index([status, createdAt])
+  @@map("fulfillments")
+}
+
+model FulfillmentEvent {
+  id            String             @id
+  fulfillmentId String             @map("fulfillment_id")
+  type          String
+  statusBefore  FulfillmentStatus? @map("status_before")
+  statusAfter   FulfillmentStatus? @map("status_after")
+  detail        Json?
+  actorType     ActorType          @map("actor_type")
+  actorId       String?            @map("actor_id")
+  createdAt     DateTime           @default(now()) @map("created_at")
+
+  fulfillment Fulfillment @relation(fields: [fulfillmentId], references: [id], onDelete: Cascade)
+
+  @@index([fulfillmentId, createdAt])
+  @@map("fulfillment_events")
+}
+
+// ---------------------------------------------------------------------------
+// Promotions
+// ---------------------------------------------------------------------------
+
+model Promotion {
+  id             String        @id
+  slug           String        @unique
+  kind           PromotionKind
+  title          Json
+  description    Json
+  percentOff     Float?        @map("percent_off")
+  amountOffMinor Int?          @map("amount_off_minor")
+  currency       String?       @db.Char(3)
+  gameIds        String[]      @default([]) @map("game_ids")
+  productIds     String[]      @default([]) @map("product_ids")
+  regionIds      String[]      @default([]) @map("region_ids")
+  bannerImageUrl String?       @map("banner_image_url")
+  startsAt       DateTime      @map("starts_at")
+  endsAt         DateTime?     @map("ends_at")
+  active         Boolean       @default(true)
+
+  coupons Coupon[]
+
+  @@map("promotions")
+}
+
+model Coupon {
+  id               String    @id
+  code             String    @unique
+  promotionId      String    @map("promotion_id")
+  minSubtotalMinor Int?      @map("min_subtotal_minor")
+  maxRedemptions   Int?      @map("max_redemptions")
+  maxPerCustomer   Int       @default(1) @map("max_per_customer")
+  redemptionCount  Int       @default(0) @map("redemption_count")
+  expiresAt        DateTime? @map("expires_at")
+  active           Boolean   @default(true)
+
+  promotion   Promotion          @relation(fields: [promotionId], references: [id])
+  redemptions CouponRedemption[]
+
+  @@map("coupons")
+}
+
+model CouponRedemption {
+  id          String   @id
+  couponId    String   @map("coupon_id")
+  orderId     String   @map("order_id")
+  customerId  String?  @map("customer_id")
+  amountMinor Int      @map("amount_minor")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  coupon Coupon @relation(fields: [couponId], references: [id])
+  order  Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([couponId, orderId], name: "coupon_once_per_order")
+  @@map("coupon_redemptions")
+}
+
+// ---------------------------------------------------------------------------
+// Content
+// ---------------------------------------------------------------------------
+
+model Review {
+  id                String   @id
+  productId         String?  @map("product_id")
+  customerId        String?  @map("customer_id")
+  authorDisplayName String   @map("author_display_name")
+  rating            Int
+  title             String?
+  body              String
+  verifiedPurchase  Boolean  @default(false) @map("verified_purchase")
+  published         Boolean  @default(true)
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  product  Product?  @relation(fields: [productId], references: [id])
+  customer Customer? @relation(fields: [customerId], references: [id])
+
+  @@index([productId, createdAt])
+  @@map("reviews")
+}
+
+model FaqEntry {
+  id        String       @id
+  topic     SupportTopic
+  question  Json
+  answer    Json
+  sortOrder Int          @default(0) @map("sort_order")
+
+  @@map("faq_entries")
+}
+
+model SupportTicket {
+  id           String              @id
+  reference    String              @unique
+  customerId   String?             @map("customer_id")
+  orderId      String?             @map("order_id")
+  topic        SupportTopic
+  status       SupportTicketStatus @default(OPEN)
+  contactEmail String              @map("contact_email")
+  subject      String
+  message      String
+  createdAt    DateTime            @default(now()) @map("created_at")
+  updatedAt    DateTime            @updatedAt @map("updated_at")
+
+  customer Customer? @relation(fields: [customerId], references: [id])
+
+  @@map("support_tickets")
+}
+
+// ---------------------------------------------------------------------------
+// Cross-cutting
+// ---------------------------------------------------------------------------
+
+/// Postgres-backed so it survives a process restart, which an in-memory map
+/// would not. `requestHash` detects a key reused with a different body.
+model IdempotencyKey {
+  key            String            @map("key")
+  endpoint       String
+  requestHash    String            @map("request_hash")
+  status         IdempotencyStatus
+  responseStatus Int?              @map("response_status")
+  responseBody   Json?             @map("response_body")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  expiresAt      DateTime          @map("expires_at")
+
+  @@id([key, endpoint])
+  @@index([expiresAt])
+  @@map("idempotency_keys")
+}
+
+/// Append-only. The application role has no UPDATE or DELETE grant on this
+/// table in a production deployment.
+model AuditLog {
+  id          BigInt    @id @default(autoincrement())
+  eventType   String    @map("event_type")
+  entityType  String    @map("entity_type")
+  entityId    String    @map("entity_id")
+  actorType   ActorType @map("actor_type")
+  actorId     String?   @map("actor_id")
+  requestId   String?   @map("request_id")
+  beforeState Json?     @map("before_state")
+  afterState  Json?     @map("after_state")
+  ip          String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([entityType, entityId, createdAt])
+  @@index([eventType, createdAt])
+  @@map("audit_logs")
+}
+
+/// Fixed-window rate limiting, in the database so a restart does not reset a
+/// customer's budget and so several instances share one counter.
+model RateLimitCounter {
+  bucket     String   @id
+  count      Int      @default(0)
+  windowEnds DateTime @map("window_ends")
+
+  @@index([windowEnds])
+  @@map("rate_limit_counters")
+}
