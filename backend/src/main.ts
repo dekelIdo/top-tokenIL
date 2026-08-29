@@ -1,0 +1,135 @@
+import { ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
+import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
+import { json, urlencoded } from 'express';
+
+import { AppModule } from './app.module';
+import { ApiExceptionFilter } from './common/errors/api-exception.filter';
+import { AppLogger } from './common/logging/app-logger.service';
+import { APP_CONFIG } from './config/config.module';
+import { AppConfig, EnvironmentValidationError, validateEnvironment } from './config/environment';
+
+/** Every route lives under this prefix; the Angular ApiClient builds the same. */
+export const API_PREFIX = 'api/v1';
+
+export async function createApp(): Promise<NestExpressApplication> {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    // Our structured logger replaces Nest's once the app is built; until then
+    // buffer so nothing is written in the framework's format.
+    bufferLogs: true,
+  });
+
+  const config = app.get<AppConfig>(APP_CONFIG);
+  const logger = app.get(AppLogger);
+  app.useLogger(logger);
+
+  app.setGlobalPrefix(API_PREFIX);
+
+  // --- Security headers ----------------------------------------------------
+  // The API serves JSON only, so the strictest CSP is appropriate: nothing here
+  // is ever rendered as a document.
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'none'"],
+          frameAncestors: ["'none'"],
+          baseUri: ["'none'"],
+        },
+      },
+      crossOriginResourcePolicy: { policy: 'same-site' },
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+      hsts: config.isDeployed
+        ? { maxAge: 63072000, includeSubDomains: true, preload: true }
+        : false,
+    }),
+  );
+
+  // Not an API that needs to advertise its framework.
+  app.getHttpAdapter().getInstance().disable('x-powered-by');
+
+  // --- Body limits ---------------------------------------------------------
+  // A commerce API posts small JSON documents. Capping the body is the cheapest
+  // defence against a trivial memory-exhaustion attempt.
+  app.use(json({ limit: config.requestBodyLimit }));
+  app.use(urlencoded({ extended: false, limit: config.requestBodyLimit }));
+
+  app.use(cookieParser(config.sessionSecret || undefined));
+
+  // --- CORS ----------------------------------------------------------------
+  // An explicit allowlist, never a wildcard: the storefront sends credentials,
+  // and browsers reject `*` with credentials anyway.
+  app.enableCors({
+    origin: (origin, callback) => {
+      // Same-origin, curl and server-to-server calls send no Origin header.
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+      callback(null, config.corsAllowedOrigins.includes(origin));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'X-Request-Id', 'X-Session-Trace', 'Idempotency-Key'],
+    exposedHeaders: ['X-Request-Id', 'Retry-After'],
+    maxAge: 600,
+  });
+
+  // --- Validation ----------------------------------------------------------
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      // An unexpected field is rejected rather than ignored. docs/API-CONTRACT
+      // promises the checkout engine refuses unknown fields, and this is where
+      // that promise is kept for every endpoint at once.
+      forbidNonWhitelisted: true,
+      transform: true,
+      transformOptions: { enableImplicitConversion: false },
+    }),
+  );
+
+  app.useGlobalFilters(app.get(ApiExceptionFilter));
+
+  return app;
+}
+
+async function bootstrap(): Promise<void> {
+  try {
+    // Validated before Nest builds anything. Otherwise the failure surfaces
+    // during dependency injection and Nest prints a stack trace, which is the
+    // opposite of what an operator needs from a configuration mistake.
+    validateEnvironment(process.env);
+
+    const app = await createApp();
+    const config = app.get<AppConfig>(APP_CONFIG);
+
+    await app.listen(config.port, '0.0.0.0');
+
+    app.get(AppLogger).info('backend started', {
+      env: config.nodeEnv,
+      port: config.port,
+      prefix: `/${API_PREFIX}`,
+      corsOrigins: config.corsAllowedOrigins.length,
+      paymentMode: config.paymentMode,
+    });
+  } catch (error) {
+    // Fail fast and loudly. A configuration problem must never degrade into a
+    // half-working service.
+    if (error instanceof EnvironmentValidationError) {
+      process.stderr.write(`\n${error.message}\n\n`);
+      process.stderr.write('See backend/.env.example for the expected variables.\n');
+    } else {
+      process.stderr.write(
+        `\nBackend failed to start: ${error instanceof Error ? error.message : String(error)}\n`,
+      );
+    }
+    process.exit(1);
+  }
+}
+
+// Only self-start when run directly; tests import `createApp` instead.
+if (require.main === module) {
+  void bootstrap();
+}

@@ -2,7 +2,7 @@
   "name": "top-token-backend",
   "version": "0.1.0",
   "private": true,
-  "description": "Top Token commerce backend — Phase 4A foundation",
+  "description": "Top Token commerce backend \u2014 Phase 4A foundation",
   "scripts": {
     "build": "nest build",
     "start": "node dist/main.js",
@@ -15,7 +15,9 @@
     "migrate:deploy": "prisma migrate deploy",
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts",
     "test": "jest --runInBand",
-    "test:watch": "jest --watch --runInBand"
+    "test:watch": "jest --watch --runInBand",
+    "start:prod": "node dist/main.js",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",
@@ -46,5 +48,9 @@
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
     "typescript": "~5.6.3"
+  },
+  "engines": {
+    "node": "20.x",
+    "npm": ">=10"
   }
 }
