@@ -2,12 +2,15 @@
 
 # Compiled output
 /dist
+/backend/dist
 /tmp
 /out-tsc
 /bazel-out
 
 # Node
-/node_modules
+# Unanchored so it matches at ANY depth. The previous rule was "/node_modules",
+# which only ignored the root one and let backend/node_modules be committed.
+node_modules/
 npm-debug.log
 yarn-error.log
 
@@ -44,3 +47,11 @@ Thumbs.db
 # QA output
 qa/out/
 qa/screenshots/
+
+# Secrets - never commit a real environment file
+.env
+.env.*
+!.env.example
+
+# Scratch directories that must never be committed
+/pgtest/
