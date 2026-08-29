@@ -56,3 +56,7 @@ qa/screenshots/
 
 # Scratch directories that must never be committed
 /pgtest/
+
+# Local PostgreSQL data directory created by backend/scripts/dev-db.mjs.
+# Hundreds of megabytes of cluster files; never belongs in git.
+/backend/.pgdata/

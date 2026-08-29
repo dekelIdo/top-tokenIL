@@ -1,9 +1,10 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 
 import { AppConfigModule } from './config/config.module';
+import { DatabaseModule } from './database/database.module';
 import { ApiExceptionFilter } from './common/errors/api-exception.filter';
 import { CorrelationMiddleware } from './common/interceptors/correlation.middleware';
-import { AppLogger } from './common/logging/app-logger.service';
+import { LoggingModule } from './common/logging/logging.module';
 import { HealthModule } from './modules/health/health.module';
 
 /**
@@ -16,9 +17,8 @@ import { HealthModule } from './modules/health/health.module';
  * without changing anything below.
  */
 @Module({
-  imports: [AppConfigModule, HealthModule],
-  providers: [AppLogger, ApiExceptionFilter],
-  exports: [AppLogger],
+  imports: [AppConfigModule, LoggingModule, HealthModule, DatabaseModule],
+  providers: [ApiExceptionFilter],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {

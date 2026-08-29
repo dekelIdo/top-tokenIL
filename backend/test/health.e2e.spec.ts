@@ -42,10 +42,12 @@ describe('backend HTTP surface', () => {
       expect(response.body.status).toBe('ready');
     });
 
-    it('reports honestly that Phase A registers no readiness checks', async () => {
+    it('performs a real database check rather than reporting a bare "ok"', async () => {
       const response = await request(app.getHttpServer()).get('/api/v1/ready').expect(200);
-      // No database exists yet, so readiness must not pretend to have verified one.
-      expect(response.body.checks).toBe('none registered');
+      // Readiness means "can serve traffic", which since Phase B includes
+      // reaching PostgreSQL. A green tick with no check behind it would be worse
+      // than no endpoint at all.
+      expect(response.body.checks.database).toEqual({ ok: true });
     });
 
     it('does not mount routes outside the /api/v1 prefix', async () => {

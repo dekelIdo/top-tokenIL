@@ -110,20 +110,31 @@ enum CheckoutSessionStatus {
   CANCELLED
 }
 
+/// Must match `OrderStatus` in src/app/domain/order/order.ts member for member.
+/// The frontend maps an unrecognised value to PROCESSING, so a mismatch would
+/// not error: a DELIVERED order would silently render as "being prepared".
 enum OrderStatus {
-  PENDING
+  DRAFT
+  PENDING_PAYMENT
   PAYMENT_PROCESSING
   PAID
   PROCESSING
-  FULFILLING
-  DELIVERED
-  PAYMENT_FAILED
+  FULFILLMENT_PENDING
+  FULFILLMENT_PROCESSING
+  FULFILLED
+  FAILED
   CANCELLED
-  FULFILLMENT_FAILED
   REFUND_PENDING
   REFUNDED
 }
 
+/// CREATED..CANCELLED match the frontend domain exactly.
+///
+/// EXPIRED is an internal state the frontend has no member for. It is stored so
+/// the sweep that abandons stale intents has somewhere truthful to record the
+/// outcome, and it is translated to CANCELLED at the DTO boundary rather than
+/// being emitted on the wire, where the frontend would fall back to PROCESSING
+/// and tell the customer their payment was still in flight.
 enum PaymentStatus {
   CREATED
   REQUIRES_ACTION
@@ -198,7 +209,9 @@ model Game {
   accentColor      String?  @map("accent_color")
   coverUrl         String?  @map("cover_url")
   heroUrl          String?  @map("hero_url")
-  platformIds      String[] @map("platform_ids")
+  // platformIds is NOT stored. A String[] cannot carry a foreign key, so it
+  // could name a platform that does not exist, or claim support the catalog
+  // cannot actually sell. It is derived from the game's offers instead.
   active           Boolean  @default(true)
   featured         Boolean  @default(false)
   sortOrder        Int      @default(0) @map("sort_order")
@@ -259,12 +272,18 @@ model Product {
   images           Json        @default("[]")
   metadata         Json        @default("{}")
   tags             String[]    @default([])
-  platformIds      String[]    @map("platform_ids")
-  regionIds        String[]    @map("region_ids")
+  // platformIds and regionIds are NOT stored, for the same reason as on Game:
+  // an array cannot be foreign-keyed, and a product that lists PS5 without a
+  // PS5 offer would be advertising something nobody can buy. Both are derived
+  // from this product's offers, which makes the badge on a card a statement
+  // about real purchasable inventory.
+  //
+  // ratingAverage and ratingCount are likewise derived, from published reviews.
+  // Storing them invites the number drifting from the rows behind it, and a
+  // rating count that does not correspond to real reviews is a fabricated trust
+  // signal.
   active           Boolean     @default(true)
   featured         Boolean     @default(false)
-  ratingAverage    Float?      @map("rating_average")
-  ratingCount      Int         @default(0) @map("rating_count")
   createdAt        DateTime    @default(now()) @map("created_at")
   updatedAt        DateTime    @updatedAt @map("updated_at")
 
@@ -284,6 +303,9 @@ model ProductVariant {
   productId     String   @map("product_id")
   name          Json
   sku           String   @unique
+  // Int, not NUMERIC as docs/DATABASE-DESIGN.md suggests: every quantity we
+  // sell is a whole unit (coins, points, months, a shekel denomination), and an
+  // integer avoids Prisma's Decimal type leaking into JSON serialisation.
   quantityValue Int?     @map("quantity_value")
   quantityUnit  Json?    @map("quantity_unit")
   metadata      Json     @default("{}")
@@ -551,7 +573,9 @@ model Order {
   sessionId         String?     @map("session_id")
   checkoutSessionId String      @unique @map("checkout_session_id")
   contactEmail      String      @map("contact_email")
-  status            OrderStatus @default(PENDING)
+  // An order begins awaiting payment. DRAFT exists in the vocabulary for a
+  // future saved-basket feature and is never written by the current flow.
+  status            OrderStatus @default(PENDING_PAYMENT)
   regionId          String      @map("region_id")
   currency          String      @db.Char(3)
   subtotalMinor     Int         @map("subtotal_minor")
