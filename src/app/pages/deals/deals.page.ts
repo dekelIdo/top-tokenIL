@@ -28,7 +28,7 @@ import { EmptyStateComponent, ProductCardComponent } from '../../ui';
         <tt-empty-state *ngIf="vm.promotions.length === 0"
                         icon="🏷️"
                         title="אין מבצעים פעילים כרגע"
-                        message="שווה לחזור לבדוק — מבצעים מתחלפים.">
+                        message="שווה לחזור לבדוק, המבצעים מתחלפים.">
         </tt-empty-state>
 
         <div class="tt-grid promos" *ngIf="vm.promotions.length > 0">

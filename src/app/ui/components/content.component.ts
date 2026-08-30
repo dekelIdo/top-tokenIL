@@ -212,7 +212,7 @@ export class OrderStatusTimelineComponent {
         <div *ngSwitchCase="'CODE'" class="code">
           <span class="tt-faint">הקוד שלכם</span>
           <code>{{ code }}</code>
-          <span class="tt-hint">קוד הדגמה בסביבת פיתוח — אינו ניתן למימוש.</span>
+          <span class="tt-hint">קוד הדגמה בסביבת פיתוח. אינו ניתן למימוש.</span>
         </div>
         <p *ngSwitchDefault class="tt-muted">{{ statusLabel }}</p>
       </ng-container>

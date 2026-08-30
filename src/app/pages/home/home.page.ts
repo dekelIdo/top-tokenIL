@@ -33,7 +33,7 @@ const REVIEW_PAGE: PageRequest = { page: 1, pageSize: 3 };
     <section class="hero">
       <div class="tt-container hero__inner">
         <span class="tt-eyebrow">חנות גיימינג ישראלית</span>
-        <h1>קודים, מנויים ומטבעות משחק — בלי הפתעות</h1>
+        <h1>קודים, מנויים ומטבעות משחק בלי הפתעות</h1>
         <p class="lead tt-muted">
           כל מוצר מציג מראש את הפלטפורמה, את אזור החנות ואת זמן האספקה המשוער.
           אנחנו לא מבקשים סיסמאות, ולא מבטיחים אספקה שאיננו יכולים לעמוד בה.

@@ -10,7 +10,7 @@ export const PROMOTIONS: readonly Promotion[] = [
     id: 'promo-launch',
     slug: 'launch-week',
     kind: PromotionKind.PercentOff,
-    title: localized('שבוע השקה — 10% הנחה', 'Launch week — 10% off'),
+    title: localized('שבוע השקה: 10% הנחה', 'Launch week: 10% off'),
     description: localized(
       'קוד LAUNCH10 מעניק 10% הנחה על כל הזמנה מעל 100 ₪.',
       'Code LAUNCH10 gives 10% off any order above 100 ILS.',
@@ -110,8 +110,8 @@ export const FAQ_ENTRIES: readonly FaqEntry[] = [
     topic: SupportTopic.General,
     question: localized('האם תבקשו את הסיסמה שלי?', 'Will you ask for my password?'),
     answer: localized(
-      'לא. לעולם לא נבקש סיסמה, קוד אימות דו-שלבי או קודי גיבוי — לא באתר, לא במייל ולא בצ׳אט. אם מישהו מבקש מכם פרטים כאלה בשמנו, זו הונאה.',
-      'No. We will never ask for a password, a two-factor code or backup codes — not on the site, not by email and not in chat. If anyone asks for these in our name, it is a scam.',
+      'לא. לעולם לא נבקש סיסמה, קוד אימות דו-שלבי או קודי גיבוי. לא באתר, לא במייל ולא בצ׳אט. אם מישהו מבקש מכם פרטים כאלה בשמנו, זו הונאה.',
+      'No. We will never ask for a password, a two-factor code or backup codes. Not on the site, not by email and not in chat. If anyone asks for these in our name, it is a scam.',
     ),
   },
   {
@@ -128,8 +128,8 @@ export const FAQ_ENTRIES: readonly FaqEntry[] = [
     topic: SupportTopic.PaymentProblem,
     question: localized('אילו אמצעי תשלום נתמכים?', 'Which payment methods are supported?'),
     answer: localized(
-      'האתר נמצא כרגע בשלב פיתוח ומריץ סימולציית תשלום בלבד — לא מתבצע חיוב אמיתי ולא נאספים פרטי כרטיס אשראי. אמצעי תשלום אמיתיים יופעלו לאחר חיבור ספק סליקה.',
-      'The site is currently in development and runs a payment simulation only — no real charge is made and no card details are collected. Real payment methods will be enabled once a payment provider is connected.',
+      'האתר נמצא כרגע בשלב פיתוח ומריץ סימולציית תשלום בלבד. לא מתבצע חיוב אמיתי ולא נאספים פרטי כרטיס אשראי. אמצעי תשלום אמיתיים יופעלו לאחר חיבור ספק סליקה.',
+      'The site is currently in development and runs a payment simulation only. No real charge is made and no card details are collected. Real payment methods will be enabled once a payment provider is connected.',
     ),
   },
   {
@@ -146,7 +146,7 @@ export const FAQ_ENTRIES: readonly FaqEntry[] = [
     topic: SupportTopic.OrderStatus,
     question: localized('איך אני עוקב אחרי ההזמנה?', 'How do I track my order?'),
     answer: localized(
-      'כל הזמנה מקבלת דף סטטוס משלה עם ציר זמן שמראה בדיוק היכן היא עומדת — מהתשלום ועד האספקה. הקישור נשלח למייל וזמין גם באזור האישי.',
+      'כל הזמנה מקבלת דף סטטוס משלה עם ציר זמן שמראה בדיוק היכן היא עומדת, מהתשלום ועד האספקה. הקישור נשלח למייל וזמין גם באזור האישי.',
       'Every order gets its own status page with a timeline showing exactly where it stands, from payment through delivery. The link is emailed to you and is also available in your account.',
     ),
   },
@@ -162,8 +162,8 @@ export const PAYMENT_PROVIDERS: readonly PaymentProviderDescriptor[] = [
     id: PaymentProviderId.Mock,
     name: localized('סימולציית תשלום (פיתוח)', 'Payment simulation (development)'),
     description: localized(
-      'סימולציה בלבד — לא מתבצע חיוב ולא נאספים פרטי אשראי.',
-      'Simulation only — no charge is made and no card details are collected.',
+      'סימולציה בלבד. לא מתבצע חיוב ולא נאספים פרטי אשראי.',
+      'Simulation only. No charge is made and no card details are collected.',
     ),
     icon: 'science',
     enabled: true,
@@ -224,13 +224,13 @@ export const SIMULATED_INSTRUMENTS: readonly SimulatedInstrument[] = [
   {
     token: 'sim_error',
     label: localized('שגיאת תקשורת', 'Gateway error'),
-    description: localized('הספק מחזיר שגיאה — ניתן לנסות שוב.', 'The gateway errors out — the payment can be retried.'),
+    description: localized('הספק מחזיר שגיאה, וניתן לנסות שוב.', 'The gateway errors out, and the payment can be retried.'),
     expectedStatus: PaymentStatus.Failed,
   },
   {
     token: 'sim_timeout',
     label: localized('פסק זמן (איטי)', 'Timeout (slow)'),
-    description: localized('התשלום נתקע במצב עיבוד — לבדיקת מצב ממתין.', 'The payment hangs in processing — exercises the pending state.'),
+    description: localized('התשלום נתקע במצב עיבוד, לבדיקת המצב הממתין.', 'The payment hangs in processing, which exercises the pending state.'),
     expectedStatus: PaymentStatus.Processing,
   },
 ];

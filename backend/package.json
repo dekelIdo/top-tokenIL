@@ -2,7 +2,7 @@
   "name": "top-token-backend",
   "version": "0.1.0",
   "private": true,
-  "description": "Top Token commerce backend \u2014 Phase 4A foundation",
+  "description": "Top Token commerce backend — Phase 4A foundation",
   "scripts": {
     "build": "nest build",
     "start": "node dist/main.js",
@@ -24,7 +24,8 @@
     "db:init": "node scripts/with-db.mjs npm run db:init:inner",
     "db:init:inner": "prisma migrate deploy && npm run seed",
     "test:unit": "jest --runInBand --testPathIgnorePatterns integration",
-    "test:inner": "prisma migrate deploy && npm run seed && jest --runInBand"
+    "test:inner": "prisma migrate deploy && npm run seed && jest --runInBand",
+    "start:e2e": "prisma migrate deploy && npm run seed && ts-node --transpile-only src/main.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",

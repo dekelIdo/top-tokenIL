@@ -18,7 +18,7 @@ import { RouterLink } from '@angular/router';
         <div class="cols">
           <div>
             <strong class="brand">TOP TOKEN</strong>
-            <p class="tt-faint">חנות דיגיטלית למוצרי גיימינג — קודים, מנויים ומטבעות משחק.</p>
+            <p class="tt-faint">חנות דיגיטלית למוצרי גיימינג: קודים, מנויים ומטבעות משחק.</p>
           </div>
           <nav>
             <h2 class="col-title">חנות</h2>

@@ -42,7 +42,7 @@ interface StoreViewModel {
       <header class="head">
         <span class="tt-eyebrow">קטלוג</span>
         <h1>כל המוצרים</h1>
-        <p class="tt-muted">קודים דיגיטליים, כרטיסי מתנה, מנויים ומטבעות משחק — עם אזור ושיטת אספקה גלויים מראש.</p>
+        <p class="tt-muted">קודים דיגיטליים, כרטיסי מתנה, מנויים ומטבעות משחק, עם אזור ושיטת אספקה גלויים מראש.</p>
       </header>
 
       <form class="filters tt-panel" (submit)="$event.preventDefault()">

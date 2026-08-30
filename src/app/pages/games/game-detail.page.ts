@@ -38,7 +38,7 @@ import { signal } from '@angular/core';
 
           <tt-empty-state *ngIf="vm.products.length === 0"
                           title="אין כרגע מוצרים למשחק הזה"
-                          message="המוצרים יתווספו בקרוב. בינתיים אפשר לעיין בשאר החנות.">
+                          message="אין כרגע מוצרים למשחק הזה. אפשר לעיין בשאר החנות.">
           </tt-empty-state>
 
           <div class="tt-grid" *ngIf="vm.products.length > 0">

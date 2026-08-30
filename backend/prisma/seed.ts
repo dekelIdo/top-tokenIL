@@ -303,8 +303,8 @@ const PRODUCTS: ProductSeed[] = [
     name: t('COD Points', 'COD Points'),
     shortDescription: t('קודים דיגיטליים ל-Call of Duty', 'Digital codes for Call of Duty'),
     description: t(
-      'קוד דיגיטלי למימוש בחשבון המשחק. אספקה מיידית לאחר התשלום.',
-      'A digital code redeemed on your game account. Delivered right after payment.',
+      'קוד דיגיטלי למימוש בחשבון המשחק. הקוד נמסר לאחר אישור התשלום.',
+      'A digital code redeemed on your game account. The code is released once payment is approved.',
     ),
     platformIds: ['plat-any'], regionIds: ['reg-global'],
     fulfillmentMethod: FulfillmentMethod.DIGITAL_CODE,

@@ -153,8 +153,8 @@ export const networkError = (technicalMessage: string): AppError => new AppError
 export const serverError = (technicalMessage: string, status = 500, retryAfterSeconds?: number): AppError => new AppError({
   kind: AppErrorKind.Server,
   userMessage: localized(
-    'השירות אינו זמין כרגע. אנחנו כבר מטפלים בזה — נסו שוב בעוד רגע.',
-    'The service is unavailable right now. We are on it — please try again shortly.',
+    'השירות אינו זמין כרגע. אנחנו כבר מטפלים בזה. נסו שוב בעוד רגע.',
+    'The service is unavailable right now. We are on it. Please try again shortly.',
   ),
   technicalMessage,
   status,

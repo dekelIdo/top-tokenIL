@@ -190,8 +190,8 @@ export class CheckoutFacade {
             break;
           case PaymentStatus.Processing:
             this.paymentFailureSignal.set(localized(
-              'התשלום עדיין בעיבוד אצל ספק הסליקה. אל תשלמו שוב — נעדכן אתכם בדף ההזמנה ובמייל.',
-              'The payment is still processing at the gateway. Do not pay again — we will update you on the order page and by email.',
+              'התשלום עדיין בעיבוד אצל ספק הסליקה. אל תשלמו שוב. נעדכן אתכם בדף ההזמנה ובמייל.',
+              'The payment is still processing at the gateway. Do not pay again. We will update you on the order page and by email.',
             ));
             break;
           default:

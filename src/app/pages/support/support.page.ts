@@ -73,7 +73,7 @@ import { FaqAccordionComponent } from '../../ui';
       <div class="tt-alert tt-alert--success" *ngIf="sentReference() as reference">
         <span aria-hidden="true">✅</span>
         <span>
-          <strong>הפנייה נקלטה — מספר {{ reference }}</strong>
+          <strong>הפנייה נקלטה. מספר הפנייה: {{ reference }}</strong>
           <span class="tt-faint">
             שימו לב: האתר בפיתוח, ולכן הפנייה נשמרת בזיכרון הדפדפן בלבד ולא נשלחת לצוות בפועל.
           </span>

@@ -468,8 +468,8 @@ export class MockPaymentApiService extends PaymentApiService {
       action: {
         kind: 'CONFIRM',
         prompt: localized(
-          'זוהי סימולציית תשלום לצורכי פיתוח. בחרו תרחיש ואשרו — לא יתבצע חיוב ולא נאספים פרטי אשראי.',
-          'This is a development payment simulation. Pick a scenario and confirm — no charge is made and no card details are collected.',
+          'זוהי סימולציית תשלום לצורכי פיתוח. בחרו תרחיש ואשרו. לא יתבצע חיוב ולא נאספים פרטי אשראי.',
+          'This is a development payment simulation. Pick a scenario and confirm. No charge is made and no card details are collected.',
         ),
       },
       createdAt: this.backend.now(),
@@ -601,7 +601,7 @@ export class MockPaymentApiService extends PaymentApiService {
       return;
     }
     if (order.status === OrderStatus.Fulfilled || order.status === OrderStatus.Paid) {
-      return; // already settled — never process a payment twice
+      return; // already settled; never process a payment twice
     }
 
     const fulfillments: Fulfillment[] = order.fulfillments.map((fulfillment) => {
@@ -669,8 +669,8 @@ const CANCEL_MESSAGE = localized(
 );
 
 const GATEWAY_ERROR_MESSAGE = localized(
-  'שירות התשלומים לא זמין כרגע. לא בוצע חיוב — אפשר לנסות שוב.',
-  'The payment service is unavailable right now. You were not charged — please try again.',
+  'שירות התשלומים לא זמין כרגע. לא בוצע חיוב, אפשר לנסות שוב.',
+  'The payment service is unavailable right now. You were not charged. Please try again.',
 );
 
 interface SimulatedOutcome {

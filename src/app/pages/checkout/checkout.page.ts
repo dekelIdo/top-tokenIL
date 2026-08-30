@@ -103,7 +103,7 @@ import { MoneyPipe, RegionBadgeComponent } from '../../ui';
               </ng-container>
 
               <p class="tt-hint">
-                אנחנו לעולם לא מבקשים סיסמה, קוד אימות או קודי גיבוי — בשום שלב.
+                אנחנו לעולם לא מבקשים סיסמה, קוד אימות או קודי גיבוי, בשום שלב.
               </p>
 
               <button type="submit" class="tt-btn tt-btn--primary tt-btn--block" [disabled]="checkout.busy()">

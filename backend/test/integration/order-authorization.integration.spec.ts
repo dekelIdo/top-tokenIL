@@ -18,6 +18,13 @@ describe('order authorization', () => {
 
   const email = () => `qa-${Math.random().toString(36).slice(2, 10)}@example.com`;
 
+  /**
+   * Unique per run, because the development database persists between runs. A
+   * run that is interrupted before its cleanup would otherwise leave rows that
+   * collide with the next one, which looks like a product failure and is not.
+   */
+  const run = Math.random().toString(36).slice(2, 8);
+
   beforeAll(async () => {
     process.env.NODE_ENV = 'test';
     process.env.CORS_ALLOWED_ORIGINS = 'http://localhost:4200';
@@ -50,7 +57,7 @@ describe('order authorization', () => {
     customerId?: string | null;
   }): Promise<string> {
     const offer = await prisma.offer.findFirstOrThrow();
-    const sessionKey = `cs-auth-${options.suffix}`;
+    const sessionKey = `cs-auth-${run}-${options.suffix}`;
     const orderId = generateId('ord');
 
     await prisma.checkoutSession.create({
@@ -71,7 +78,7 @@ describe('order authorization', () => {
     await prisma.order.create({
       data: {
         id: orderId,
-        orderNumber: `TT-AUTH-${options.suffix}`,
+        orderNumber: `TT-AUTH-${run}-${options.suffix}`,
         checkoutSessionId: sessionKey,
         sessionId: options.sessionId ?? null,
         customerId: options.customerId ?? null,
@@ -197,7 +204,7 @@ describe('order authorization', () => {
 
       expect(response.body.id).toBe(orderId);
       // The contract calls this `reference`; the column is `orderNumber`.
-      expect(response.body.reference).toBe('TT-AUTH-mine');
+      expect(response.body.reference).toBe(`TT-AUTH-${run}-mine`);
     });
 
     it('lets the owning session read an order placed without an account', async () => {
@@ -240,8 +247,8 @@ describe('order authorization', () => {
 
       expect(mine.body.total).toBe(2);
       const references = mine.body.items.map((o: { reference: string }) => o.reference);
-      expect(references).toEqual(expect.arrayContaining(['TT-AUTH-list1', 'TT-AUTH-list2']));
-      expect(references).not.toContain('TT-AUTH-list3');
+      expect(references).toEqual(expect.arrayContaining([`TT-AUTH-${run}-list1`, `TT-AUTH-${run}-list2`]));
+      expect(references).not.toContain(`TT-AUTH-${run}-list3`);
     });
 
     it('returns an empty page for a caller with no session, not an error', async () => {
