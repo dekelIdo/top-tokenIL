@@ -350,6 +350,85 @@ try {
   check('a retry returns the same order rather than a second one', replayed.id === order.id, `HTTP ${replay.status}`);
 
   // -------------------------------------------------------------------------
+  group('paying for it through the sandbox provider');
+
+  const intentResponse = await fetch(`${API}/payment/intents`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: cookie },
+    body: JSON.stringify({ checkoutSessionId: checkoutBody.id }),
+  });
+  const paymentSession = await intentResponse.json();
+
+  check('a payment intent is opened', intentResponse.status === 201, paymentSession.intent?.id ?? '');
+  check(
+    'the amount comes from the order, not the browser',
+    paymentSession.intent?.amount.amountMinor === order.totals.total.amountMinor,
+  );
+  check(
+    'only a simulated provider is offered, and it says so',
+    paymentSession.availableProviders?.length === 1 && paymentSession.availableProviders[0].simulated === true,
+  );
+  check(
+    'no card field appears anywhere in the payment session',
+    !/cardNumber|cvv|expiryDate/i.test(JSON.stringify(paymentSession)),
+  );
+
+  const declined = await fetch(`${API}/payment/intents/${paymentSession.intent.id}/confirm`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: cookie },
+    body: JSON.stringify({ instrument: { token: 'sim_declined' } }),
+  });
+  const declinedBody = await declined.json();
+  check('a declined payment reports failure', declinedBody.status === 'FAILED', declinedBody.status);
+
+  const afterDecline = await (await fetch(`${API}/orders/${order.id}`, { headers: { Cookie: cookie } })).json();
+  check(
+    'a decline leaves the order payable rather than killing it',
+    afterDecline.status === 'PENDING_PAYMENT',
+    afterDecline.status,
+  );
+
+  const retryResponse = await fetch(`${API}/payment/intents`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: cookie },
+    body: JSON.stringify({ checkoutSessionId: checkoutBody.id }),
+  });
+  const retry = await retryResponse.json();
+  const approved = await fetch(`${API}/payment/intents/${retry.intent.id}/confirm`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: cookie },
+    body: JSON.stringify({ instrument: { token: 'sim_success' } }),
+  });
+  const approvedBody = await approved.json();
+  check('a retry can succeed', approvedBody.status === 'SUCCEEDED', approvedBody.status);
+
+  const paid = await (await fetch(`${API}/orders/${order.id}`, { headers: { Cookie: cookie } })).json();
+  check(
+    'the order moves to fulfillment once paid',
+    paid.status === 'FULFILLMENT_PENDING',
+    paid.status,
+  );
+  check(
+    'no delivered code is invented for an unfulfilled order',
+    (paid.fulfillments ?? []).every((f) => f.status === 'PENDING' && !f.delivery),
+  );
+
+  // The browser must not be able to talk its way into a paid order.
+  const forged = await fetch(`${API}/orders/${order.id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Cookie: cookie },
+    body: JSON.stringify({ status: 'PAID' }),
+  });
+  check('there is no endpoint through which a client can mark an order paid', forged.status === 404, `HTTP ${forged.status}`);
+
+  const forgedWebhook = await fetch(`${API}/webhooks/payments/mock`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-TT-Signature': 'f'.repeat(64), 'X-TT-Timestamp': String(Math.floor(Date.now() / 1000)) },
+    body: JSON.stringify({ id: 'evt_forged', type: 'payment.succeeded', data: { intentId: 'sbx_x', status: 'SUCCEEDED' } }),
+  });
+  check('an unsigned webhook is rejected', forgedWebhook.status === 401, `HTTP ${forgedWebhook.status}`);
+
+  // -------------------------------------------------------------------------
   group('the storefront journey in the browser');
 
   // The order page reads straight from PostgreSQL through the same HTTP stack.

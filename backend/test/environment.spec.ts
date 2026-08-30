@@ -12,6 +12,10 @@ const deployed = {
   NODE_ENV: 'production',
   DATABASE_URL: 'postgresql://user:pass@db:5432/toptoken',
   SESSION_SECRET: 'a'.repeat(48),
+  PAYMENT_WEBHOOK_SECRET: 'b'.repeat(48),
+  // `log` is a development sink that delivers nothing, so a deployed
+  // environment has to say explicitly what it wants instead.
+  NOTIFICATION_TRANSPORT: 'none',
   COOKIE_SECURE: 'true',
   CORS_ALLOWED_ORIGINS: 'https://top-tokenil.onrender.com',
 };
@@ -38,6 +42,14 @@ describe('environment validation: development defaults', () => {
 
   it('defaults cookies to insecure locally, because localhost is not HTTPS', () => {
     expect(validateEnvironment({}).cookieSecure).toBe(false);
+  });
+
+  it('defaults housekeeping to a sensible interval', () => {
+    expect(validateEnvironment({}).housekeepingIntervalSeconds).toBe(60);
+  });
+
+  it('allows the log notification sink locally, where nothing is delivered', () => {
+    expect(validateEnvironment({}).notificationTransport).toBe('log');
   });
 
   it('defaults to sandbox payments', () => {
@@ -68,6 +80,33 @@ describe('environment validation: production fails fast', () => {
 
   it('treats staging with the same hardening as production', () => {
     expect(validateEnvironment({ ...deployed, NODE_ENV: 'staging' }).isDeployed).toBe(true);
+  });
+
+  it('refuses to start without a webhook secret', () => {
+    const problems = problemsOf({ ...deployed, PAYMENT_WEBHOOK_SECRET: undefined });
+    expect(problems.some((p) => p.includes('PAYMENT_WEBHOOK_SECRET'))).toBe(true);
+  });
+
+  it('rejects a short webhook secret', () => {
+    const problems = problemsOf({ ...deployed, PAYMENT_WEBHOOK_SECRET: 'short' });
+    expect(problems.some((p) => p.includes('PAYMENT_WEBHOOK_SECRET'))).toBe(true);
+  });
+
+  it('rejects a placeholder webhook secret', () => {
+    const problems = problemsOf({ ...deployed, PAYMENT_WEBHOOK_SECRET: 'change-me-change-me-change-me-change-me' });
+    expect(problems.some((p) => p.includes('placeholder'))).toBe(true);
+  });
+
+  it('refuses the development notification sink once deployed', () => {
+    // Writing an order confirmation to a log file is not sending it. Starting
+    // anyway would drop every customer email silently.
+    const problems = problemsOf({ ...deployed, NOTIFICATION_TRANSPORT: 'log' });
+    expect(problems.some((p) => p.includes('NOTIFICATION_TRANSPORT'))).toBe(true);
+  });
+
+  it('rejects an out-of-range housekeeping interval', () => {
+    const problems = problemsOf({ ...deployed, HOUSEKEEPING_INTERVAL_SECONDS: '99999' });
+    expect(problems.some((p) => p.includes('HOUSEKEEPING_INTERVAL_SECONDS'))).toBe(true);
   });
 
   it('refuses to start without DATABASE_URL', () => {

@@ -11,7 +11,9 @@
 | [DATABASE-DESIGN.md](DATABASE-DESIGN.md) | Conceptual schema, constraints and data-integrity invariants |
 | [PAYMENT-ARCHITECTURE.md](PAYMENT-ARCHITECTURE.md) | Provider abstraction, intent lifecycle, webhooks, refunds |
 | [FULFILLMENT-ARCHITECTURE.md](FULFILLMENT-ARCHITECTURE.md) | How a paid order becomes a delivered product |
+| [ORDER-STATE-MACHINE.md](ORDER-STATE-MACHINE.md) | The legal states of an order, its payment and its stock, and how races resolve |
 | [SECURITY-ARCHITECTURE.md](SECURITY-ARCHITECTURE.md) | Threat model, auth, authorization, secrets, headers, audit |
+| [DEPLOYMENT.md](DEPLOYMENT.md) | What Render needs, and what the service refuses to start without |
 | [COMPLIANCE.md](COMPLIANCE.md) | What a lawyer and an accountant must review before real money |
 | [UPGRADE-PATH.md](UPGRADE-PATH.md) | Proposed Angular 16 → 20 upgrade, not yet performed |
 
@@ -19,25 +21,36 @@
 
 | Document | Written |
 |---|---|
-| [ARCHITECTURE-AUDIT.md](ARCHITECTURE-AUDIT.md) | Phase 1 — the state of the codebase before the rebuild |
-| [SECURITY-REVIEW.md](SECURITY-REVIEW.md) | Phase 2 — what is *verified today*, each claim backed by a check |
+| [ARCHITECTURE-AUDIT.md](ARCHITECTURE-AUDIT.md) | The state of the codebase before the rebuild |
+| [SECURITY-REVIEW.md](SECURITY-REVIEW.md) | What was verified in the browser, each claim backed by a check |
 
 ## Status
 
-The Angular storefront is complete and tested against an in-memory mock backend.
+A real backend now exists. Catalog, cart pricing, checkout, order creation,
+inventory reservation and the payment state machine all run against PostgreSQL,
+and the storefront has been driven against them in a browser.
 
-**There is no backend.** No database, no authentication, no payment provider, no
-fulfillment integration. The documents above specify what to build; only
-`ARCHITECTURE.md`, `ARCHITECTURE-AUDIT.md` and `SECURITY-REVIEW.md` describe
-code that exists.
+What is still specification only: refunds, fulfillment delivery, email, and any
+real payment provider. `FULFILLMENT-ARCHITECTURE.md` and the refund sections of
+`PAYMENT-ARCHITECTURE.md` describe systems that have tables and no mechanism.
 
-Nothing here is a claim of production readiness or legal compliance.
+Nothing is deployed. Nothing here is a claim of production readiness or legal
+compliance. `CURRENT-STATE.md` in the repository root is the authority on what
+exists on any given day.
 
 ## Verifying the claims
 
 ```bash
-npm run test:ci      # 157 unit tests
+# backend, against a real PostgreSQL it starts and disposes of itself
+cd backend && npm test
+
+# storefront
+npm run test:ci      # unit tests
 npm run qa:all       # routes, purchase flows, accessibility, security, performance
+
+# the storefront against the real backend
+npx ng build --configuration staging
+node backend/scripts/with-db.mjs node qa/http-flow.mjs
 ```
 
 `qa/README.md` describes each harness.

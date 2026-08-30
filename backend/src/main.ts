@@ -53,7 +53,17 @@ export async function createApp(): Promise<NestExpressApplication> {
   // --- Body limits ---------------------------------------------------------
   // A commerce API posts small JSON documents. Capping the body is the cheapest
   // defence against a trivial memory-exhaustion attempt.
-  app.use(json({ limit: config.requestBodyLimit }));
+  app.use(
+    json({
+      limit: config.requestBodyLimit,
+      // The raw bytes are kept so a webhook signature can be verified against
+      // exactly what the provider signed. Re-serialising the parsed object would
+      // change whitespace and key order, and every signature would fail.
+      verify: (request, _response, buffer) => {
+        (request as unknown as { rawBody?: Buffer }).rawBody = Buffer.from(buffer);
+      },
+    }),
+  );
   app.use(urlencoded({ extended: false, limit: config.requestBodyLimit }));
 
   app.use(cookieParser(config.sessionSecret || undefined));
@@ -73,6 +83,8 @@ export async function createApp(): Promise<NestExpressApplication> {
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'X-Request-Id', 'X-Session-Trace', 'Idempotency-Key'],
+    // Webhook headers are deliberately absent: a provider calls server to
+    // server and never from a browser, so they have no business on this list.
     exposedHeaders: ['X-Request-Id', 'Retry-After'],
     maxAge: 600,
   });
@@ -105,6 +117,13 @@ async function bootstrap(): Promise<void> {
     const app = await createApp();
     const config = app.get<AppConfig>(APP_CONFIG);
 
+    // Render sends SIGTERM before replacing an instance. Enabling the hooks lets
+    // Nest run every onApplicationShutdown, so the housekeeping timer stops and
+    // Prisma closes its pool instead of the process being killed mid-query.
+    app.enableShutdownHooks();
+
+    // PORT comes from the environment, and the bind address is explicit: a
+    // platform that routes to the container needs 0.0.0.0, not localhost.
     await app.listen(config.port, '0.0.0.0');
 
     app.get(AppLogger).info('backend started', {

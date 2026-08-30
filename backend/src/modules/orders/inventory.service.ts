@@ -118,89 +118,91 @@ export class InventoryService {
   /**
    * Turns holds into sales once payment settles.
    *
-   * Reserved units move to sold rather than simply being freed, so the stock
-   * that left the shelf is still accounted for.
+   * The reservations are claimed first, by a conditional UPDATE that returns the
+   * rows it actually changed. Only one transaction can move a row out of HELD,
+   * so a second concurrent commit claims nothing and adjusts nothing. Reading
+   * the rows and then updating them would let two callers apply the same
+   * movement twice.
    */
   async commit(tx: Db, orderId: string): Promise<number> {
-    const held = await tx.inventoryReservation.findMany({
-      where: { orderId, status: 'HELD' },
-    });
+    const claimed = await tx.$queryRaw<{ offer_id: string; quantity: number }[]>`
+      UPDATE inventory_reservations
+         SET status = 'COMMITTED', updated_at = NOW()
+       WHERE order_id = ${orderId}
+         AND status = 'HELD'
+      RETURNING offer_id, quantity
+    `;
 
-    for (const reservation of held) {
+    for (const reservation of claimed) {
       await tx.$executeRaw`
         UPDATE inventory
-           SET quantity_reserved = quantity_reserved - ${reservation.quantity},
+           SET quantity_reserved = GREATEST(0, quantity_reserved - ${reservation.quantity}),
                quantity_sold = quantity_sold + ${reservation.quantity},
                quantity_available = CASE
                  WHEN quantity_available IS NULL THEN NULL
-                 ELSE quantity_available - ${reservation.quantity}
+                 ELSE GREATEST(0, quantity_available - ${reservation.quantity})
                END,
                updated_at = NOW()
-         WHERE offer_id = ${reservation.offerId}
+         WHERE offer_id = ${reservation.offer_id}
       `;
     }
 
-    await tx.inventoryReservation.updateMany({
-      where: { orderId, status: 'HELD' },
-      data: { status: 'COMMITTED' },
-    });
-
-    return held.length;
+    return claimed.length;
   }
 
   /**
    * Returns held units to the shelf when an order is abandoned or cancelled.
    *
-   * Only `HELD` rows are released. A committed reservation belongs to a sale and
-   * releasing it would conjure stock that was already delivered.
+   * Claimed the same way as a commit, so releasing twice frees the stock once.
+   * A COMMITTED reservation is never touched: those units belong to a sale, and
+   * releasing them would conjure stock that has already been paid for.
    */
   async release(tx: Db, orderId: string): Promise<number> {
-    const held = await tx.inventoryReservation.findMany({
-      where: { orderId, status: 'HELD' },
-    });
+    const claimed = await tx.$queryRaw<{ offer_id: string; quantity: number }[]>`
+      UPDATE inventory_reservations
+         SET status = 'RELEASED', updated_at = NOW()
+       WHERE order_id = ${orderId}
+         AND status = 'HELD'
+      RETURNING offer_id, quantity
+    `;
 
-    for (const reservation of held) {
+    for (const reservation of claimed) {
       await tx.$executeRaw`
         UPDATE inventory
            SET quantity_reserved = GREATEST(0, quantity_reserved - ${reservation.quantity}),
                updated_at = NOW()
-         WHERE offer_id = ${reservation.offerId}
+         WHERE offer_id = ${reservation.offer_id}
       `;
     }
 
-    await tx.inventoryReservation.updateMany({
-      where: { orderId, status: 'HELD' },
-      data: { status: 'RELEASED' },
-    });
-
-    return held.length;
+    return claimed.length;
   }
 
   /**
    * Releases holds that outlived their checkout.
    *
-   * Without this, an abandoned basket keeps stock off the shelf forever. Run by
-   * housekeeping; safe to call repeatedly.
+   * Without this an abandoned basket keeps stock off the shelf forever. The
+   * claim is atomic, so two instances sweeping at the same time release each
+   * reservation exactly once between them.
    */
   async releaseExpired(tx: Db, now = new Date()): Promise<number> {
-    const stale = await tx.inventoryReservation.findMany({
-      where: { status: 'HELD', expiresAt: { lte: now } },
-    });
+    const claimed = await tx.$queryRaw<{ offer_id: string; quantity: number }[]>`
+      UPDATE inventory_reservations
+         SET status = 'EXPIRED', updated_at = NOW()
+       WHERE status = 'HELD'
+         AND expires_at <= ${now}
+      RETURNING offer_id, quantity
+    `;
 
-    for (const reservation of stale) {
+    for (const reservation of claimed) {
       await tx.$executeRaw`
         UPDATE inventory
            SET quantity_reserved = GREATEST(0, quantity_reserved - ${reservation.quantity}),
                updated_at = NOW()
-         WHERE offer_id = ${reservation.offerId}
+         WHERE offer_id = ${reservation.offer_id}
       `;
     }
 
-    await tx.inventoryReservation.updateMany({
-      where: { status: 'HELD', expiresAt: { lte: now } },
-      data: { status: 'EXPIRED' },
-    });
-
-    return stale.length;
+    return claimed.length;
   }
 }

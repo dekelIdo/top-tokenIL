@@ -10,6 +10,9 @@ import { CatalogModule } from './modules/catalog/catalog.module';
 import { CheckoutModule } from './modules/checkout/checkout.module';
 import { ContentModule } from './modules/content/content.module';
 import { CustomersModule } from './modules/customers/customers.module';
+import { HousekeepingModule } from './modules/housekeeping/housekeeping.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 import { HealthModule } from './modules/health/health.module';
 import { OrdersModule } from './modules/orders/orders.module';
 
@@ -32,7 +35,10 @@ import { OrdersModule } from './modules/orders/orders.module';
     CheckoutModule,
     ContentModule,
     CustomersModule,
+    NotificationsModule,
     OrdersModule,
+    PaymentsModule,
+    HousekeepingModule,
   ],
   providers: [ApiExceptionFilter],
 })

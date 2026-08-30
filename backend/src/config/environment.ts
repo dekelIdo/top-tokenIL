@@ -14,6 +14,9 @@ export type NodeEnv = 'development' | 'test' | 'staging' | 'production';
 export type PaymentMode = 'sandbox' | 'production';
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
+/** Where customer notifications go. `log` sends nothing and is development only. */
+export type NotificationTransport = 'log' | 'none';
+
 export interface AppConfig {
   readonly nodeEnv: NodeEnv;
   /** True for staging and production, which share the same hardening. */
@@ -39,6 +42,23 @@ export interface AppConfig {
   readonly otpDevEcho: boolean;
 
   readonly paymentMode: PaymentMode;
+  /**
+   * Verifies webhook signatures. A provider signs each delivery with it, so a
+   * forged or replayed callback can be rejected before it reaches the state
+   * machine. Required in a deployed environment; a development default exists so
+   * the sandbox works out of the box.
+   */
+  readonly paymentWebhookSecret: string;
+
+  /**
+   * Where order notifications go. `log` writes them to the application log and
+   * sends nothing, which is fine locally and refused once deployed: a customer
+   * whose code was never emailed has not been served.
+   */
+  readonly notificationTransport: NotificationTransport;
+
+  /** How often housekeeping releases expired holds. Zero disables the sweep. */
+  readonly housekeepingIntervalSeconds: number;
 
   readonly logLevel: LogLevel;
   readonly requestBodyLimit: string;
@@ -151,6 +171,40 @@ export function validateEnvironment(source: NodeJS.ProcessEnv = process.env): Ap
     );
   }
 
+  const paymentWebhookSecret = source.PAYMENT_WEBHOOK_SECRET ?? '';
+  if (isDeployed) {
+    if (paymentWebhookSecret.length === 0) {
+      problems.push('PAYMENT_WEBHOOK_SECRET is required in staging and production');
+    } else if (paymentWebhookSecret.length < MIN_SECRET_LENGTH) {
+      problems.push(
+        `PAYMENT_WEBHOOK_SECRET must be at least ${MIN_SECRET_LENGTH} characters (received ${paymentWebhookSecret.length})`,
+      );
+    }
+    if (isWeakSecret(paymentWebhookSecret)) {
+      problems.push('PAYMENT_WEBHOOK_SECRET looks like a placeholder; generate a random value');
+    }
+  }
+
+  // --- Notifications -------------------------------------------------------
+  const notificationTransport = pickEnum(
+    source.NOTIFICATION_TRANSPORT,
+    ['log', 'none'] as const,
+    'log',
+  );
+  if (isDeployed && notificationTransport === 'log') {
+    // Writing an order confirmation to a log file is not delivering it. Rather
+    // than let a deployment silently drop every customer email, refuse to start
+    // until a real transport is configured.
+    problems.push(
+      'NOTIFICATION_TRANSPORT=log is a development sink and must not be used in staging or production',
+    );
+  }
+
+  const housekeepingIntervalSeconds = toInt(source.HOUSEKEEPING_INTERVAL_SECONDS, 60);
+  if (housekeepingIntervalSeconds < 0 || housekeepingIntervalSeconds > 3600) {
+    problems.push('HOUSEKEEPING_INTERVAL_SECONDS must be between 0 and 3600');
+  }
+
   const logLevel = pickEnum(source.LOG_LEVEL, LOG_LEVELS, isDeployed ? 'info' : 'debug');
   const requestBodyLimit = source.REQUEST_BODY_LIMIT ?? '100kb';
 
@@ -172,6 +226,9 @@ export function validateEnvironment(source: NodeJS.ProcessEnv = process.env): Ap
     otpMaxAttempts,
     otpDevEcho,
     paymentMode,
+    paymentWebhookSecret: paymentWebhookSecret || 'development-only-webhook-secret',
+    notificationTransport,
+    housekeepingIntervalSeconds,
     logLevel,
     requestBodyLimit,
   };
