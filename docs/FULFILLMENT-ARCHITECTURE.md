@@ -1,4 +1,4 @@
-# Top Token — Fulfillment Architecture
+# Top Token: fulfillment architecture
 
 How a paid order becomes a delivered product. This is the part of Top Token that
 differs most between product categories, so it is built as a set of providers

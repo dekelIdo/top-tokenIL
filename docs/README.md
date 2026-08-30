@@ -1,4 +1,4 @@
-# Top Token — documentation
+# Top Token: documentation
 
 ## Read in this order
 

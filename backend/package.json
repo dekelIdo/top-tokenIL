@@ -14,7 +14,7 @@
     "migrate:dev": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
     "seed": "ts-node --transpile-only prisma/seed.ts",
-    "test": "node scripts/with-db.mjs jest --runInBand",
+    "test": "node scripts/with-db.mjs npm run test:inner",
     "test:watch": "jest --watch --runInBand",
     "start:prod": "node dist/main.js",
     "typecheck": "tsc --noEmit",
@@ -23,7 +23,8 @@
     "migrate:status": "prisma migrate status",
     "db:init": "node scripts/with-db.mjs npm run db:init:inner",
     "db:init:inner": "prisma migrate deploy && npm run seed",
-    "test:unit": "jest --runInBand --testPathIgnorePatterns integration"
+    "test:unit": "jest --runInBand --testPathIgnorePatterns integration",
+    "test:inner": "prisma migrate deploy && npm run seed && jest --runInBand"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",

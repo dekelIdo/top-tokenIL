@@ -1,4 +1,4 @@
-# Top Token — Backend Architecture
+# Top Token: backend architecture
 
 The intended production architecture. **Nothing here is implemented.** This
 document exists so the backend can be built in the next phase without

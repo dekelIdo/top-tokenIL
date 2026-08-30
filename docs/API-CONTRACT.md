@@ -1,4 +1,4 @@
-# Top Token — API Contract v1
+# Top Token: API contract v1
 
 The REST contract between the Angular storefront and the backend that will be
 built in the next phase.

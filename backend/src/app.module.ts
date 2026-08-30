@@ -5,7 +5,9 @@ import { DatabaseModule } from './database/database.module';
 import { ApiExceptionFilter } from './common/errors/api-exception.filter';
 import { CorrelationMiddleware } from './common/interceptors/correlation.middleware';
 import { LoggingModule } from './common/logging/logging.module';
+import { CustomersModule } from './modules/customers/customers.module';
 import { HealthModule } from './modules/health/health.module';
+import { OrdersModule } from './modules/orders/orders.module';
 
 /**
  * The application root.
@@ -17,7 +19,7 @@ import { HealthModule } from './modules/health/health.module';
  * without changing anything below.
  */
 @Module({
-  imports: [AppConfigModule, LoggingModule, HealthModule, DatabaseModule],
+  imports: [AppConfigModule, LoggingModule, HealthModule, DatabaseModule, CustomersModule, OrdersModule],
   providers: [ApiExceptionFilter],
 })
 export class AppModule implements NestModule {

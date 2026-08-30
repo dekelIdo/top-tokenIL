@@ -1,4 +1,4 @@
-# Top Token — Payment Architecture
+# Top Token: payment architecture
 
 **No real payment provider is connected. No real money is processed.** The
 current build runs a simulator that walks the same state machine a gateway

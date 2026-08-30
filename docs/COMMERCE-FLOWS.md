@@ -1,4 +1,4 @@
-# Top Token — Commerce Flows
+# Top Token: commerce flows
 
 End-to-end flows across frontend, backend, providers and database. Read this
 alongside `docs/API-CONTRACT.md` for payloads and

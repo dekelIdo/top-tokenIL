@@ -1,4 +1,4 @@
-# Top Token — Database Design
+# Top Token: database design
 
 Conceptual relational schema for PostgreSQL. **No migrations exist and none
 should be written in this phase.** This is the contract; the next phase turns it

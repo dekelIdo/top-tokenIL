@@ -1,4 +1,4 @@
-# Top Token — Security Architecture
+# Top Token: security architecture
 
 The production security design. Complements `docs/SECURITY-REVIEW.md`, which
 records what is *verified today* in the frontend by `qa/security-scan.mjs`.
