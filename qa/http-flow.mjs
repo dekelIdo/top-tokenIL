@@ -298,7 +298,67 @@ try {
   check('a caller without the session cannot', stranger.status === 404, `HTTP ${stranger.status}`);
 
   // -------------------------------------------------------------------------
+  group('a real order, created against PostgreSQL');
+
+  // Fill in the checkout the way a customer would, then order it. The browser
+  // cannot drive this last step yet because payment has no endpoints, so the
+  // request is made directly and the result is then read back through the UI.
+  const values = {};
+  for (const requirement of checkoutBody.requirements) {
+    if (!requirement.required) continue;
+    values[requirement.key] =
+      requirement.control === 'checkbox'
+        ? true
+        : requirement.key === 'EMAIL'
+          ? 'buyer@example.com'
+          : requirement.options?.length
+            ? requirement.options[0].value
+            : 'Test Value';
+  }
+
+  const detailsResponse = await fetch(`${API}/checkout/sessions/${checkoutBody.id}/validate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: cookie },
+    body: JSON.stringify({ values }),
+  });
+  const details = await detailsResponse.json();
+  check('checkout details are accepted', details.issues.length === 0, JSON.stringify(details.issues).slice(0, 120));
+  check('the checkout advances to payment', details.session.step === 'PAYMENT', details.session.step);
+
+  const idempotencyKey = `order-create:${checkoutBody.id}`;
+  const orderResponse = await fetch(`${API}/orders`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: cookie, 'Idempotency-Key': idempotencyKey },
+    body: JSON.stringify({ checkoutSessionId: checkoutBody.id }),
+  });
+  const order = await orderResponse.json();
+
+  check('an order is created', orderResponse.status === 201, order.reference ?? JSON.stringify(order).slice(0, 120));
+  check(
+    'the order total matches the quote',
+    order.totals?.total.amountMinor === checkoutBody.cart.totals.total.amountMinor,
+    `${order.totals?.total.amountMinor} agorot`,
+  );
+  check('the order awaits payment rather than claiming to be paid', order.status === 'PENDING_PAYMENT', order.status);
+
+  const replay = await fetch(`${API}/orders`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: cookie, 'Idempotency-Key': idempotencyKey },
+    body: JSON.stringify({ checkoutSessionId: checkoutBody.id }),
+  });
+  const replayed = await replay.json();
+  check('a retry returns the same order rather than a second one', replayed.id === order.id, `HTTP ${replay.status}`);
+
+  // -------------------------------------------------------------------------
   group('the storefront journey in the browser');
+
+  // The order page reads straight from PostgreSQL through the same HTTP stack.
+  await context.addCookies([
+    { name: cookie.split('=')[0], value: cookie.split('=')[1], domain: 'localhost', path: '/' },
+  ]);
+  await go(`/order/${order.id}`);
+  const orderPageText = await page.locator('main').innerText();
+  check('the order page renders the real order', orderPageText.includes(order.reference), order.reference);
 
   await go('/cart');
   await go('/checkout');

@@ -1,21 +1,27 @@
-import { Controller, Get, Param, Query, Req } from '@nestjs/common';
-import type { Request } from 'express';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  HttpCode,
+  Param,
+  Post,
+  Query,
+  Req,
+  Res,
+} from '@nestjs/common';
+import type { Request, Response } from 'express';
 
 import { PrismaService } from '../../database/prisma.service';
 import { SessionService } from '../customers/session.service';
 import { OrderAccessService } from './order-access.service';
+import { ORDER_INCLUDE, OrderCreationService } from './order-creation.service';
+import { CreateOrderDto } from './dto/create-order.dto';
 import {
   OrderWithRelations,
   toOrderResponse,
   toOrderStatusResponse,
 } from './dto/order.mapper';
-
-/** Everything an order response needs, loaded in one query. */
-const ORDER_INCLUDE = {
-  items: { orderBy: { id: 'asc' } },
-  fulfillments: { orderBy: { id: 'asc' } },
-  paymentIntents: { orderBy: { createdAt: 'desc' }, take: 1 },
-} as const;
 
 /**
  * Reading orders.
@@ -30,7 +36,43 @@ export class OrdersController {
     private readonly prisma: PrismaService,
     private readonly sessions: SessionService,
     private readonly access: OrderAccessService,
+    private readonly creation: OrderCreationService,
   ) {}
+
+  /**
+   * Creates the order for a checkout session.
+   *
+   * 201 for a new order, 200 when the checkout already had one. Both carry the
+   * same body, so a client that retried after a timeout sees its order either
+   * way and never has to decide whether to try again.
+   *
+   * The idempotency key is required. Without it a retry after a network failure
+   * would be indistinguishable from a deliberate second purchase.
+   */
+  @Post('orders')
+  @HttpCode(201)
+  async createOrder(
+    @Body() body: CreateOrderDto,
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+    @Headers('idempotency-key') idempotencyKey?: string,
+  ) {
+    const session = await this.sessions.resolve(request);
+    const result = await this.creation.createFromCheckout(
+      body.checkoutSessionId,
+      session,
+      idempotencyKey?.trim() || null,
+    );
+
+    response.status(result.status);
+
+    const order = await this.prisma.order.findUniqueOrThrow({
+      where: { id: result.orderId },
+      include: ORDER_INCLUDE,
+    });
+
+    return toOrderResponse(order as OrderWithRelations);
+  }
 
   @Get('orders/:orderId')
   async getOrder(@Param('orderId') orderId: string, @Req() request: Request) {

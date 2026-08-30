@@ -83,6 +83,10 @@ export class AppLogger implements LoggerService {
 const REDACTED_KEYS = [
   'password', 'secret', 'token', 'cookie', 'authorization', 'otp', 'code',
   'card', 'cvv', 'pan', 'iban', 'session',
+  // Customer contact details. Nothing logs them today; the entry is here so
+  // that adding a log line later cannot quietly start writing addresses to
+  // disk. An id is enough to reconstruct what happened to an order.
+  'email', 'phone',
 ];
 
 /** `code` is a legitimate field on an error; keep the error one, drop the rest. */

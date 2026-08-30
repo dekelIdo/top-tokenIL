@@ -418,8 +418,25 @@ in the provider's hosted field or on the provider's own page. See
   existing order with `200`. This is the duplicate-order guard.
 - The order copies the session's **pricing snapshot**. Later catalog price
   changes never alter a historical order.
-- **Errors** `422 MISSING_CONTACT_EMAIL`; `404 SESSION_NOT_FOUND`;
-  `410 SESSION_EXPIRED`; `409 CART_INVALID` (re-validated at this point)
+- **Errors** `422 IDEMPOTENCY_KEY_REQUIRED` (the header is mandatory here);
+  `422 MISSING_CONTACT_EMAIL`; `404` for a checkout the caller does not own, in
+  place of both "not found" and "forbidden"; `409 SESSION_EXPIRED`;
+  `409 SESSION_NOT_OPEN` (details incomplete, or already ordered);
+  `409 CART_INVALID` (a line is no longer sellable, or the stored totals
+  disagree with the lines); `409 OUT_OF_STOCK` (stock ran out between the quote
+  and the order)
+
+**Implemented behaviour**, as of the order-creation phase:
+
+- Stock is held in the same transaction as the order. There is no state where an
+  order exists and its inventory was never reserved.
+- Reservation is a single conditional `UPDATE`, so N units can never satisfy
+  more than N concurrent buyers. The `inventory_reserved_within_available`
+  CHECK constraint is the backstop beneath it.
+- A failed creation writes nothing: no order, no items, no hold, and the
+  idempotency key is released so the customer can retry.
+- The order copies its own pricing snapshot. Later catalog changes, including
+  withdrawing the offer entirely, never alter a historical order.
 
 #### `GET /api/v1/orders/{id}`
 - **Auth** the owning customer, **or** an anonymous holder of the order's signed
