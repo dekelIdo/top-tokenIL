@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { AutoFulfillmentService } from './auto-fulfillment.service';
 import { FulfillmentService } from './fulfillment.service';
 
 /**
@@ -11,7 +12,7 @@ import { FulfillmentService } from './fulfillment.service';
  * into disagreeing about what a delivered order is.
  */
 @Module({
-  providers: [FulfillmentService],
-  exports: [FulfillmentService],
+  providers: [FulfillmentService, AutoFulfillmentService],
+  exports: [FulfillmentService, AutoFulfillmentService],
 })
 export class FulfillmentModule {}

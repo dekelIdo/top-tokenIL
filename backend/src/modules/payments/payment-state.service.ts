@@ -5,6 +5,7 @@ import { conflictError } from '../../common/errors/api-error';
 import { generateId } from '../../common/crypto/tokens';
 import { AppLogger } from '../../common/logging/app-logger.service';
 import { PrismaService } from '../../database/prisma.service';
+import { AutoFulfillmentService } from '../fulfillment/auto-fulfillment.service';
 import { InventoryService } from '../orders/inventory.service';
 import { NotificationService } from '../notifications/notification.service';
 import { ProviderPaymentStatus } from './providers/payment-provider';
@@ -53,6 +54,7 @@ export class PaymentStateService {
     private readonly prisma: PrismaService,
     private readonly inventory: InventoryService,
     private readonly notifications: NotificationService,
+    private readonly autoFulfillment: AutoFulfillmentService,
     private readonly logger: AppLogger,
   ) {}
 
@@ -391,6 +393,20 @@ export class PaymentStateService {
   }
 
   private async notifyAfterCommit(outcome: SettlementOutcome): Promise<void> {
+    if (outcome.orderStatus === 'FULFILLMENT_PENDING') {
+      // Runs before the notification so the customer's email can carry the
+      // listing instruction rather than "we will be in touch". Best-effort and
+      // self-contained: a failure here leaves the job in the operator queue.
+      try {
+        await this.autoFulfillment.planOrder(outcome.orderId);
+      } catch (error) {
+        this.logger.error('automatic fulfillment planning failed', {
+          orderId: outcome.orderId,
+          reason: error instanceof Error ? error.message : 'unknown',
+        });
+      }
+    }
+
     try {
       if (outcome.orderStatus === 'FULFILLMENT_PENDING') {
         await this.notifications.orderPaid(outcome.orderId);
