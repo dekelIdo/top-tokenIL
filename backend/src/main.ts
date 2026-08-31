@@ -82,7 +82,17 @@ export async function createApp(): Promise<NestExpressApplication> {
     },
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'X-Request-Id', 'X-Session-Trace', 'Idempotency-Key'],
+    // `Authorization` is here for the operator panel, which is a separate
+    // origin and authenticates with a bearer token rather than the storefront's
+    // cookie. Without it the browser blocks the preflight and the panel reports
+    // a connection failure that looks like the backend being down.
+    allowedHeaders: [
+      'Content-Type',
+      'X-Request-Id',
+      'X-Session-Trace',
+      'Idempotency-Key',
+      'Authorization',
+    ],
     // Webhook headers are deliberately absent: a provider calls server to
     // server and never from a browser, so they have no business on this list.
     exposedHeaders: ['X-Request-Id', 'Retry-After'],
