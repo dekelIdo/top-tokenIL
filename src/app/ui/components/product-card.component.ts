@@ -49,8 +49,8 @@ import { StarRatingComponent } from './star-rating.component';
       </div>
 
       <div class="foot">
-        <span class="from tt-faint">החל מ־</span>
-        <span class="price">{{ product.fromPrice?.current | money }}</span>
+        <span class="foot__label tt-faint">החל מ־</span>
+        <span class="tt-price">{{ product.fromPrice?.current | money }}</span>
       </div>
     </a>
   `,
@@ -58,7 +58,8 @@ import { StarRatingComponent } from './star-rating.component';
     .card {
       display: flex;
       flex-direction: column;
-      block-size: 358px;
+      block-size: 100%;
+      min-block-size: 340px;
       background: var(--tt-surface);
       border: 1px solid var(--tt-border);
       border-radius: var(--tt-radius-lg);
@@ -69,22 +70,39 @@ import { StarRatingComponent } from './star-rating.component';
                   border-color var(--tt-duration) var(--tt-ease),
                   box-shadow var(--tt-duration) var(--tt-ease);
     }
+    /* Restrained on purpose: a small lift and a brand-tinted edge. A card that
+       scales or glows fights every other card on the grid for attention. */
     .card:hover {
       transform: translateY(-3px);
-      border-color: var(--tt-border-strong);
+      border-color: var(--tt-border-brand);
       box-shadow: var(--tt-shadow-2);
       text-decoration: none;
     }
+    .card:hover .media img { transform: scale(1.04); }
+
     .media {
       position: relative;
-      block-size: 148px;
+      block-size: 156px;
       flex: none;
       display: grid;
       place-items: center;
-      background: radial-gradient(circle at 50% 30%, var(--tt-surface-3), var(--tt-surface));
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 120%, var(--tt-brand-tint), transparent 62%),
+        var(--tt-surface-2);
+      border-block-end: 1px solid var(--tt-border);
     }
-    .media img { max-block-size: 108px; object-fit: contain; }
-    .featured { position: absolute; inset-block-start: var(--tt-space-3); inset-inline-start: var(--tt-space-3); }
+    .media img {
+      max-block-size: 112px;
+      object-fit: contain;
+      transition: transform var(--tt-duration-slow) var(--tt-ease-out);
+    }
+    .featured {
+      position: absolute;
+      inset-block-start: var(--tt-space-3);
+      inset-inline-start: var(--tt-space-3);
+    }
+
     .body {
       padding: var(--tt-space-4);
       display: flex;
@@ -92,28 +110,40 @@ import { StarRatingComponent } from './star-rating.component';
       gap: var(--tt-space-2);
       flex: 1;
       min-block-size: 0;
-      overflow: hidden;
     }
-    .name { font-size: var(--tt-text-lg); margin: 0; font-weight: 700; }
-    .desc {
-      font-size: var(--tt-text-sm);
+    .name {
       margin: 0;
+      font-size: var(--tt-text-md);
+      font-weight: 700;
+      line-height: var(--tt-leading-snug);
+      /* Two lines maximum, so a long name cannot make one card taller than the
+         rest of its row. */
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
-    .meta { gap: var(--tt-space-1); }
+    .desc {
+      font-size: var(--tt-text-sm);
+      margin: 0;
+      line-height: var(--tt-leading-snug);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .meta { gap: var(--tt-space-1); margin-block-start: auto; }
+
     .foot {
-      margin-block-start: auto;
       display: flex;
       align-items: baseline;
+      justify-content: space-between;
       gap: var(--tt-space-2);
       padding: var(--tt-space-3) var(--tt-space-4);
       border-block-start: 1px solid var(--tt-border);
-      background: var(--tt-surface-2);
+      background: var(--tt-bg-elevated);
     }
-    .price { font-size: var(--tt-text-xl); font-weight: 700; }
+    .foot__label { font-size: var(--tt-text-xs); }
   `],
 })
 export class ProductCardComponent {

@@ -9,121 +9,208 @@ import { PageRequest } from '../../domain';
 import { PromotionApiService, ReviewApiService, SupportApiService } from '../../data/api';
 import { CatalogFacade } from '../../state';
 import {
-  FaqAccordionComponent, GameCardComponent, ProductCardComponent, ReviewCardComponent,
-  SkeletonGridComponent, TrustBadgesComponent,
+  FaqAccordionComponent, GameCardComponent, HeroComponent, IconComponent,
+  ProductCardComponent, ReviewCardComponent, SkeletonGridComponent, TrustBadgesComponent,
 } from '../../ui';
 
 const REVIEW_PAGE: PageRequest = { page: 1, pageSize: 3 };
 
 /**
- * The storefront landing page: what we sell, which games, why we can be trusted,
- * and what customers said. Everything on it is real data from the catalog — there
- * is no decorative content that does not link somewhere.
+ * The landing page.
+ *
+ * Deliberately not five identical blocks. The page previously ran the same
+ * "heading, link, grid" shape five times, which is what made it read as
+ * generated rather than designed. Each section now earns its own treatment: the
+ * hero shows a real priced product, games run as a horizontal rail, promotions
+ * sit on a raised ground, and reassurance appears once rather than being
+ * sprinkled everywhere.
+ *
+ * Everything on it is real catalog data. Nothing is decorative filler and every
+ * block links somewhere.
  */
 @Component({
   selector: 'tt-home-page',
   standalone: true,
   imports: [
     CommonModule, RouterLink, LocalizePipe,
-    GameCardComponent, ProductCardComponent, ReviewCardComponent, FaqAccordionComponent,
-    TrustBadgesComponent, SkeletonGridComponent,
+    GameCardComponent, HeroComponent, IconComponent, ProductCardComponent,
+    ReviewCardComponent, FaqAccordionComponent, TrustBadgesComponent, SkeletonGridComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="hero">
-      <div class="tt-container hero__inner">
-        <span class="tt-eyebrow">חנות גיימינג ישראלית</span>
-        <h1>קודים, מנויים ומטבעות משחק בלי הפתעות</h1>
-        <p class="lead tt-muted">
-          כל מוצר מציג מראש את הפלטפורמה, את אזור החנות ואת זמן האספקה המשוער.
-          אנחנו לא מבקשים סיסמאות, ולא מבטיחים אספקה שאיננו יכולים לעמוד בה.
-        </p>
-        <div class="tt-row">
-          <a class="tt-btn tt-btn--primary" routerLink="/store">לכל המוצרים</a>
-          <a class="tt-btn tt-btn--ghost" routerLink="/games">לפי משחק</a>
-        </div>
-        <tt-trust-badges class="trust"></tt-trust-badges>
-      </div>
-    </section>
+    <ng-container *ngIf="vm$ | async as vm; else loading">
+      <tt-hero [product]="vm.featured[0]"></tt-hero>
 
-    <section class="tt-container tt-section">
-      <div class="tt-section__head">
-        <h2>מוצרים מומלצים</h2>
-        <a routerLink="/store">לכל המוצרים →</a>
-      </div>
+      <section class="tt-container tt-section">
+        <header class="tt-section__head">
+          <div>
+            <p class="tt-eyebrow">נבחרו עבורכם</p>
+            <h2>מוצרים מומלצים</h2>
+          </div>
+          <a class="more" routerLink="/store">
+            לכל המוצרים <tt-icon name="chevron" [size]="16" dir="auto"></tt-icon>
+          </a>
+        </header>
 
-      <ng-container *ngIf="vm$ | async as vm; else loading">
         <div class="tt-grid reserve-grid">
           <tt-product-card *ngFor="let product of vm.featured"
                            [product]="product"
                            [lookups]="vm.lookups">
           </tt-product-card>
         </div>
-      </ng-container>
-      <ng-template #loading><tt-skeleton-grid [count]="4"></tt-skeleton-grid></ng-template>
-    </section>
+      </section>
+    </ng-container>
 
-    <section class="tt-container tt-section">
-      <div class="tt-section__head">
-        <h2>משחקים</h2>
-        <a routerLink="/games">כל המשחקים →</a>
-      </div>
-      <div class="tt-grid reserve-promos">
-        <tt-game-card *ngFor="let game of games$ | async" [game]="game"></tt-game-card>
+    <ng-template #loading>
+      <tt-hero [product]="null"></tt-hero>
+      <section class="tt-container tt-section">
+        <tt-skeleton-grid [count]="4"></tt-skeleton-grid>
+      </section>
+    </ng-template>
+
+    <!-- Games. A rail rather than a grid: there are few of them, they are wide,
+         and a rail scrolls naturally on a phone instead of stacking. -->
+    <section class="tt-section tt-section--raised">
+      <div class="tt-container">
+        <header class="tt-section__head">
+          <div>
+            <p class="tt-eyebrow">לפי משחק</p>
+            <h2>מה משחקים היום</h2>
+          </div>
+          <a class="more" routerLink="/games">
+            כל המשחקים <tt-icon name="chevron" [size]="16" dir="auto"></tt-icon>
+          </a>
+        </header>
+
+        <div class="rail reserve-rail">
+          <tt-game-card *ngFor="let game of games$ | async" [game]="game"></tt-game-card>
+        </div>
       </div>
     </section>
 
     <section class="tt-container tt-section" *ngIf="promotions$ | async as promotions">
-      <div class="tt-section__head" *ngIf="promotions.length > 0">
-        <h2>מבצעים פעילים</h2>
-        <a routerLink="/deals">לכל המבצעים →</a>
-      </div>
-      <div class="tt-grid reserve-promos" *ngIf="promotions.length > 0">
-        <article class="tt-card tt-card--pad" *ngFor="let promotion of promotions">
-          <span class="tt-badge tt-badge--accent">מבצע</span>
-          <h3>{{ promotion.title | t }}</h3>
-          <p class="tt-muted">{{ promotion.description | t }}</p>
-        </article>
-      </div>
+      <ng-container *ngIf="promotions.length > 0">
+        <header class="tt-section__head">
+          <div>
+            <p class="tt-eyebrow">פעיל עכשיו</p>
+            <h2>מבצעים</h2>
+          </div>
+          <a class="more" routerLink="/deals">
+            לכל המבצעים <tt-icon name="chevron" [size]="16" dir="auto"></tt-icon>
+          </a>
+        </header>
+
+        <div class="promos">
+          <article class="promo" *ngFor="let promotion of promotions">
+            <tt-icon name="tag" [size]="18"></tt-icon>
+            <div>
+              <h3>{{ promotion.title | t }}</h3>
+              <p>{{ promotion.description | t }}</p>
+            </div>
+          </article>
+        </div>
+      </ng-container>
     </section>
 
-    <section class="tt-container tt-section">
-      <div class="tt-section__head">
-        <h2>מה לקוחות אומרים</h2>
-        <a routerLink="/reviews">כל הביקורות →</a>
-      </div>
-      <div class="tt-grid reserve-reviews">
-        <tt-review-card *ngFor="let review of (reviews$ | async)" [review]="review"></tt-review-card>
-      </div>
+    <!-- Reassurance appears once, here, rather than repeating on every section. -->
+    <section class="tt-container tt-section tt-section--tight">
+      <tt-trust-badges></tt-trust-badges>
     </section>
 
+    <!-- Reviews and questions share a row on a wide screen: two short blocks
+         side by side, instead of two more full-width bands. -->
     <section class="tt-container tt-section">
-      <div class="tt-section__head">
-        <h2>שאלות נפוצות</h2>
-        <a routerLink="/faq">כל השאלות →</a>
+      <div class="split">
+        <div>
+          <header class="tt-section__head">
+            <h2>מה לקוחות אומרים</h2>
+            <a class="more" routerLink="/reviews">
+              הכל <tt-icon name="chevron" [size]="16" dir="auto"></tt-icon>
+            </a>
+          </header>
+          <div class="tt-stack reserve-reviews">
+            <tt-review-card *ngFor="let review of (reviews$ | async)" [review]="review"></tt-review-card>
+          </div>
+        </div>
+
+        <div>
+          <header class="tt-section__head">
+            <h2>שאלות נפוצות</h2>
+            <a class="more" routerLink="/faq">
+              הכל <tt-icon name="chevron" [size]="16" dir="auto"></tt-icon>
+            </a>
+          </header>
+          <tt-faq-accordion class="reserve-faq" [entries]="(faq$ | async) ?? []"></tt-faq-accordion>
+        </div>
       </div>
-      <tt-faq-accordion class="reserve-faq" [entries]="(faq$ | async) ?? []"></tt-faq-accordion>
     </section>
   `,
   styles: [`
-    .hero {
-      padding-block: var(--tt-space-8) var(--tt-space-7);
-      background:
-        radial-gradient(circle at 80% 0%, var(--tt-brand-tint), transparent 55%),
-        radial-gradient(circle at 10% 20%, var(--tt-accent-tint), transparent 45%);
+    h2 { margin: 0; font-size: var(--tt-text-2xl); letter-spacing: var(--tt-tracking-display); }
+    .tt-section__head p { margin: 0 0 var(--tt-space-1); }
+
+    .more {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--tt-space-1);
+      color: var(--tt-text-muted);
+      font-size: var(--tt-text-sm);
+      font-weight: 600;
+      white-space: nowrap;
     }
-    .hero__inner { display: flex; flex-direction: column; align-items: flex-start; gap: var(--tt-space-3); }
-    .hero h1 { font-size: clamp(2rem, 5vw, var(--tt-text-4xl)); max-inline-size: 18ch; margin: 0; }
-    .lead { max-inline-size: 60ch; font-size: var(--tt-text-lg); }
-    .trust { display: block; inline-size: 100%; margin-block-start: var(--tt-space-5); }
-    /* Async sections reserve their height so late-arriving data cannot push the
-       page around under the reader. */
-    .reserve-grid { min-block-size: 358px; }
-    .reserve-promos { min-block-size: 190px; }
+    .more:hover { color: var(--tt-brand-300); text-decoration: none; }
+
+    /* Games rail: scrolls horizontally, snaps, and hides its scrollbar. */
+    .rail {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(240px, 1fr);
+      gap: var(--tt-space-4);
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding-block-end: var(--tt-space-2);
+      scrollbar-width: none;
+    }
+    .rail::-webkit-scrollbar { display: none; }
+    .rail > * { scroll-snap-align: start; }
+
+    .promos {
+      display: grid;
+      gap: var(--tt-space-4);
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+    .promo {
+      display: flex;
+      gap: var(--tt-space-3);
+      padding: var(--tt-space-4);
+      border-radius: var(--tt-radius-lg);
+      background: var(--tt-surface);
+      border: 1px solid var(--tt-border);
+      /* A gold hairline on the leading edge marks it as an offer without
+         wrapping the whole card in colour. */
+      border-inline-start: 3px solid var(--tt-gold-500);
+    }
+    .promo tt-icon { color: var(--tt-gold-400); margin-block-start: 2px; }
+    .promo h3 { margin: 0 0 var(--tt-space-1); font-size: var(--tt-text-md); }
+    .promo p { margin: 0; color: var(--tt-text-muted); font-size: var(--tt-text-sm); }
+
+    .split {
+      display: grid;
+      gap: var(--tt-space-7);
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      align-items: start;
+    }
+
+    /* Async sections reserve their height so late data cannot push the page
+       around under the reader. */
+    .reserve-grid { min-block-size: 340px; }
+    .reserve-rail { min-block-size: 172px; }
     .reserve-reviews { min-block-size: 220px; }
     .reserve-faq { min-block-size: 260px; }
-    article h3 { margin-block: var(--tt-space-2) var(--tt-space-1); font-size: var(--tt-text-lg); }
-    article p { margin: 0; font-size: var(--tt-text-sm); }
+
+    @media (max-width: 700px) {
+      h2 { font-size: var(--tt-text-xl); }
+    }
   `],
 })
 export class HomePage {

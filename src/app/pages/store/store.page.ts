@@ -46,11 +46,22 @@ interface StoreViewModel {
       </header>
 
       <form class="filters tt-panel" (submit)="$event.preventDefault()">
-        <label class="tt-field grow">
+        <label class="tt-field grow search-field">
           <span class="tt-label">חיפוש</span>
           <input class="tt-input" type="search" [ngModel]="search$ | async" name="search"
                  (ngModelChange)="setSearch($event)" placeholder="שם מוצר, משחק או תגית…" />
         </label>
+
+        <!-- On a phone the five selects filled the entire first screen, so a
+             customer saw filters and no products. They collapse behind a
+             summary below 720px and are forced open above it, which needs no
+             JavaScript and stays keyboard accessible. -->
+        <details class="refine">
+          <summary>
+            <span>סינון</span>
+            <span class="refine__sign" aria-hidden="true"></span>
+          </summary>
+          <div class="refine__body">
 
         <label class="tt-field">
           <span class="tt-label">משחק</span>
@@ -98,6 +109,8 @@ interface StoreViewModel {
         </label>
 
         <button type="button" class="tt-btn tt-btn--quiet" (click)="clear()" *ngIf="hasFilters">איפוס</button>
+          </div>
+        </details>
       </form>
 
       <ng-container *ngIf="error(); else content">
@@ -137,19 +150,66 @@ interface StoreViewModel {
     .filters {
       display: grid;
       gap: var(--tt-space-3);
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       align-items: end;
       margin-block-end: var(--tt-space-5);
     }
-    /* Search takes its own row; the five selects then divide the next one
-       evenly, instead of one of them being stranded on a row of its own. */
     .grow { grid-column: 1 / -1; }
+
+    .refine { grid-column: 1 / -1; }
+    .refine > summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--tt-space-2);
+      min-block-size: 44px;
+      padding-inline: var(--tt-space-1);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: var(--tt-text-sm);
+      color: var(--tt-text-muted);
+      list-style: none;
+    }
+    .refine > summary::-webkit-details-marker { display: none; }
+    .refine__sign {
+      position: relative;
+      inline-size: 12px;
+      block-size: 12px;
+      color: var(--tt-brand-400);
+    }
+    .refine__sign::before, .refine__sign::after {
+      content: '';
+      position: absolute;
+      inset-block-start: 50%;
+      inline-size: 12px;
+      block-size: 2px;
+      background: currentColor;
+      transform: translateY(-50%);
+      transition: opacity var(--tt-duration-fast) var(--tt-ease);
+    }
+    .refine__sign::after { transform: translateY(-50%) rotate(90deg); }
+    .refine[open] .refine__sign::after { opacity: 0; }
+
+    .refine__body {
+      display: grid;
+      gap: var(--tt-space-3);
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      padding-block-start: var(--tt-space-3);
+    }
     .count { margin-block-end: var(--tt-space-3); }
     /* One skeleton row's worth of space, so the first response does not jump. */
     .tt-grid { min-block-size: 358px; }
     .more { display: flex; justify-content: center; margin-block-start: var(--tt-space-5); }
+    @media (max-width: 719px) {
+      .head h1 { font-size: var(--tt-text-2xl); }
+    }
+
+    /* Above the phone breakpoint the disclosure is not wanted: the selects are
+       always shown and the summary is hidden. The UA hides a closed details'
+       contents, so this rule has to be specific enough to win. */
     @media (min-width: 720px) {
-      .filters { grid-template-columns: repeat(5, 1fr); }
+      .refine > summary { display: none; }
+      .refine:not([open]) > .refine__body { display: grid; }
+      .refine__body { grid-template-columns: repeat(5, 1fr); padding-block-start: 0; }
     }
   `],
 })

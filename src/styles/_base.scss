@@ -113,7 +113,7 @@ img { max-width: 100%; display: block; }
 .tt-faint { color: var(--tt-text-faint); font-size: var(--tt-text-sm); }
 .tt-eyebrow {
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--tt-tracking-eyebrow);
   font-size: var(--tt-text-xs);
   font-weight: 700;
   color: var(--tt-brand-400);
@@ -168,9 +168,26 @@ img { max-width: 100%; display: block; }
 .tt-btn--primary {
   background: var(--tt-brand-500);
   color: var(--tt-text-on-brand);
+  box-shadow: 0 6px 20px rgba(109, 74, 255, 0.32);
 }
 
-.tt-btn--primary:hover:not(:disabled) { background: var(--tt-brand-400); }
+.tt-btn--primary:hover:not(:disabled) {
+  background: var(--tt-brand-400);
+  box-shadow: 0 10px 28px rgba(109, 74, 255, 0.42);
+}
+
+/* The buy action. Gold because it is the moment money is involved, and because
+   a screen with two violet buttons has no primary action at all. */
+.tt-btn--buy {
+  background: linear-gradient(135deg, var(--tt-gold-400), var(--tt-gold-600));
+  color: var(--tt-text-on-gold);
+  font-weight: 700;
+  box-shadow: 0 6px 20px rgba(224, 151, 43, 0.28);
+}
+
+.tt-btn--buy:hover:not(:disabled) {
+  box-shadow: 0 10px 28px rgba(224, 151, 43, 0.4);
+}
 
 .tt-btn--ghost {
   background: transparent;
@@ -204,7 +221,7 @@ img { max-width: 100%; display: block; }
 }
 
 .tt-badge--brand { background: var(--tt-brand-tint); color: var(--tt-brand-400); border-color: transparent; }
-.tt-badge--accent { background: var(--tt-accent-tint); color: #c3b4ff; border-color: transparent; }
+.tt-badge--accent { background: var(--tt-gold-tint); color: var(--tt-gold-400); border-color: transparent; }
 .tt-badge--success { background: var(--tt-success-tint); color: var(--tt-success); border-color: transparent; }
 .tt-badge--warning { background: var(--tt-warning-tint); color: var(--tt-warning); border-color: transparent; }
 .tt-badge--danger { background: var(--tt-danger-tint); color: var(--tt-danger); border-color: transparent; }
@@ -324,3 +341,84 @@ img { max-width: 100%; display: block; }
 }
 
 .tt-skip-link:focus { inset-block-start: 0; }
+
+// --- Money -------------------------------------------------------------------
+//
+// A price is the most important number on a commerce page, and until now it was
+// styled as ordinary body text. These classes give it authority and, just as
+// importantly, tabular figures so a column of prices lines up digit for digit
+// instead of wobbling.
+
+.tt-price {
+  font-family: var(--tt-font-numeric);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--tt-gold-400);
+  line-height: var(--tt-leading-tight);
+}
+
+.tt-price--lg { font-size: var(--tt-text-2xl); }
+.tt-price--xl { font-size: var(--tt-text-3xl); }
+
+/* The old price, struck through. Muted so the saving reads as the story. */
+.tt-price-was {
+  font-family: var(--tt-font-numeric);
+  font-variant-numeric: tabular-nums;
+  color: var(--tt-text-faint);
+  text-decoration: line-through;
+  font-size: var(--tt-text-sm);
+}
+
+/* Any figure in a table or list: aligns, does not shout. */
+.tt-numeric {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+// --- Section rhythm ----------------------------------------------------------
+//
+// The homepage previously repeated one section shape five times, which is what
+// made it read as generated. These give a section somewhere else to go.
+
+.tt-section--tight { padding-block: var(--tt-space-6); }
+.tt-section--loose { padding-block: var(--tt-space-9); }
+
+/* A section whose ground is lifted, used to break a long run of identical
+   blocks without inventing a new layout for each one. */
+.tt-section--raised {
+  background: var(--tt-bg-elevated);
+  border-block: 1px solid var(--tt-border);
+}
+
+// --- Motion ------------------------------------------------------------------
+//
+// Three named speeds, one easing family, applied through classes so a component
+// does not invent its own timing.
+
+.tt-motion-fast { transition-duration: var(--tt-duration-fast); transition-timing-function: var(--tt-ease); }
+.tt-motion { transition-duration: var(--tt-duration); transition-timing-function: var(--tt-ease); }
+.tt-motion-slow { transition-duration: var(--tt-duration-slow); transition-timing-function: var(--tt-ease-out); }
+
+/* A first-paint rise, used sparingly for content that arrives after a fetch. */
+@keyframes tt-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+.tt-rise {
+  animation: tt-rise var(--tt-duration-slow) var(--tt-ease-out) both;
+}
+
+/* Someone who has asked for less motion gets none of it. This is the one place
+   the preference is honoured, so no component has to remember. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

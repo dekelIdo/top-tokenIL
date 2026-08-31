@@ -5,19 +5,30 @@ import { LocalizePipe } from '../../core/i18n';
 import {
   FaqEntry, Fulfillment, FulfillmentStatus, ORDER_STATUS_FLOW, OrderStatus, Review,
 } from '../../domain';
+import { IconComponent, IconName } from './icon.component';
 import { StarRatingComponent } from './star-rating.component';
 
-/** Trust signals. Each claim here is one the platform can actually keep. */
+/**
+ * Trust signals. Every claim here is one the platform can actually keep.
+ *
+ * Class names are prefixed rather than generic. Several components live in this
+ * file, and a bare `.list` in two of them collided: the FAQ accordion's rules
+ * won, which left these rendering as a bulleted column instead of a grid. The
+ * host is also given an explicit `display`, because a component host is inline
+ * by default and an inline host cannot lay its children out.
+ */
 @Component({
   selector: 'tt-trust-badges',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <ul class="list">
-      <li *ngFor="let signal of signals">
-        <span class="glyph" aria-hidden="true">{{ signal.icon }}</span>
-        <span>
+    <ul class="trust-list">
+      <li class="trust-item" *ngFor="let signal of signals">
+        <span class="trust-glyph" aria-hidden="true">
+          <tt-icon [name]="signal.icon" [size]="18"></tt-icon>
+        </span>
+        <span class="trust-copy">
           <strong>{{ signal.title }}</strong>
           <span class="tt-faint">{{ signal.detail }}</span>
         </span>
@@ -25,34 +36,46 @@ import { StarRatingComponent } from './star-rating.component';
     </ul>
   `,
   styles: [`
-    .list {
+    :host { display: block; }
+    .trust-list {
       list-style: none;
       margin: 0;
       padding: 0;
       display: grid;
       gap: var(--tt-space-3);
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     }
-    li {
+    .trust-item {
       display: flex;
       align-items: flex-start;
       gap: var(--tt-space-3);
-      padding: var(--tt-space-3);
-      border-radius: var(--tt-radius-md);
-      background: var(--tt-surface-2);
+      padding: var(--tt-space-4);
+      border-radius: var(--tt-radius-lg);
+      background: var(--tt-surface);
       border: 1px solid var(--tt-border);
     }
-    .glyph { font-size: 1.4rem; line-height: 1.2; }
-    strong { display: block; font-size: var(--tt-text-sm); }
-    .tt-faint { display: block; }
+    /* A tinted tile behind the icon, so the row has an anchor and the icon is
+       not floating next to the text. */
+    .trust-glyph {
+      display: grid;
+      place-items: center;
+      inline-size: 36px;
+      block-size: 36px;
+      flex: none;
+      border-radius: var(--tt-radius-md);
+      background: var(--tt-brand-tint);
+      color: var(--tt-brand-300);
+    }
+    .trust-copy strong { display: block; font-size: var(--tt-text-sm); margin-block-end: 2px; }
+    .trust-copy .tt-faint { display: block; line-height: var(--tt-leading-snug); }
   `],
 })
 export class TrustBadgesComponent {
-  readonly signals = [
-    { icon: '🔒', title: 'לא מבקשים סיסמאות', detail: 'לעולם לא נבקש סיסמה או קוד אימות' },
-    { icon: '🌍', title: 'אזור מוצג מראש', detail: 'האזור של כל קוד מוצג לפני התשלום' },
-    { icon: '⚡', title: 'זמן אספקה גלוי', detail: 'הזמן המשוער מופיע על כל מוצר' },
-    { icon: '🇮🇱', title: 'תמיכה בעברית', detail: 'צוות ישראלי, מענה בעברית' },
+  readonly signals: { icon: IconName; title: string; detail: string }[] = [
+    { icon: 'shield', title: 'לא מבקשים סיסמאות', detail: 'לעולם לא נבקש סיסמה או קוד אימות' },
+    { icon: 'globe', title: 'אזור מוצג מראש', detail: 'האזור של כל קוד מוצג לפני התשלום' },
+    { icon: 'clock', title: 'זמן אספקה גלוי', detail: 'הזמן המשוער מופיע על כל מוצר' },
+    { icon: 'user', title: 'תמיכה בעברית', detail: 'צוות ישראלי, מענה בעברית' },
   ];
 }
 
@@ -91,24 +114,65 @@ export class ReviewCardComponent {
   imports: [CommonModule, LocalizePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="list">
-      <details class="item" *ngFor="let entry of entries">
-        <summary>{{ entry.question | t }}</summary>
+    <div class="faq-list">
+      <details class="faq-item" *ngFor="let entry of entries">
+        <summary>
+          <span>{{ entry.question | t }}</span>
+          <span class="faq-sign" aria-hidden="true"></span>
+        </summary>
         <p class="tt-muted">{{ entry.answer | t }}</p>
       </details>
     </div>
   `,
   styles: [`
-    .list { display: flex; flex-direction: column; gap: var(--tt-space-2); }
-    .item {
+    :host { display: block; }
+    .faq-list { display: flex; flex-direction: column; gap: var(--tt-space-2); }
+    .faq-item {
       border: 1px solid var(--tt-border);
       border-radius: var(--tt-radius-md);
       background: var(--tt-surface);
       padding: var(--tt-space-4);
+      transition: border-color var(--tt-duration-fast) var(--tt-ease);
     }
-    summary { cursor: pointer; font-weight: 600; }
-    summary::marker { color: var(--tt-brand-500); }
-    p { margin-block: var(--tt-space-3) 0; font-size: var(--tt-text-sm); }
+    .faq-item[open] { border-color: var(--tt-border-brand); }
+    summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--tt-space-3);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: var(--tt-text-sm);
+      list-style: none;
+    }
+    /* The default triangle is replaced by a plus that becomes a minus, which
+       reads the same in both directions and does not flip in RTL. */
+    summary::-webkit-details-marker { display: none; }
+    summary::marker { content: ''; }
+    .faq-sign {
+      position: relative;
+      inline-size: 14px;
+      block-size: 14px;
+      flex: none;
+      color: var(--tt-brand-400);
+    }
+    .faq-sign::before,
+    .faq-sign::after {
+      content: '';
+      position: absolute;
+      inset-block-start: 50%;
+      inset-inline-start: 0;
+      inline-size: 14px;
+      block-size: 2px;
+      border-radius: 2px;
+      background: currentColor;
+      transform: translateY(-50%);
+      transition: transform var(--tt-duration) var(--tt-ease), opacity var(--tt-duration) var(--tt-ease);
+    }
+    .faq-sign::after { transform: translateY(-50%) rotate(90deg); }
+    .faq-item[open] .faq-sign::after { transform: translateY(-50%) rotate(0deg); opacity: 0; }
+
+    p { margin-block: var(--tt-space-3) 0; font-size: var(--tt-text-sm); line-height: var(--tt-leading); }
   `],
 })
 export class FaqAccordionComponent {

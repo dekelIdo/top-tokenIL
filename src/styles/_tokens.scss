@@ -1,52 +1,76 @@
 // -----------------------------------------------------------------------------
-// Design tokens
+// ZuzCOINS design tokens
 //
 // Every colour, space, radius, shadow and duration in the product comes from
 // here. Components never hard-code a hex value or a pixel gap, which is what
-// makes a later re-theme a single-file change.
+// makes a re-theme a single-file change.
 //
-// The palette is dark-first: a gaming storefront reads as premium on a dark
-// ground, and the light theme is a deliberate override rather than the default.
+// The idea behind the palette
+// ---------------------------
+// "זוז" is an old Hebrew silver coin and also the verb "to move". The system is
+// built on those two things: value, and speed.
+//
+//   ink      a deep violet-black ground, not a neutral grey. Gaming products
+//            live on dark surfaces, and a slight violet cast keeps it from
+//            reading as a developer's default #111.
+//   violet   the interactive colour. Everything a customer can press.
+//   gold     value. Prices, coin products, anything denominated in money. Gold
+//            gives a price visual authority without shouting, and ties to
+//            "coins" without drawing a literal coin next to every number.
+//
+// Green was deliberately dropped as the primary. Dark plus neon mint is the
+// house style of every crypto exchange, and this is a gaming shop, not one.
+// Green survives only where it means "this worked".
 // -----------------------------------------------------------------------------
 
 :root {
   // --- Brand ---------------------------------------------------------------
-  --tt-brand-500: #00e5a0; // primary action, "buy"
-  --tt-brand-600: #00c489;
-  --tt-brand-400: #4dffc4;
-  --tt-brand-tint: rgba(0, 229, 160, 0.12);
+  --tt-brand-300: #C4B2FF;
+  --tt-brand-400: #9B7CFF;
+  --tt-brand-500: #6D4AFF; // primary action
+  --tt-brand-600: #5836E0;
+  --tt-brand-700: #3F24AD;
+  --tt-brand-tint: rgba(109, 74, 255, 0.14);
+  --tt-brand-tint-strong: rgba(109, 74, 255, 0.26);
 
-  --tt-accent-500: #7c5cff; // secondary emphasis, promos
-  --tt-accent-tint: rgba(124, 92, 255, 0.14);
+  // Value. Prices, coin bundles, discounts.
+  --tt-gold-300: #FFE3A3;
+  --tt-gold-400: #FFD873;
+  --tt-gold-500: #F5B942;
+  --tt-gold-600: #E0972B;
+  --tt-gold-tint: rgba(245, 185, 66, 0.14);
 
   // --- Surfaces ------------------------------------------------------------
-  --tt-bg: #0a0d14;
-  --tt-surface: #111621;
-  --tt-surface-2: #171d2b;
-  --tt-surface-3: #1e2637;
-  --tt-overlay: rgba(6, 9, 15, 0.72);
+  // Five steps rather than four: cards sit on panels sit on the page, and with
+  // only three the middle layer had to do two jobs.
+  --tt-bg: #0B0A12;
+  --tt-bg-elevated: #100E1A;
+  --tt-surface: #15121F;
+  --tt-surface-2: #1C1829;
+  --tt-surface-3: #251F36;
+  --tt-overlay: rgba(6, 5, 12, 0.78);
 
   // --- Text ----------------------------------------------------------------
-  --tt-text: #eef2f8;
-  --tt-text-muted: #9aa6bd;
-  /* Lightened from #6b7891, which measured 3.79:1 on the app background and
-     failed the 4.5:1 minimum for body-size text. */
-  --tt-text-faint: #8d9ab2;
-  --tt-text-on-brand: #04140e;
+  --tt-text: #F2EFFA;
+  --tt-text-muted: #A79FC0;
+  --tt-text-faint: #8B83A6;
+  --tt-text-on-brand: #FFFFFF;
+  --tt-text-on-gold: #241A05;
 
   // --- Lines ---------------------------------------------------------------
-  --tt-border: rgba(255, 255, 255, 0.08);
-  --tt-border-strong: rgba(255, 255, 255, 0.16);
+  --tt-border: rgba(255, 255, 255, 0.09);
+  --tt-border-strong: rgba(255, 255, 255, 0.18);
+  --tt-border-brand: rgba(109, 74, 255, 0.45);
 
   // --- Status --------------------------------------------------------------
-  --tt-success: #35d07f;
-  --tt-warning: #ffb020;
-  --tt-danger: #ff5c72;
-  --tt-info: #4f8cff;
-  --tt-success-tint: rgba(53, 208, 127, 0.14);
+  --tt-success: #2FD48F;
+  --tt-warning: #FFB020;
+  --tt-danger: #FF5C72;
+  --tt-info: #55A0FF;
+  --tt-success-tint: rgba(47, 212, 143, 0.14);
   --tt-warning-tint: rgba(255, 176, 32, 0.14);
   --tt-danger-tint: rgba(255, 92, 114, 0.14);
-  --tt-info-tint: rgba(79, 140, 255, 0.14);
+  --tt-info-tint: rgba(85, 160, 255, 0.14);
 
   // --- Spacing (4px base) --------------------------------------------------
   --tt-space-1: 0.25rem;
@@ -57,23 +81,32 @@
   --tt-space-6: 2rem;
   --tt-space-7: 3rem;
   --tt-space-8: 4rem;
+  --tt-space-9: 6rem;
 
   // --- Radius --------------------------------------------------------------
-  --tt-radius-sm: 8px;
-  --tt-radius-md: 12px;
-  --tt-radius-lg: 18px;
-  --tt-radius-xl: 26px;
+  // Tightened from the previous scale. Very round corners read as friendly and
+  // generic; slightly tighter reads as a product with engineering behind it.
+  --tt-radius-sm: 6px;
+  --tt-radius-md: 10px;
+  --tt-radius-lg: 14px;
+  --tt-radius-xl: 20px;
   --tt-radius-pill: 999px;
 
   // --- Elevation -----------------------------------------------------------
-  --tt-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --tt-shadow-2: 0 8px 24px rgba(0, 0, 0, 0.36);
-  --tt-shadow-3: 0 20px 48px rgba(0, 0, 0, 0.46);
-  --tt-glow: 0 0 0 1px var(--tt-brand-500), 0 8px 32px rgba(0, 229, 160, 0.22);
+  // Shadows on a dark ground are nearly invisible, so depth comes mostly from
+  // surface steps and a hairline. These exist for genuinely floating things.
+  --tt-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --tt-shadow-2: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --tt-shadow-3: 0 24px 60px rgba(0, 0, 0, 0.55);
+  --tt-ring-brand: 0 0 0 1px var(--tt-border-brand), 0 8px 28px rgba(109, 74, 255, 0.28);
+  --tt-ring-gold: 0 0 0 1px rgba(245, 185, 66, 0.4);
 
   // --- Typography ----------------------------------------------------------
   --tt-font: 'Heebo', 'Rubik', 'Segoe UI', system-ui, sans-serif;
   --tt-font-display: 'Heebo', 'Rubik', system-ui, sans-serif;
+  // Tabular figures so prices in a column line up digit for digit.
+  --tt-font-numeric: 'Heebo', 'Segoe UI', system-ui, sans-serif;
+
   --tt-text-xs: 0.75rem;
   --tt-text-sm: 0.875rem;
   --tt-text-md: 1rem;
@@ -82,34 +115,67 @@
   --tt-text-2xl: 1.75rem;
   --tt-text-3xl: 2.25rem;
   --tt-text-4xl: 3rem;
-  --tt-leading-tight: 1.2;
+  --tt-text-5xl: 3.75rem;
+
+  --tt-leading-tight: 1.15;
+  --tt-leading-snug: 1.35;
   --tt-leading: 1.6;
 
+  // Hebrew display type needs a little negative tracking at large sizes or it
+  // looks loose next to the Latin wordmark.
+  --tt-tracking-display: -0.02em;
+  --tt-tracking-eyebrow: 0.12em;
+
   // --- Motion --------------------------------------------------------------
-  --tt-duration-fast: 120ms;
-  --tt-duration: 220ms;
-  --tt-duration-slow: 400ms;
-  --tt-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  // Three speeds, one easing family. Anything that needs a fourth is usually a
+  // sign the interaction is doing too much.
+  --tt-duration-fast: 120ms;   // hover, focus, colour
+  --tt-duration: 220ms;        // the default: reveals, small movement
+  --tt-duration-slow: 420ms;   // deliberate, entrance of something large
+  --tt-ease: cubic-bezier(0.22, 0.61, 0.36, 1);       // standard, decelerating
+  --tt-ease-out: cubic-bezier(0.16, 1, 0.3, 1);       // emphasised arrival
+  --tt-ease-in: cubic-bezier(0.55, 0, 0.55, 0.2);     // exits
 
   // --- Layout --------------------------------------------------------------
-  --tt-container: 1200px;
-  --tt-header-height: 64px;
+  --tt-container: 1240px;
+  --tt-container-narrow: 780px;
+  --tt-header-height: 68px;
+
+  // --- Z-index -------------------------------------------------------------
+  // Named so nobody has to invent 9999 to win an argument with a stacking
+  // context they did not know existed.
+  --tt-z-base: 1;
+  --tt-z-sticky: 20;
+  --tt-z-header: 40;
+  --tt-z-drawer: 50;
+  --tt-z-overlay: 60;
+  --tt-z-toast: 80;
 }
 
 // The light theme re-declares only the tokens that change role, so no component
 // stylesheet needs a media query of its own.
 :root[data-theme='light'] {
-  --tt-bg: #f6f8fc;
-  --tt-surface: #ffffff;
-  --tt-surface-2: #f0f3f9;
-  --tt-surface-3: #e6ebf4;
-  --tt-overlay: rgba(16, 22, 34, 0.5);
-  --tt-text: #101623;
-  --tt-text-muted: #4d5a72;
-  --tt-text-faint: #75839c;
-  --tt-border: rgba(16, 22, 34, 0.1);
-  --tt-border-strong: rgba(16, 22, 34, 0.2);
-  --tt-shadow-1: 0 1px 2px rgba(16, 22, 34, 0.08);
-  --tt-shadow-2: 0 8px 24px rgba(16, 22, 34, 0.1);
-  --tt-shadow-3: 0 20px 48px rgba(16, 22, 34, 0.14);
+  --tt-bg: #F7F6FB;
+  --tt-bg-elevated: #FFFFFF;
+  --tt-surface: #FFFFFF;
+  --tt-surface-2: #F2F0F8;
+  --tt-surface-3: #E7E3F2;
+  --tt-overlay: rgba(11, 10, 18, 0.5);
+
+  --tt-text: #17132A;
+  --tt-text-muted: #544B72;
+  --tt-text-faint: #6E6690;
+  --tt-text-on-brand: #FFFFFF;
+
+  --tt-border: rgba(23, 19, 42, 0.11);
+  --tt-border-strong: rgba(23, 19, 42, 0.22);
+  --tt-border-brand: rgba(109, 74, 255, 0.4);
+
+  // Gold needs to darken on white or it disappears against the page.
+  --tt-gold-400: #C98A12;
+  --tt-gold-500: #A96F08;
+
+  --tt-shadow-1: 0 1px 2px rgba(23, 19, 42, 0.08);
+  --tt-shadow-2: 0 10px 30px rgba(23, 19, 42, 0.1);
+  --tt-shadow-3: 0 24px 60px rgba(23, 19, 42, 0.14);
 }

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ZuzCOINS">
+  <!-- Favicon: the mark on the brand ground, so the tab reads at 16px. -->
+  <defs>
+    <linearGradient id="fc" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFD873"/>
+      <stop offset="1" stop-color="#E0972B"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="#0B0A12"/>
+  <ellipse cx="32" cy="32" rx="20" ry="23" fill="url(#fc)"/>
+  <path d="M22 21h21l-14 22h14"
+        fill="none" stroke="#1A1428" stroke-width="5.6"
+        stroke-linecap="square" stroke-linejoin="miter"/>
+</svg>

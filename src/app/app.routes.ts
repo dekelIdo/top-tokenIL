@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 
+import { brandTitle } from './core/brand';
+
 import { cartNotEmptyGuard } from './pages/checkout/cart-not-empty.guard';
 import { LEGAL_PAGES } from './pages/legal/legal.content';
 
@@ -13,19 +15,19 @@ import { LEGAL_PAGES } from './pages/legal/legal.content';
 export const APP_ROUTES: Routes = [
   {
     path: '',
-    title: 'Top Token | מוצרי גיימינג דיגיטליים',
+    title: brandTitle(),
     loadComponent: () => import('./pages/home/home.page').then((m) => m.HomePage),
   },
   {
     path: 'store',
-    title: 'החנות | Top Token',
+    title: brandTitle('החנות'),
     loadComponent: () => import('./pages/store/store.page').then((m) => m.StorePage),
   },
   // /products is the canonical catalog path in the API; in the UI it is the store.
   { path: 'products', pathMatch: 'full', redirectTo: 'store' },
   {
     path: 'games',
-    title: 'משחקים | Top Token',
+    title: brandTitle('משחקים'),
     loadComponent: () => import('./pages/games/games.page').then((m) => m.GamesPage),
   },
   {
@@ -43,12 +45,12 @@ export const APP_ROUTES: Routes = [
   },
   {
     path: 'cart',
-    title: 'העגלה שלי | Top Token',
+    title: brandTitle('העגלה שלי'),
     loadComponent: () => import('./pages/cart/cart.page').then((m) => m.CartPage),
   },
   {
     path: 'checkout',
-    title: 'תשלום | Top Token',
+    title: brandTitle('תשלום'),
     canActivate: [cartNotEmptyGuard],
     loadComponent: () => import('./pages/checkout/checkout.page').then((m) => m.CheckoutPage),
   },
@@ -67,12 +69,12 @@ export const APP_ROUTES: Routes = [
   },
   {
     path: 'account',
-    title: 'האזור האישי | Top Token',
+    title: brandTitle('האזור האישי'),
     loadComponent: () => import('./pages/account/account.page').then((m) => m.AccountPage),
   },
   {
     path: 'account/orders',
-    title: 'ההזמנות שלי | Top Token',
+    title: brandTitle('ההזמנות שלי'),
     loadComponent: () => import('./pages/account/account-orders.page').then((m) => m.AccountOrdersPage),
   },
   {
@@ -81,39 +83,39 @@ export const APP_ROUTES: Routes = [
   },
   {
     path: 'support',
-    title: 'תמיכה | Top Token',
+    title: brandTitle('תמיכה'),
     loadComponent: () => import('./pages/support/support.page').then((m) => m.SupportPage),
   },
   {
     path: 'faq',
-    title: 'שאלות נפוצות | Top Token',
+    title: brandTitle('שאלות נפוצות'),
     loadComponent: () => import('./pages/support/faq.page').then((m) => m.FaqPage),
   },
   {
     path: 'reviews',
-    title: 'ביקורות | Top Token',
+    title: brandTitle('ביקורות'),
     loadComponent: () => import('./pages/reviews/reviews.page').then((m) => m.ReviewsPage),
   },
   {
     path: 'deals',
-    title: 'מבצעים | Top Token',
+    title: brandTitle('מבצעים'),
     loadComponent: () => import('./pages/deals/deals.page').then((m) => m.DealsPage),
   },
   {
     path: 'contact',
-    title: 'צור קשר | Top Token',
+    title: brandTitle('צור קשר'),
     loadComponent: () => import('./pages/support/support.page').then((m) => m.SupportPage),
   },
   // Static policy pages share one component and differ only by content record.
   ...LEGAL_PAGES.map((page) => ({
     path: page.slug,
-    title: `${page.title} | Top Token`,
+    title: brandTitle(page.title),
     loadComponent: () => import('./pages/legal/legal.page').then((m) => m.LegalPage),
     data: { slug: page.slug },
   })),
   {
     path: '**',
-    title: 'הדף לא נמצא | Top Token',
+    title: brandTitle('הדף לא נמצא'),
     loadComponent: () => import('./pages/not-found/not-found.page').then((m) => m.NotFoundPage),
   },
 ];

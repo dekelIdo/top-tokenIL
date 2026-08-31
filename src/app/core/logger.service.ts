@@ -14,18 +14,18 @@ export class LoggerService {
   debug(message: string, context?: Record<string, string | number | boolean>): void {
     if (environment.debugLogging) {
       // eslint-disable-next-line no-console
-      console.debug(`[top-token] ${message}`, context ?? '');
+      console.debug(`[zuzcoins] ${message}`, context ?? '');
     }
   }
 
   warn(message: string, context?: Record<string, string | number | boolean>): void {
     if (environment.debugLogging) {
-      console.warn(`[top-token] ${message}`, context ?? '');
+      console.warn(`[zuzcoins] ${message}`, context ?? '');
     }
   }
 
   /** Errors are always reported; the message must already be sanitised. */
   error(message: string, context?: Record<string, string | number | boolean>): void {
-    console.error(`[top-token] ${message}`, context ?? '');
+    console.error(`[zuzcoins] ${message}`, context ?? '');
   }
 }

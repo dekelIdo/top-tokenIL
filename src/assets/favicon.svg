@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Top Token">
-  <rect width="64" height="64" rx="14" fill="#0a0d14"/>
-  <rect x="6" y="6" width="52" height="52" rx="11" fill="#00e5a0"/>
-  <text x="32" y="43" font-family="Heebo, system-ui, sans-serif" font-size="28" font-weight="800"
-        text-anchor="middle" fill="#04140e">TT</text>
-</svg>

@@ -2,6 +2,9 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
+import { BRAND } from '../../core/brand';
+import { BrandLogoComponent } from './brand-logo.component';
+
 /**
  * Footer. It carries the legal and policy links an Israeli consumer store needs,
  * and states plainly that the site is in development and runs a payment
@@ -10,15 +13,15 @@ import { RouterLink } from '@angular/router';
 @Component({
   selector: 'tt-app-footer',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, BrandLogoComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <footer class="foot">
       <div class="tt-container">
         <div class="cols">
-          <div>
-            <strong class="brand">TOP TOKEN</strong>
-            <p class="tt-faint">חנות דיגיטלית למוצרי גיימינג: קודים, מנויים ומטבעות משחק.</p>
+          <div class="about">
+            <tt-brand-logo></tt-brand-logo>
+            <p class="tt-faint">{{ description }}</p>
           </div>
           <nav>
             <h2 class="col-title">חנות</h2>
@@ -49,7 +52,7 @@ import { RouterLink } from '@angular/router';
           והקודים המוצגים הם קודי הדגמה.
         </p>
 
-        <p class="tt-faint copy">© {{ year }} Top Token. כל הזכויות שמורות.</p>
+        <p class="tt-faint copy">© {{ year }} {{ brandName }}. כל הזכויות שמורות.</p>
       </div>
     </footer>
   `,
@@ -67,6 +70,7 @@ import { RouterLink } from '@angular/router';
       align-items: center;
     }
     .col-title { margin: 0 0 var(--tt-space-1); font-size: var(--tt-text-sm); font-weight: 700; }
+    .about tt-brand-logo { margin-block-end: var(--tt-space-2); }
     .brand { display: block; margin-block-end: var(--tt-space-2); letter-spacing: 0.06em; }
     .notice { margin-block-start: var(--tt-space-5); }
     .copy { margin-block: var(--tt-space-4) 0; }
@@ -74,4 +78,6 @@ import { RouterLink } from '@angular/router';
 })
 export class AppFooterComponent {
   readonly year = new Date().getFullYear();
+  readonly brandName = BRAND.name;
+  readonly description = BRAND.description.he;
 }
