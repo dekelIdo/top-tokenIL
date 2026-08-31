@@ -49,6 +49,7 @@ worse than one that does not start.
 | `SESSION_SECRET` | yes | 32+ characters, generated, never reused |
 | `PAYMENT_WEBHOOK_SECRET` | yes | 32+ characters, different from `SESSION_SECRET` |
 | `NOTIFICATION_TRANSPORT` | yes | `log` is refused; no mail provider exists yet, so `none` until one does |
+| `ADMIN_TOKENS` | yes | `name:token` pairs, one per operator, never shared. Without it nobody can deliver an order |
 | `CORS_ALLOWED_ORIGINS` | yes | the storefront origin; a wildcard is refused |
 | `COOKIE_SECURE` | yes | must be `true` |
 | `COOKIE_SAME_SITE` | no | `lax` unless the storefront is on another site |

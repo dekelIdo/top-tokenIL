@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { CustomersModule } from '../customers/customers.module';
+import { FulfillmentModule } from '../fulfillment/fulfillment.module';
 import { OrderAccessService } from '../orders/order-access.service';
 import { InventoryService } from '../orders/inventory.service';
 import { PaymentStateService } from './payment-state.service';
@@ -16,7 +17,7 @@ import { WebhooksController } from './webhooks.controller';
  * alternative would be a circular import.
  */
 @Module({
-  imports: [CustomersModule],
+  imports: [CustomersModule, FulfillmentModule],
   controllers: [PaymentsController, WebhooksController],
   providers: [
     PaymentsService,

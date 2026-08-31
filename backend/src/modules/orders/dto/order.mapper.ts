@@ -72,6 +72,18 @@ function toFulfillment(fulfillment: Fulfillment, orderIsPaid: boolean) {
     status: fulfillment.status,
     updatedAt: fulfillment.updatedAt.toISOString(),
     estimatedReadyAt: fulfillment.estimatedReadyAt?.toISOString() ?? null,
+    /**
+     * What the customer has to do for delivery to be possible.
+     *
+     * Released on the same condition as the delivery payload, and for the same
+     * reason: it is part of what they bought. Unlike the payload it is shown
+     * *before* delivery rather than after, because the customer performs the
+     * listing and cannot do it without being told the exact price.
+     *
+     * It carries a card name and a number. There is no credential in it,
+     * because none is ever collected.
+     */
+    instruction: orderIsPaid ? (fulfillment.customerInstruction ?? null) : null,
     delivery:
       orderIsPaid && fulfillment.deliveredAt
         ? {

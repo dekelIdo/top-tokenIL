@@ -18,6 +18,9 @@ const deployed = {
   NOTIFICATION_TRANSPORT: 'none',
   COOKIE_SECURE: 'true',
   CORS_ALLOWED_ORIGINS: 'https://top-tokenil.onrender.com',
+  // Without at least one operator nobody can deliver an order, so a deployment
+  // that omits this is broken in a way that only shows up after a sale.
+  ADMIN_TOKENS: `yuval:${'c'.repeat(48)},dekel:${'d'.repeat(48)}`,
 };
 
 const problemsOf = (env: NodeJS.ProcessEnv): string[] => {
@@ -185,5 +188,66 @@ describe('environment validation: production fails fast', () => {
     expect(() => validateEnvironment({ NODE_ENV: 'production' })).toThrow(
       EnvironmentValidationError,
     );
+  });
+});
+
+describe('operator credentials', () => {
+  it('parses named operators so every action is attributable', () => {
+    const config = validateEnvironment(deployed);
+
+    expect(config.operators.map((operator) => operator.name)).toEqual(['yuval', 'dekel']);
+  });
+
+  it('leaves the admin API with no operators when none are configured locally', () => {
+    // Development gets no default token. A default that works is a default that
+    // reaches production.
+    expect(validateEnvironment({}).operators).toEqual([]);
+  });
+
+  it('refuses to deploy without an operator', () => {
+    const { ADMIN_TOKENS, ...withoutOperators } = deployed;
+    const problems = problemsOf(withoutOperators);
+
+    expect(problems.some((p) => p.includes('ADMIN_TOKENS'))).toBe(true);
+  });
+
+  it('rejects a short operator token', () => {
+    const problems = problemsOf({ ...deployed, ADMIN_TOKENS: 'yuval:tooshort' });
+
+    expect(problems.some((p) => p.includes('at least'))).toBe(true);
+  });
+
+  it('rejects a placeholder token', () => {
+    const problems = problemsOf({ ...deployed, ADMIN_TOKENS: `yuval:change-me-${'x'.repeat(40)}` });
+
+    expect(problems.some((p) => p.includes('placeholder'))).toBe(true);
+  });
+
+  it('rejects two operators sharing one token, which would destroy attribution', () => {
+    const shared = 'e'.repeat(48);
+    const problems = problemsOf({ ...deployed, ADMIN_TOKENS: `yuval:${shared},dekel:${shared}` });
+
+    expect(problems.some((p) => p.includes('same token'))).toBe(true);
+  });
+
+  it('rejects a duplicated operator name', () => {
+    const problems = problemsOf({
+      ...deployed,
+      ADMIN_TOKENS: `yuval:${'f'.repeat(48)},yuval:${'g'.repeat(48)}`,
+    });
+
+    expect(problems.some((p) => p.includes('more than once'))).toBe(true);
+  });
+
+  it('rejects a malformed entry rather than silently skipping it', () => {
+    const problems = problemsOf({ ...deployed, ADMIN_TOKENS: 'no-colon-here' });
+
+    expect(problems.some((p) => p.includes('name:token'))).toBe(true);
+  });
+
+  it('keeps the token out of the error message for a malformed entry', () => {
+    const problems = problemsOf({ ...deployed, ADMIN_TOKENS: 'yuval' });
+
+    expect(problems.join(' ')).not.toContain('yuval:');
   });
 });

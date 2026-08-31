@@ -17,6 +17,12 @@ export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 /** Where customer notifications go. `log` sends nothing and is development only. */
 export type NotificationTransport = 'log' | 'none';
 
+/** One operator of the admin API. The token authenticates; the name attributes. */
+export interface OperatorCredential {
+  readonly name: string;
+  readonly token: string;
+}
+
 export interface AppConfig {
   readonly nodeEnv: NodeEnv;
   /** True for staging and production, which share the same hardening. */
@@ -59,6 +65,16 @@ export interface AppConfig {
 
   /** How often housekeeping releases expired holds. Zero disables the sweep. */
   readonly housekeepingIntervalSeconds: number;
+
+  /**
+   * Named operator credentials for the admin API, one per person.
+   *
+   * Named rather than shared, because every operator action is written to the
+   * audit log and "someone marked this order delivered" is not an audit trail.
+   * An empty list disables the admin API outright: no default token exists, so
+   * a deployment that forgets to configure operators exposes nothing.
+   */
+  readonly operators: readonly OperatorCredential[];
 
   readonly logLevel: LogLevel;
   readonly requestBodyLimit: string;
@@ -205,6 +221,12 @@ export function validateEnvironment(source: NodeJS.ProcessEnv = process.env): Ap
     problems.push('HOUSEKEEPING_INTERVAL_SECONDS must be between 0 and 3600');
   }
 
+  // --- Operators -----------------------------------------------------------
+  // `ADMIN_TOKENS` is a comma-separated list of `name:token` pairs. Absent, the
+  // admin API refuses every request; there is deliberately no default token,
+  // because a default that works is a default that ships.
+  const operators = parseOperators(source.ADMIN_TOKENS, problems, isDeployed);
+
   const logLevel = pickEnum(source.LOG_LEVEL, LOG_LEVELS, isDeployed ? 'info' : 'debug');
   const requestBodyLimit = source.REQUEST_BODY_LIMIT ?? '100kb';
 
@@ -229,6 +251,7 @@ export function validateEnvironment(source: NodeJS.ProcessEnv = process.env): Ap
     paymentWebhookSecret: paymentWebhookSecret || 'development-only-webhook-secret',
     notificationTransport,
     housekeepingIntervalSeconds,
+    operators,
     logLevel,
     requestBodyLimit,
   };
@@ -268,6 +291,83 @@ function splitList(value: string | undefined): string[] {
     .split(',')
     .map((entry) => entry.trim())
     .filter((entry) => entry.length > 0);
+}
+
+/**
+ * Parses `name:token,name:token` into named operator credentials.
+ *
+ * A malformed entry is a hard failure rather than a skipped line. Silently
+ * dropping an operator would leave someone unable to sign in with no
+ * explanation, and silently dropping the *only* operator would leave the admin
+ * API open to nobody while appearing configured.
+ */
+function parseOperators(
+  value: string | undefined,
+  problems: string[],
+  isDeployed: boolean,
+): OperatorCredential[] {
+  const entries = splitList(value);
+
+  if (entries.length === 0) {
+    if (isDeployed) {
+      problems.push(
+        'ADMIN_TOKENS is required in staging and production: without it no operator can deliver an order',
+      );
+    }
+    return [];
+  }
+
+  const operators: OperatorCredential[] = [];
+  const seenNames = new Set<string>();
+  const seenTokens = new Set<string>();
+
+  for (const entry of entries) {
+    const separator = entry.indexOf(':');
+    if (separator <= 0 || separator === entry.length - 1) {
+      problems.push(`ADMIN_TOKENS entries must look like "name:token"; received "${redact(entry)}"`);
+      continue;
+    }
+
+    const name = entry.slice(0, separator).trim();
+    const token = entry.slice(separator + 1).trim();
+
+    if (!/^[a-z0-9_-]{2,32}$/i.test(name)) {
+      problems.push(
+        `ADMIN_TOKENS operator name "${name}" must be 2-32 characters of letters, digits, "-" or "_"`,
+      );
+    }
+    if (seenNames.has(name.toLowerCase())) {
+      problems.push(`ADMIN_TOKENS contains the operator name "${name}" more than once`);
+    }
+    seenNames.add(name.toLowerCase());
+
+    // A short operator token is a guessable one, and it authorises marking
+    // orders delivered and reading every customer's contact details.
+    if (token.length < MIN_SECRET_LENGTH) {
+      problems.push(
+        `ADMIN_TOKENS token for "${name}" must be at least ${MIN_SECRET_LENGTH} characters (received ${token.length})`,
+      );
+    }
+    if (isWeakSecret(token)) {
+      problems.push(`ADMIN_TOKENS token for "${name}" looks like a placeholder; generate a random value`);
+    }
+    if (seenTokens.has(token)) {
+      // Two operators sharing a token destroys the attribution the audit log
+      // exists to provide.
+      problems.push('ADMIN_TOKENS contains the same token for more than one operator');
+    }
+    seenTokens.add(token);
+
+    operators.push({ name, token });
+  }
+
+  return operators;
+}
+
+/** Keeps a malformed entry out of the error message, in case it held a secret. */
+function redact(entry: string): string {
+  const separator = entry.indexOf(':');
+  return separator > 0 ? `${entry.slice(0, separator)}:***` : '***';
 }
 
 /** Catches the obvious copy-paste-from-the-example-file mistake. */

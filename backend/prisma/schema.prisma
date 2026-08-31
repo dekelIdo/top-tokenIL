@@ -699,6 +699,11 @@ model Fulfillment {
   deliveredAt      DateTime?         @map("delivered_at")
   /// Withheld until the order is paid; the service refuses to read it earlier.
   deliveryPayload  Json?             @map("delivery_payload")
+  /// What the customer must do for delivery to be possible: the exact transfer-
+  /// market listings for a coin order. Unlike `deliveryPayload` this is shown
+  /// *before* delivery, because the customer performs the listing. It carries no
+  /// secret: a player name and a price, never a credential.
+  customerInstruction Json?          @map("customer_instruction")
   failureReason    Json?             @map("failure_reason")
   operatorId       String?           @map("operator_id")
   createdAt        DateTime          @default(now()) @map("created_at")
