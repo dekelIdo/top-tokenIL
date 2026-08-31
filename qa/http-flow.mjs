@@ -403,14 +403,23 @@ try {
   check('a retry can succeed', approvedBody.status === 'SUCCEEDED', approvedBody.status);
 
   const paid = await (await fetch(`${API}/orders/${order.id}`, { headers: { Cookie: cookie } })).json();
+  // Either state is correct. A coin order is picked up by auto-fulfillment and
+  // advances to FULFILLMENT_PROCESSING with a transfer instruction; anything it
+  // cannot plan stays FULFILLMENT_PENDING for an operator.
   check(
     'the order moves to fulfillment once paid',
-    paid.status === 'FULFILLMENT_PENDING',
+    ['FULFILLMENT_PENDING', 'FULFILLMENT_PROCESSING'].includes(paid.status),
     paid.status,
   );
+
+  // The property that actually matters: planning a delivery is not performing
+  // one. Nothing may be marked delivered, and no code may exist, until a person
+  // or a supplier has actually delivered it.
+  const fulfillments = paid.fulfillments ?? [];
   check(
-    'no delivered code is invented for an unfulfilled order',
-    (paid.fulfillments ?? []).every((f) => f.status === 'PENDING' && !f.delivery),
+    'nothing is marked delivered and no code is invented',
+    fulfillments.every((f) => f.status !== 'DELIVERED' && !f.delivery),
+    fulfillments.map((f) => f.status).join(', ') || 'none',
   );
 
   // The browser must not be able to talk its way into a paid order.

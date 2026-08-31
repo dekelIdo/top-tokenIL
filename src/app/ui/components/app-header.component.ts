@@ -2,7 +2,6 @@ import {
   ChangeDetectionStrategy, Component, HostListener, inject, signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 
 import { CartFacade } from '../../state/cart.facade';
@@ -25,7 +24,7 @@ import { IconComponent } from './icon.component';
   selector: 'tt-app-header',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, RouterLink, RouterLinkActive,
+    CommonModule, RouterLink, RouterLinkActive,
     BrandLogoComponent, IconComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -43,11 +42,15 @@ import { IconComponent } from './icon.component';
           <a routerLink="/support" routerLinkActive="active">תמיכה</a>
         </nav>
 
-        <form class="search" role="search" (ngSubmit)="submitSearch()">
+        <!-- A template reference rather than ngModel: the value is only needed
+             on submit, and importing FormsModule here would pull it into the
+             eagerly loaded bundle for one input. That alone pushed the initial
+             bundle past its budget. -->
+        <form class="search" role="search" (submit)="submitSearch(q.value); $event.preventDefault()">
           <tt-icon name="search" [size]="18" class="search__icon"></tt-icon>
-          <input type="search"
+          <input #q
+                 type="search"
                  name="q"
-                 [(ngModel)]="query"
                  placeholder="חיפוש מוצר או משחק"
                  aria-label="חיפוש בחנות" />
         </form>
@@ -285,8 +288,6 @@ export class AppHeaderComponent {
   readonly scrolled = signal(false);
   readonly count = this.cart.itemCount;
 
-  query = '';
-
   @HostListener('window:scroll')
   onScroll(): void {
     // A small threshold rather than zero, so a one-pixel trackpad bounce does
@@ -294,8 +295,8 @@ export class AppHeaderComponent {
     this.scrolled.set(window.scrollY > 8);
   }
 
-  submitSearch(): void {
-    const term = this.query.trim();
+  submitSearch(raw: string): void {
+    const term = raw.trim();
     // An empty search goes to the store rather than nowhere, which is what
     // pressing enter on a blank field is asking for.
     void this.router.navigate(['/store'], term ? { queryParams: { search: term } } : {});

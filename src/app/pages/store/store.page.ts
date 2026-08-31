@@ -259,9 +259,18 @@ export class StorePage {
   );
 
   constructor() {
-    const gameId = this.route.snapshot.queryParamMap.get('game');
+    const params = this.route.snapshot.queryParamMap;
+
+    const gameId = params.get('game');
     if (gameId) {
       this.patch({ gameIds: [gameId] });
+    }
+
+    // The header search navigates here with `?search=`. Without this the box
+    // would appear to work and quietly return the whole catalogue.
+    const search = params.get('search');
+    if (search) {
+      this.patch({ search });
     }
     this.analytics.pageView('/store', 'Store');
   }

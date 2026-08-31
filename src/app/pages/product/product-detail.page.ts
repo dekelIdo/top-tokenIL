@@ -134,9 +134,9 @@ interface ProductViewModel {
 
                 <div class="buy tt-card tt-card--pad">
                   <div class="price-row">
-                    <span class="price">{{ offer.price.current | money }}</span>
-                    <span class="was tt-faint" *ngIf="offer.price.compareAt">{{ offer.price.compareAt | money }}</span>
-                    <span class="tt-badge tt-badge--brand" *ngIf="offer.price.discountPercent">
+                    <span class="tt-price tt-price--xl">{{ offer.price.current | money }}</span>
+                    <span class="tt-price-was" *ngIf="offer.price.compareAt">{{ offer.price.compareAt | money }}</span>
+                    <span class="tt-badge tt-badge--accent" *ngIf="offer.price.discountPercent">
                       −{{ offer.price.discountPercent }}%
                     </span>
                   </div>
@@ -168,14 +168,14 @@ interface ProductViewModel {
 
           <section class="tt-section" *ngIf="(reviews$ | async) as reviews">
             <div class="tt-section__head" *ngIf="reviews.length > 0"><h2>ביקורות</h2></div>
-            <div class="tt-grid" *ngIf="reviews.length > 0">
+            <div class="tt-grid tt-grid--fit" *ngIf="reviews.length > 0">
               <tt-review-card *ngFor="let review of reviews" [review]="review"></tt-review-card>
             </div>
           </section>
 
           <section class="tt-section" *ngIf="vm.related.length > 0">
             <div class="tt-section__head"><h2>מוצרים נוספים</h2></div>
-            <div class="tt-grid">
+            <div class="tt-grid tt-grid--fit">
               <tt-product-card *ngFor="let product of vm.related" [product]="product" [lookups]="vm.lookups">
               </tt-product-card>
             </div>
@@ -201,8 +201,24 @@ interface ProductViewModel {
   styles: [`
     .crumbs { margin-block-end: var(--tt-space-3); }
     .layout { display: grid; gap: var(--tt-space-5); grid-template-columns: 1fr; }
-    @media (min-width: 900px) { .layout { grid-template-columns: 380px 1fr; align-items: start; } }
-    .media { display: grid; place-items: center; padding: var(--tt-space-6); min-block-size: 280px; }
+    @media (min-width: 900px) {
+      .layout { grid-template-columns: 400px 1fr; align-items: start; }
+      /* The media column is far shorter than the details beside it, which left
+         a tall empty void down the side of the page. Sticking it keeps the
+         product in view while the options are read. */
+      .media { position: sticky; inset-block-start: calc(var(--tt-header-height) + var(--tt-space-4)); }
+    }
+    .media {
+      display: grid;
+      place-items: center;
+      padding: var(--tt-space-6);
+      min-block-size: 320px;
+      border-radius: var(--tt-radius-xl);
+      background:
+        radial-gradient(circle at 50% 115%, var(--tt-brand-tint), transparent 62%),
+        var(--tt-surface);
+      border: 1px solid var(--tt-border);
+    }
     .info-skeleton { min-block-size: 520px; }
     .media img { max-block-size: 220px; object-fit: contain; }
     .info { display: flex; flex-direction: column; gap: var(--tt-space-3); }
@@ -227,8 +243,8 @@ interface ProductViewModel {
     .badges { gap: var(--tt-space-1); }
     .delivery { font-size: var(--tt-text-sm); margin: 0; }
     .price-row { display: flex; align-items: baseline; gap: var(--tt-space-2); margin-block-end: var(--tt-space-3); }
-    .price { font-size: var(--tt-text-2xl); font-weight: 800; }
-    .was { text-decoration: line-through; }
+    
+    
     .grow { flex: 1; }
     .tt-alert span span { display: block; }
   `],

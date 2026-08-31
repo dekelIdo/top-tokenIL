@@ -74,7 +74,7 @@ check('product exposes variants', variantCount >= 5, `${variantCount} variants`)
 // Select the 500K variant, then a platform, then read the resolved offer price.
 await variantChips.nth(2).click();
 await page.waitForTimeout(250);
-const priceAfterVariant = await page.locator('.price').first().innerText();
+const priceAfterVariant = await page.locator('.tt-price').first().innerText();
 check('variant selection changes price', priceAfterVariant.includes('219'), `price=${priceAfterVariant}`);
 
 const platformChips = page.locator('.chooser').nth(1).locator('.chip');
