@@ -9,7 +9,7 @@ import {
   CheckoutFieldKey, CheckoutFieldValues, CheckoutRequirement, PaymentProviderId, PaymentStatus,
 } from '../../domain';
 import { CartFacade, CatalogFacade, CheckoutFacade } from '../../state';
-import { MoneyPipe, RegionBadgeComponent } from '../../ui';
+import { MoneyPipe, RegionBadgeComponent, IconComponent } from '../../ui';
 
 /**
  * Checkout.
@@ -26,7 +26,7 @@ import { MoneyPipe, RegionBadgeComponent } from '../../ui';
 @Component({
   selector: 'tt-checkout-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, LocalizePipe, MoneyPipe, RegionBadgeComponent],
+  imports: [CommonModule, FormsModule, RouterLink, LocalizePipe, MoneyPipe, RegionBadgeComponent, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="tt-container tt-section">
@@ -117,7 +117,7 @@ import { MoneyPipe, RegionBadgeComponent } from '../../ui';
             <h2>אמצעי תשלום</h2>
 
             <div class="tt-alert tt-alert--warning">
-              <span aria-hidden="true">🧪</span>
+              <tt-icon name="flask" [size]="18"></tt-icon>
               <span>
                 <strong>סימולציית תשלום</strong>
                 <span class="tt-faint">

@@ -27,7 +27,7 @@ import { AppFooterComponent, AppHeaderComponent, ToastHostComponent } from './ui
     /*
       The routed view arrives one lazy chunk later than the shell. Without a
       reserved main area the footer paints just under the header and then drops
-      down the page — which measured as the single largest layout shift on every
+      down the page, which measured as the single largest layout shift on every
       route. Reserving a viewport-height main keeps the footer where it belongs
       from the first frame.
     */

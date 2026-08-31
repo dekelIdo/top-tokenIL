@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
+import { IconComponent, IconName } from './icon.component';
+
 import { AppError } from '../../domain';
 
 /**
@@ -56,11 +58,11 @@ export class SkeletonGridComponent {
 @Component({
   selector: 'tt-empty-state',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="wrap">
-      <div class="glyph" aria-hidden="true">{{ icon }}</div>
+      <div class="glyph" aria-hidden="true"><tt-icon [name]="icon" [size]="26"></tt-icon></div>
       <h2>{{ title }}</h2>
       <p class="tt-muted">{{ message }}</p>
       <button type="button" class="tt-btn tt-btn--ghost" *ngIf="actionLabel" (click)="action.emit()">
@@ -77,13 +79,23 @@ export class SkeletonGridComponent {
       gap: var(--tt-space-2);
       padding: var(--tt-space-7) var(--tt-space-4);
     }
-    .glyph { font-size: 3rem; line-height: 1; margin-block-end: var(--tt-space-2); }
+    .glyph {
+      display: grid;
+      place-items: center;
+      inline-size: 56px;
+      block-size: 56px;
+      margin-block-end: var(--tt-space-2);
+      border-radius: var(--tt-radius-lg);
+      background: var(--tt-surface-2);
+      border: 1px solid var(--tt-border);
+      color: var(--tt-text-muted);
+    }
     h2 { font-size: var(--tt-text-xl); }
     p { max-inline-size: 44ch; }
   `],
 })
 export class EmptyStateComponent {
-  @Input() icon = '🔍';
+  @Input() icon: IconName = 'search';
   @Input() title = '';
   @Input() message = '';
   @Input() actionLabel?: string;
@@ -97,11 +109,11 @@ export class EmptyStateComponent {
 @Component({
   selector: 'tt-error-state',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="wrap" role="alert">
-      <div class="glyph" aria-hidden="true">⚠️</div>
+      <div class="glyph" aria-hidden="true"><tt-icon name="alert" [size]="24"></tt-icon></div>
       <h2>{{ title }}</h2>
       <p class="tt-muted">{{ message }}</p>
       <button type="button" class="tt-btn tt-btn--primary" *ngIf="error?.retryable !== false" (click)="retry.emit()">
@@ -118,7 +130,15 @@ export class EmptyStateComponent {
       gap: var(--tt-space-2);
       padding: var(--tt-space-7) var(--tt-space-4);
     }
-    .glyph { font-size: 2.5rem; line-height: 1; }
+    .glyph {
+      display: grid;
+      place-items: center;
+      inline-size: 52px;
+      block-size: 52px;
+      border-radius: var(--tt-radius-lg);
+      background: var(--tt-danger-tint);
+      color: var(--tt-danger);
+    }
     h2 { font-size: var(--tt-text-xl); }
     p { max-inline-size: 44ch; }
   `],

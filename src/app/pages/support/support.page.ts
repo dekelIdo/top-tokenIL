@@ -7,7 +7,7 @@ import { AnalyticsEvent, AnalyticsService } from '../../core/analytics';
 import { NotificationService } from '../../core/error';
 import { SupportTopic, toAppError } from '../../domain';
 import { SupportApiService } from '../../data/api';
-import { FaqAccordionComponent } from '../../ui';
+import { FaqAccordionComponent, IconComponent } from '../../ui';
 
 /**
  * Support. Also serves /contact — the two are the same conversation.
@@ -19,7 +19,7 @@ import { FaqAccordionComponent } from '../../ui';
 @Component({
   selector: 'tt-support-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, FaqAccordionComponent],
+  imports: [CommonModule, FormsModule, RouterLink, FaqAccordionComponent, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="tt-container tt-section narrow">
@@ -30,7 +30,7 @@ import { FaqAccordionComponent } from '../../ui';
       </p>
 
       <div class="tt-alert">
-        <span aria-hidden="true">🔒</span>
+        <tt-icon name="shield" [size]="18"></tt-icon>
         <span>
           <strong>לא נבקש מכם סיסמה</strong>
           <span class="tt-faint">
@@ -71,7 +71,7 @@ import { FaqAccordionComponent } from '../../ui';
       </form>
 
       <div class="tt-alert tt-alert--success" *ngIf="sentReference() as reference">
-        <span aria-hidden="true">✅</span>
+        <tt-icon name="check" [size]="18"></tt-icon>
         <span>
           <strong>הפנייה נקלטה. מספר הפנייה: {{ reference }}</strong>
           <span class="tt-faint">

@@ -388,6 +388,18 @@ img { max-width: 100%; display: block; }
 // The homepage previously repeated one section shape five times, which is what
 // made it read as generated. These give a section somewhere else to go.
 
+/* For pages with little content. `main` reserves a viewport of height so the
+   footer cannot jump while a route loads; without this a short page leaves that
+   reserved space as a black void beneath the content. */
+.tt-page-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-block-size: calc(100vh - var(--tt-header-height) - var(--tt-space-9));
+}
+
 .tt-section--tight { padding-block: var(--tt-space-6); }
 .tt-section--loose { padding-block: var(--tt-space-9); }
 

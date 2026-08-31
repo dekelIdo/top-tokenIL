@@ -12,7 +12,7 @@ import {
 import { CatalogFacade, OrderFacade } from '../../state';
 import {
   DeliveryPayloadComponent, ErrorStateComponent, FulfillmentBadgeComponent, MoneyPipe,
-  OrderStatusTimelineComponent, PlatformBadgeComponent, RegionBadgeComponent,
+  OrderStatusTimelineComponent, PlatformBadgeComponent, RegionBadgeComponent, IconComponent
 } from '../../ui';
 
 /** How often a still-moving order re-checks its status. */
@@ -29,8 +29,7 @@ const POLL_INTERVAL_MS = 2500;
   imports: [
     CommonModule, RouterLink, LocalizePipe, MoneyPipe,
     OrderStatusTimelineComponent, DeliveryPayloadComponent, FulfillmentBadgeComponent,
-    PlatformBadgeComponent, RegionBadgeComponent, ErrorStateComponent,
-  ],
+    PlatformBadgeComponent, RegionBadgeComponent, ErrorStateComponent, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="tt-container tt-section">
@@ -60,7 +59,7 @@ const POLL_INTERVAL_MS = 2500;
       <ng-template #content>
         <ng-container *ngIf="vm$ | async as vm; else loading">
           <div class="tt-alert tt-alert--success banner" *ngIf="celebrate">
-            <span aria-hidden="true">✅</span>
+            <tt-icon name="check" [size]="18"></tt-icon>
             <span>
               <strong>ההזמנה התקבלה</strong>
               <span class="tt-faint">אישור נשלח לכתובת {{ vm.order.contactEmail }}.</span>

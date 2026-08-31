@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 
 import { LocalizePipe } from '../../core/i18n';
 import { ToastService } from '../../core/error/toast.service';
+import { IconComponent, IconName } from './icon.component';
 
 /**
  * Toast outlet, mounted once by the app shell.
@@ -10,17 +11,17 @@ import { ToastService } from '../../core/error/toast.service';
  * This replaces Angular Material's snackbar. Material was pulling its whole
  * overlay and theming stack into the initial bundle for one notification widget,
  * and its visual language is the opposite of what this storefront should feel
- * like — so notifications are ours, built from the design tokens.
+ * like. Notifications are ours, built from the design tokens.
  */
 @Component({
   selector: 'tt-toast-host',
   standalone: true,
-  imports: [CommonModule, LocalizePipe],
+  imports: [CommonModule, LocalizePipe, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="host" role="status" aria-live="polite">
       <div class="toast" *ngFor="let toast of toasts()" [class]="'toast--' + toast.tone">
-        <span class="glyph" aria-hidden="true">{{ glyph(toast.tone) }}</span>
+        <tt-icon class="glyph" [name]="glyph(toast.tone)" [size]="18"></tt-icon>
         <span class="text">{{ toast.message | t }}</span>
         <button type="button" class="close" (click)="dismiss(toast.id)" aria-label="סגירה">×</button>
       </div>
@@ -71,7 +72,10 @@ export class ToastHostComponent {
     this.service.dismiss(id);
   }
 
-  glyph(tone: 'info' | 'success' | 'error'): string {
-    return tone === 'success' ? '✅' : tone === 'error' ? '⚠️' : 'ℹ️';
+  glyph(tone: 'info' | 'success' | 'error'): IconName {
+    if (tone === 'success') {
+      return 'check';
+    }
+    return tone === 'error' ? 'alert' : 'info';
   }
 }

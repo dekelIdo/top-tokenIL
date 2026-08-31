@@ -33,7 +33,7 @@ import {
       <h1>העגלה שלי</h1>
 
       <tt-empty-state *ngIf="cart.isEmpty()"
-                      icon="🛒"
+                      icon="cart"
                       title="העגלה ריקה"
                       message="עדיין לא הוספתם מוצרים. אפשר להתחיל מהחנות."
                       actionLabel="לחנות"

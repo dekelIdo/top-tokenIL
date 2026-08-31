@@ -15,7 +15,7 @@ import { CartFacade, CatalogFacade, CatalogLookups } from '../../state';
 import {
   ErrorStateComponent, FulfillmentBadgeComponent, MoneyPipe, PlatformBadgeComponent,
   ProductCardComponent, QuantitySelectorComponent, RegionBadgeComponent, ReviewCardComponent,
-  StarRatingComponent, StockBadgeComponent, CompactNumberPipe,
+  StarRatingComponent, StockBadgeComponent, CompactNumberPipe, IconComponent
 } from '../../ui';
 
 interface ProductViewModel {
@@ -40,8 +40,7 @@ interface ProductViewModel {
     CommonModule, RouterLink, LocalizePipe, MoneyPipe, CompactNumberPipe,
     PlatformBadgeComponent, RegionBadgeComponent, FulfillmentBadgeComponent, StockBadgeComponent,
     QuantitySelectorComponent, StarRatingComponent, ReviewCardComponent, ProductCardComponent,
-    ErrorStateComponent,
-  ],
+    ErrorStateComponent, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="tt-container tt-section">
@@ -111,7 +110,7 @@ interface ProductViewModel {
                 <div class="tt-alert tt-alert--warning"
                      *ngIf="regionOf(vm, offer) as region"
                      [class.tt-alert--warning]="!region.isRegionFree">
-                  <span aria-hidden="true">🌍</span>
+                  <tt-icon name="globe" [size]="18"></tt-icon>
                   <span>
                     <strong>אזור: {{ region.name | t }}</strong>
                     <span class="tt-faint" *ngIf="region.restrictionNotice">{{ region.restrictionNotice | t }}</span>

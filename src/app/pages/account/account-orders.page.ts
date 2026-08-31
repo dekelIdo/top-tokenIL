@@ -24,7 +24,7 @@ import { EmptyStateComponent, MoneyPipe } from '../../ui';
 
       <ng-container *ngIf="orders$ | async as orders">
         <tt-empty-state *ngIf="orders.length === 0"
-                        icon="📦"
+                        icon="box"
                         title="אין הזמנות להצגה"
                         message="הזמנות נשמרות בשרת. כל עוד האתר בפיתוח, ההיסטוריה מתאפסת ברענון הדף.">
         </tt-empty-state>

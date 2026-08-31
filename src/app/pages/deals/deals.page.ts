@@ -26,7 +26,7 @@ import { EmptyStateComponent, ProductCardComponent } from '../../ui';
 
       <ng-container *ngIf="vm$ | async as vm">
         <tt-empty-state *ngIf="vm.promotions.length === 0"
-                        icon="🏷️"
+                        icon="tag"
                         title="אין מבצעים פעילים כרגע"
                         message="שווה לחזור לבדוק, המבצעים מתחלפים.">
         </tt-empty-state>
@@ -44,7 +44,7 @@ import { EmptyStateComponent, ProductCardComponent } from '../../ui';
           <div class="tt-section__head"><h2>מוצרים במחיר מיוחד</h2></div>
 
           <tt-empty-state *ngIf="vm.discounted.length === 0"
-                          icon="💸"
+                          icon="tag"
                           title="אין כרגע מוצרים מוזלים"
                           message="אפשר לעיין בכל הקטלוג בינתיים.">
           </tt-empty-state>
