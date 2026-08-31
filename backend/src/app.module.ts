@@ -5,11 +5,13 @@ import { DatabaseModule } from './database/database.module';
 import { ApiExceptionFilter } from './common/errors/api-exception.filter';
 import { CorrelationMiddleware } from './common/interceptors/correlation.middleware';
 import { LoggingModule } from './common/logging/logging.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { CartModule } from './modules/cart/cart.module';
 import { CatalogModule } from './modules/catalog/catalog.module';
 import { CheckoutModule } from './modules/checkout/checkout.module';
 import { ContentModule } from './modules/content/content.module';
 import { CustomersModule } from './modules/customers/customers.module';
+import { FulfillmentModule } from './modules/fulfillment/fulfillment.module';
 import { HousekeepingModule } from './modules/housekeeping/housekeeping.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PaymentsModule } from './modules/payments/payments.module';
@@ -38,6 +40,8 @@ import { OrdersModule } from './modules/orders/orders.module';
     NotificationsModule,
     OrdersModule,
     PaymentsModule,
+    FulfillmentModule,
+    AdminModule,
     HousekeepingModule,
   ],
   providers: [ApiExceptionFilter],
