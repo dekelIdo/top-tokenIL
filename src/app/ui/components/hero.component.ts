@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
-import { Product } from '../../domain';
+import { Product, ProductDetail } from '../../domain';
+import { rankByValue } from '../../core/value';
 import { LocalizePipe } from '../../core/i18n';
 import { MoneyPipe } from '../money.pipe';
 import { IconComponent } from './icon.component';
@@ -50,6 +51,15 @@ import { IconComponent } from './icon.component';
             כל מוצר מציג את הפלטפורמה, את אזור החנות ואת זמן האספקה לפני התשלום.
             לא מבקשים סיסמה, ולא מבטיחים מה שאי אפשר לקיים.
           </p>
+
+          <!-- Commercial proof, not a slogan. The cheapest price per million in
+               the catalogue, computed from real offers. Rendered only when a
+               bundle with a quantity actually exists. -->
+          <div class="proof" *ngIf="bestPerUnit as best">
+            <span class="proof__label">מ־</span>
+            <span class="proof__value">{{ best.text }}</span>
+            <span class="proof__unit">למיליון קוינס</span>
+          </div>
 
           <div class="cta">
             <a class="tt-btn tt-btn--primary" routerLink="/store">
@@ -177,6 +187,29 @@ import { IconComponent } from './icon.component';
       line-height: var(--tt-leading);
     }
 
+    /* The price proof sits between the promise and the button, where the eye
+       lands after reading the headline. */
+    .proof {
+      display: flex;
+      align-items: baseline;
+      gap: var(--tt-space-2);
+      padding: var(--tt-space-3) var(--tt-space-4);
+      border-radius: var(--tt-radius-lg);
+      background: var(--tt-gold-tint);
+      border: 1px solid rgba(245, 185, 66, 0.28);
+    }
+    .proof__label { color: var(--tt-text-muted); font-size: var(--tt-text-sm); }
+    .proof__value {
+      font-family: var(--tt-font-numeric);
+      font-variant-numeric: tabular-nums;
+      font-size: var(--tt-text-3xl);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      color: var(--tt-gold-400);
+    }
+    .proof__unit { color: var(--tt-text-muted); font-size: var(--tt-text-sm); }
+
     .cta { display: flex; gap: var(--tt-space-3); flex-wrap: wrap; }
 
     .points {
@@ -282,4 +315,39 @@ import { IconComponent } from './icon.component';
 export class HeroComponent {
   /** The product to showcase. Absent renders the copy column alone. */
   @Input() product?: Product | null;
+
+  /**
+   * The coin product's offers, used for the price proof. Optional: the hero
+   * renders without it rather than waiting.
+   */
+  @Input() set ladder(detail: ProductDetail | null | undefined) {
+    this.bestPerUnit = this.cheapestPerUnit(detail);
+  }
+
+  /** Cheapest price per million in the catalogue, or null when none applies. */
+  bestPerUnit: { text: string } | null = null;
+
+  private cheapestPerUnit(detail: ProductDetail | null | undefined): { text: string } | null {
+    if (!detail) {
+      return null;
+    }
+
+    const ranked = rankByValue(detail.offers, detail.product.variants)
+      .map((row) => row.perUnitMinor)
+      .filter((value): value is number => value !== undefined);
+
+    if (ranked.length === 0) {
+      return null;
+    }
+
+    const cheapest = Math.min(...ranked);
+    const currency = detail.offers[0]?.price.current.currency ?? 'ILS';
+
+    // Formatted here rather than through the money pipe because the value is a
+    // derived rate, and rounding it to whole shekels keeps the headline number
+    // readable.
+    const shekels = Math.round(cheapest / 100);
+    const symbol = currency === 'ILS' ? '₪' : currency;
+    return { text: `${shekels} ${symbol}` };
+  }
 }

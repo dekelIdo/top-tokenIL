@@ -40,10 +40,13 @@ import { BrandLogoComponent } from './brand-logo.component';
           <nav>
             <h2 class="col-title">מידע</h2>
             <a routerLink="/about">אודות</a>
+            <a routerLink="/business-details">פרטי העסק</a>
             <a routerLink="/terms">תנאי שימוש</a>
+            <a routerLink="/delivery">אספקה</a>
             <a routerLink="/privacy">פרטיות</a>
             <a routerLink="/refund-policy">מדיניות החזרים</a>
             <a routerLink="/accessibility">נגישות</a>
+            <a routerLink="/ip">סימני מסחר</a>
           </nav>
         </div>
 

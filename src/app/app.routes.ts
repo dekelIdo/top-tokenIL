@@ -3,7 +3,7 @@ import { Routes } from '@angular/router';
 import { brandTitle } from './core/brand';
 
 import { cartNotEmptyGuard } from './pages/checkout/cart-not-empty.guard';
-import { LEGAL_PAGES } from './pages/legal/legal.content';
+import { LEGAL_PAGES, LEGAL_PAGES_PENDING } from './pages/legal/legal.content';
 
 /**
  * Commerce routing map.
@@ -107,7 +107,7 @@ export const APP_ROUTES: Routes = [
     loadComponent: () => import('./pages/support/support.page').then((m) => m.SupportPage),
   },
   // Static policy pages share one component and differ only by content record.
-  ...LEGAL_PAGES.map((page) => ({
+  ...[...LEGAL_PAGES, ...LEGAL_PAGES_PENDING].map((page) => ({
     path: page.slug,
     title: brandTitle(page.title),
     loadComponent: () => import('./pages/legal/legal.page').then((m) => m.LegalPage),

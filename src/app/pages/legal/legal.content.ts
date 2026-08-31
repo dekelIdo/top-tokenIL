@@ -15,6 +15,15 @@ export interface LegalPageContent {
   readonly title: string;
   readonly intro: string;
   readonly sections: readonly LegalSection[];
+  /**
+   * Details only the business owner can supply, listed on the page itself.
+   *
+   * Israeli remote-sale rules require a seller to disclose specific facts about
+   * itself and the transaction. We cannot invent a company number or an address,
+   * so the page states plainly what is still missing rather than shipping a
+   * confident-sounding document with holes in it.
+   */
+  readonly awaitingFromOwner?: readonly string[];
 }
 
 export const LEGAL_PAGES: readonly LegalPageContent[] = [
@@ -158,6 +167,86 @@ export const LEGAL_PAGES: readonly LegalPageContent[] = [
   },
 ];
 
+/**
+ * Pages that exist as structure and still need their content from the business.
+ *
+ * Israeli consumer-protection rules for remote sales require the seller to
+ * disclose who it is, how to cancel, and how the product is delivered. The
+ * routes, navigation and layout are ready; the facts are not ours to make up.
+ */
+export const LEGAL_PAGES_PENDING: readonly LegalPageContent[] = [
+  {
+    slug: 'business-details',
+    title: 'פרטי העסק',
+    intro: 'לפי חוק הגנת הצרכן, עוסק שמוכר מרחוק חייב להציג את פרטי הזיהוי שלו. הפרטים כאן יושלמו לפני שהחנות מתחילה למכור.',
+    sections: [
+      {
+        heading: 'מה יופיע כאן',
+        paragraphs: [
+          'שם העוסק או החברה, מספר עוסק מורשה או ח.פ., כתובת למשלוח דואר, דרכי יצירת קשר וטלפון לשירות לקוחות.',
+          'עד להשלמת הפרטים אפשר ליצור איתנו קשר דרך עמוד התמיכה.',
+        ],
+      },
+    ],
+    awaitingFromOwner: [
+      'שם העוסק המורשה או שם החברה הרשומה',
+      'מספר עוסק מורשה או מספר ח.פ.',
+      'כתובת רשומה למשלוח דואר',
+      'טלפון ודוא"ל לשירות לקוחות',
+      'שם האחראי על פניות צרכנים',
+    ],
+  },
+  {
+    slug: 'delivery',
+    title: 'אספקה דיגיטלית',
+    intro: 'איך המוצר מגיע אליכם, וכמה זמן זה לוקח. זמני האספקה המוצגים בכל מוצר הם הערכה ולא התחייבות.',
+    sections: [
+      {
+        heading: 'איך מתבצעת האספקה',
+        paragraphs: [
+          'לכל מוצר מוצגת שיטת האספקה שלו לפני התשלום: קוד דיגיטלי, אספקה ידנית על ידי נציג, או שירות שמתבצע בתוך המשחק בתיאום איתכם.',
+          'לכל הזמנה נפתח דף מעקב עם הסטטוס העדכני, מרגע התשלום ועד האספקה.',
+        ],
+      },
+      {
+        heading: 'מה עוד צריך להיקבע',
+        paragraphs: [
+          'זמני האספקה המחייבים לכל שיטה, ואופן הטיפול במקרה של עיכוב, ייקבעו יחד עם בעלי העסק ויאושרו משפטית לפני העלייה לאוויר.',
+        ],
+      },
+    ],
+    awaitingFromOwner: [
+      'זמן אספקה מחייב לכל שיטת אספקה',
+      'שעות פעילות למענה ולאספקה ידנית',
+      'נוהל טיפול בעיכוב או באי-אספקה',
+    ],
+  },
+  {
+    slug: 'ip',
+    title: 'סימני מסחר וזכויות',
+    intro: 'שמות המשחקים והפלטפורמות באתר שייכים לבעליהם. ZuzCOINS אינה מסונפת אליהם.',
+    sections: [
+      {
+        heading: 'הבהרה',
+        paragraphs: [
+          'EA SPORTS FC, PlayStation, Xbox, Fortnite, Call of Duty, NBA 2K וכל שם משחק, לוגו או סימן מסחר אחר המוזכרים באתר הם קניינם של בעליהם החוקיים. השימוש בשמות נועד לזיהוי המוצר בלבד.',
+          'ZuzCOINS אינה מפעילה, אינה מייצגת ואינה מורשית על ידי אף אחת מהחברות הללו, אלא אם נכתב אחרת במפורש.',
+        ],
+      },
+      {
+        heading: 'בדיקה משפטית נדרשת',
+        paragraphs: [
+          'הנוסח המלא, ובכלל זה ההשלכות של מכירת מטבעות משחק מול תנאי השימוש של כל משחק, טעון בדיקה של עורך דין לפני העלייה לאוויר.',
+        ],
+      },
+    ],
+    awaitingFromOwner: [
+      'אישור עורך דין לנוסח ההבהרה',
+      'החלטה עסקית לגבי אילו משחקים נמכרים בפועל',
+    ],
+  },
+];
+
 export function findLegalPage(slug: string): LegalPageContent | undefined {
-  return LEGAL_PAGES.find((page) => page.slug === slug);
+  return [...LEGAL_PAGES, ...LEGAL_PAGES_PENDING].find((page) => page.slug === slug);
 }

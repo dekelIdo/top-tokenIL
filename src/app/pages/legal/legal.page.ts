@@ -23,9 +23,20 @@ import { LegalPageContent, findLegalPage } from './legal.content';
         <p *ngFor="let paragraph of section.paragraphs">{{ paragraph }}</p>
       </section>
 
-      <p class="tt-alert tt-alert--warning">
-        המסמך הזה הוא טיוטה של צוות הפיתוח וטרם עבר בדיקה משפטית. יש להשלים בדיקה כזו לפני שהחנות תקבל תשלומים אמיתיים.
-      </p>
+      <!-- Stated on the page rather than only in a document, so nobody reads
+           this as finished policy. -->
+      <div class="tt-alert tt-alert--warning">
+        <p class="review">
+          המסמך הזה הוא טיוטה של צוות הפיתוח וטרם עבר בדיקה משפטית. יש להשלים בדיקה כזו לפני שהחנות תקבל תשלומים אמיתיים.
+        </p>
+
+        <ng-container *ngIf="content.awaitingFromOwner?.length">
+          <p class="review review--head">פרטים שחסרים ונדרשים מבעלי העסק:</p>
+          <ul class="pending">
+            <li *ngFor="let item of content.awaitingFromOwner">{{ item }}</li>
+          </ul>
+        </ng-container>
+      </div>
     </div>
 
     <ng-template #missing>
@@ -38,6 +49,10 @@ import { LegalPageContent, findLegalPage } from './legal.content';
   styles: [`
     .tt-container { max-inline-size: 760px; }
     .lead { font-size: var(--tt-text-lg); }
+    .review { margin: 0; }
+    .review--head { margin-block-start: var(--tt-space-3); font-weight: 700; }
+    .pending { margin: var(--tt-space-2) 0 0; padding-inline-start: var(--tt-space-5); }
+    .pending li { margin-block-end: var(--tt-space-1); }
     section { margin-block-start: var(--tt-space-6); }
     h2 { font-size: var(--tt-text-lg); }
   `],

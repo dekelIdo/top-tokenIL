@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
 import { LocalizePipe } from '../../core/i18n';
-import { Platform, Product, Region } from '../../domain';
+import { savedAmount } from '../../core/value';
+import { Money, Platform, Product, Region } from '../../domain';
 import { CatalogLookups } from '../../state/catalog.facade';
 import { MoneyPipe } from '../money.pipe';
 import { PlatformBadgeComponent, RegionBadgeComponent } from './badges.component';
@@ -49,8 +50,16 @@ import { StarRatingComponent } from './star-rating.component';
       </div>
 
       <div class="foot">
-        <span class="foot__label tt-faint">החל מ־</span>
-        <span class="tt-price">{{ product.fromPrice?.current | money }}</span>
+        <div class="foot__price">
+          <span class="foot__label tt-faint">החל מ־</span>
+          <span class="tt-price">{{ product.fromPrice?.current | money }}</span>
+        </div>
+
+        <!-- Shown only when the catalogue carries a genuine strike-through, so
+             a saving on a card is always a real one. -->
+        <span class="tt-badge tt-badge--accent save" *ngIf="saved as amount">
+          חוסכים {{ amount | money }}
+        </span>
       </div>
     </a>
   `,
@@ -136,19 +145,26 @@ import { StarRatingComponent } from './star-rating.component';
 
     .foot {
       display: flex;
-      align-items: baseline;
+      align-items: center;
       justify-content: space-between;
       gap: var(--tt-space-2);
       padding: var(--tt-space-3) var(--tt-space-4);
       border-block-start: 1px solid var(--tt-border);
       background: var(--tt-bg-elevated);
     }
+    .foot__price { display: flex; align-items: baseline; gap: var(--tt-space-2); }
     .foot__label { font-size: var(--tt-text-xs); }
+    .save { font-size: 11px; }
   `],
 })
 export class ProductCardComponent {
   @Input({ required: true }) product!: Product;
   @Input() lookups?: CatalogLookups;
+
+  /** What a real strike-through saves, or undefined when there is not one. */
+  get saved(): Money | undefined {
+    return this.product.fromPrice ? savedAmount(this.product.fromPrice) : undefined;
+  }
 
   get platforms(): readonly Platform[] {
     return this.resolve(this.product.platformIds, this.lookups?.platforms);
