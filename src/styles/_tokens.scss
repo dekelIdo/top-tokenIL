@@ -85,11 +85,14 @@
 
   // --- Status --------------------------------------------------------------
   --tt-success: #43D18A;
-  --tt-warning: #F2B33D;
+  // Distinct from gold on purpose. Warning was set to the same hex as the value
+  // colour, so a delivery-time badge rendered in the money colour and gold
+  // stopped meaning money.
+  --tt-warning: #FF9A3C;
   --tt-danger: #FF6A5C;
   --tt-info: #6E93FF;
   --tt-success-tint: rgba(67, 209, 138, 0.14);
-  --tt-warning-tint: rgba(242, 179, 61, 0.14);
+  --tt-warning-tint: rgba(255, 154, 60, 0.14);
   --tt-danger-tint: rgba(255, 106, 92, 0.14);
   --tt-info-tint: rgba(110, 147, 255, 0.14);
 

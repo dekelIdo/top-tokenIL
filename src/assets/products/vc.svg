@@ -1,30 +1,42 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" role="img" aria-label="מטבע משחק">
-  <!-- ZuzCOINS product art. Original geometry, cut on the same nine-degree
-       shear as the brand mark, so every thumbnail in the catalogue belongs to
-       one family. Gold is value, blue is the interactive colour, and nothing
-       here depicts a publisher's property. -->
+  <!-- ZuzCOINS product art. Machined octagonal tokens, struck with the brand Z
+       and cut on the same nine-degree shear as the mark, so every thumbnail in
+       the catalogue belongs to one family and matches the artwork the app
+       renders inline. Original geometry; no publisher property is depicted. -->
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="0.4" y2="1">
-      <stop offset="0" stop-color="#FFE6AE"/>
-      <stop offset="0.5" stop-color="#F2B33D"/>
-      <stop offset="1" stop-color="#D9942A"/>
+    <linearGradient id="g" x1="0.15" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#FFE6AE"/><stop offset="0.42" stop-color="#F2B33D"/>
+      <stop offset="0.78" stop-color="#D9942A"/><stop offset="1" stop-color="#FFD371"/>
+    </linearGradient>
+    <linearGradient id="e" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D9942A"/><stop offset="1" stop-color="#7A4E10"/>
+    </linearGradient>
+    <linearGradient id="s" x1="0" y1="0" x2="0.55" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.5"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
     </linearGradient>
     <linearGradient id="b" x1="0" y1="0" x2="0.4" y2="1">
-      <stop offset="0" stop-color="#A8C0FF"/>
-      <stop offset="1" stop-color="#3B6DFF"/>
+      <stop offset="0" stop-color="#A8C0FF"/><stop offset="1" stop-color="#2E5FF0"/>
     </linearGradient>
-    <radialGradient id="p" cx="50%" cy="72%" r="52%">
-      <stop offset="0" stop-color="#F2B33D" stop-opacity="0.24"/>
+    <radialGradient id="p" cx="50%" cy="74%" r="55%">
+      <stop offset="0" stop-color="#F2B33D" stop-opacity="0.20"/>
       <stop offset="1" stop-color="#F2B33D" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <ellipse cx="100" cy="118" rx="62" ry="24" fill="url(#p)"/>
-  <g transform="skewX(-9) translate(9,0)">
-    <rect x="36" y="78" width="52" height="15" rx="7.5" fill="url(#g)" opacity="0.7"/>
-    <rect x="44" y="80.5" width="36" height="2.5" rx="1.25" fill="#FFF6DC" opacity="0.294"/>
-    <rect x="74" y="84" width="52" height="15" rx="7.5" fill="url(#g)" opacity="0.85"/>
-    <rect x="82" y="86.5" width="36" height="2.5" rx="1.25" fill="#FFF6DC" opacity="0.357"/>
-    <rect x="112" y="90" width="52" height="15" rx="7.5" fill="url(#g)" opacity="1"/>
-    <rect x="120" y="92.5" width="36" height="2.5" rx="1.25" fill="#FFF6DC" opacity="0.42"/>
+  <ellipse cx="100" cy="122" rx="54" ry="20" fill="url(#p)"/>
+  <g opacity="0.92">
+    <polygon points="71.8,118.4 56.1,127.5 33.9,127.5 18.2,118.4 18.2,105.6 33.9,96.5 56.1,96.5 71.8,105.6" fill="url(#e)"/>
+    <polygon points="71.8,109.4 56.1,118.5 33.9,118.5 18.2,109.4 18.2,96.6 33.9,87.5 56.1,87.5 71.8,96.6" fill="url(#g)"/>
+    <polygon points="67.0,108.3 54.1,115.7 35.9,115.7 23.0,108.3 23.0,97.7 35.9,90.3 54.1,90.3 67.0,97.7" fill="none" stroke="#7A4E10" stroke-opacity="0.34" stroke-width="1"/>
+    <polygon points="70.5,109.1 55.5,117.8 34.5,117.8 19.5,109.1 19.5,96.9 34.5,88.2 55.5,88.2 70.5,96.9" fill="url(#s)"/>
+    <g transform="translate(30.2,89.7) scale(0.462,0.416) skewX(-9)" fill="#5A390A" fill-opacity="0.66"><path d="M15 14 H47 V21.5 L29 41 H47 V49.5 H15 V42 L33 22.5 H15 Z"/></g>
+  </g>
+  <g opacity="1">
+    <polygon points="142.5,105.2 117.6,119.6 82.4,119.6 57.5,105.2 57.5,84.8 82.4,70.4 117.6,70.4 142.5,84.8" fill="url(#e)"/>
+    <polygon points="142.5,92.2 117.6,106.6 82.4,106.6 57.5,92.2 57.5,71.8 82.4,57.4 117.6,57.4 142.5,71.8" fill="url(#g)"/>
+    <polygon points="134.8,90.4 114.4,102.2 85.6,102.2 65.2,90.4 65.2,73.6 85.6,61.8 114.4,61.8 134.8,73.6" fill="none" stroke="#7A4E10" stroke-opacity="0.34" stroke-width="1.6"/>
+    <polygon points="140.4,91.7 116.7,105.4 83.3,105.4 59.6,91.7 59.6,72.3 83.3,58.6 116.7,58.6 140.4,72.3" fill="url(#s)"/>
+    <g transform="translate(76.5,60.9) scale(0.733,0.659) skewX(-9)" fill="#5A390A" fill-opacity="0.66"><path d="M15 14 H47 V21.5 L29 41 H47 V49.5 H15 V42 L33 22.5 H15 Z"/></g>
   </g>
 </svg>

@@ -72,9 +72,20 @@ type Mode = 'signIn' | 'register' | 'forgot';
 
               <label class="tt-field" *ngIf="mode() !== 'forgot'">
                 <span class="tt-label" for="acc-password">סיסמה</span>
-                <input id="acc-password" class="tt-input" type="password" name="password"
-                       [attr.autocomplete]="mode() === 'register' ? 'new-password' : 'current-password'"
-                       [(ngModel)]="password" required minlength="8" placeholder="לפחות 8 תווים" />
+                <!-- A reveal control. Typing a password blind on a phone
+                     keyboard is the most common reason a sign-in fails, and
+                     hiding it protects nobody holding their own device. -->
+                <span class="secret">
+                  <input id="acc-password" class="tt-input" name="password"
+                         [type]="revealed() ? 'text' : 'password'"
+                         [attr.autocomplete]="mode() === 'register' ? 'new-password' : 'current-password'"
+                         [(ngModel)]="password" required minlength="8" placeholder="לפחות 8 תווים" />
+                  <button type="button" class="secret__toggle" (click)="revealed.set(!revealed())"
+                          [attr.aria-pressed]="revealed()"
+                          [attr.aria-label]="revealed() ? 'הסתרת הסיסמה' : 'הצגת הסיסמה'">
+                    {{ revealed() ? 'הסתרה' : 'הצגה' }}
+                  </button>
+                </span>
                 <span class="tt-hint" *ngIf="mode() === 'register'">לפחות 8 תווים.</span>
               </label>
 
@@ -107,7 +118,10 @@ type Mode = 'signIn' | 'register' | 'forgot';
         <!-- Signed in -->
         <ng-container *ngIf="state.kind === 'AUTHENTICATED'">
           <header class="head">
-            <h1>{{ state.customer.displayName || state.customer.email }}</h1>
+            <!-- A greeting, not a record header. The page opened with the
+                 customer's own email address set as a title, which is how an
+                 admin console addresses a row in a table. -->
+            <h1>שלום{{ state.customer.displayName ? ', ' + state.customer.displayName : '' }}</h1>
             <p class="tt-muted">{{ state.customer.email }}</p>
           </header>
 
@@ -181,6 +195,26 @@ type Mode = 'signIn' | 'register' | 'forgot';
     }
     .google:hover { text-decoration: none; filter: brightness(0.96); }
 
+    .secret { position: relative; display: block; }
+    .secret .tt-input { inline-size: 100%; padding-inline-end: 4.2rem; }
+    .secret__toggle {
+      position: absolute;
+      inset-inline-end: var(--tt-space-2);
+      inset-block-start: 50%;
+      transform: translateY(-50%);
+      min-block-size: 32px;
+      padding-inline: var(--tt-space-2);
+      border: 0;
+      border-radius: var(--tt-radius-sm);
+      background: transparent;
+      color: var(--tt-text-muted);
+      font: inherit;
+      font-size: var(--tt-text-xs);
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .secret__toggle:hover { color: var(--tt-text); background: var(--tt-surface-3); }
+
     .divider {
       display: flex;
       align-items: center;
@@ -247,6 +281,9 @@ export class AccountPage {
 
   readonly mode = signal<Mode>('signIn');
   readonly busy = signal(false);
+  /** Whether the password field is showing its value. */
+  readonly revealed = signal(false);
+
   readonly error = signal<string | null>(null);
   readonly sent = signal<string | null>(null);
 

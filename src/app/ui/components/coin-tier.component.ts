@@ -2,29 +2,39 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 /**
- * Bundle artwork, drawn from the quantity.
+ * The ZuzCOINS currency object.
  *
- * The catalog used to show a cartoon pile of coins, the same picture on every
- * product with a different number underneath. It had two problems. A pile is
- * unreadable at card size, and a drawn coin is the single most generic thing a
- * currency shop can put on a page.
+ * This is the brand's product asset, and it has been through two wrong answers
+ * already. A cartoon pile of coins was the generic thing every currency shop
+ * draws and it turned to mush at card size. A stack of flat plates read as a
+ * staircase and never said "money" at all.
  *
- * This draws the bundle as a stack of sheared plates instead: tokens seen edge
- * on, cut at the same nine degrees as the brand mark. Depth is the tier, so a
- * larger bundle is visibly a larger bundle, and the whole catalogue reads as
- * one family rather than one clipart.
+ * What is drawn now is a machined octagonal token: a chamfered rim, a face
+ * carrying the brand Z, a specular sweep along the top edge, and real extruded
+ * depth. The octagon is the point. A circle is a coin from any brand; eight
+ * flat sides read as something struck to a specification, which is the register
+ * this shop wants, and the shape holds a hard silhouette at forty pixels where
+ * a circle collapses into a dot.
  *
- * Inline SVG driven by theme variables. No image files, nothing to download,
- * and it recolours with the theme. Four tiers rather than a smooth function,
- * because a customer is choosing between discrete packages and the steps have
- * to be legible.
+ * Tokens are placed asymmetrically and at different sizes rather than stacked,
+ * so the composition has a front and a back instead of a centre.
+ *
+ * Inline SVG on theme variables. No image files, nothing to download, and it
+ * recolours with the theme.
  */
 export type CoinTier = 'entry' | 'standard' | 'premium' | 'hero';
 
-interface Plate {
-  readonly y: number;
-  readonly width: number;
-  readonly opacity: number;
+interface Token {
+  readonly cx: number;
+  readonly cy: number;
+  readonly r: number;
+  /** Vertical squash, giving the three-quarter view. */
+  readonly squash: number;
+  readonly depth: number;
+  /** Tokens further back sit deeper into the dark. */
+  readonly dim: number;
+  /** The Z is only legible above a certain size. */
+  readonly face: boolean;
 }
 
 @Component({
@@ -35,33 +45,61 @@ interface Plate {
   template: `
     <svg viewBox="0 0 200 150" class="art" [class]="'art--' + tier" aria-hidden="true">
       <defs>
-        <linearGradient [attr.id]="faceId" x1="0" y1="0" x2="0.4" y2="1">
+        <!-- Metal, not yellow. The band runs light along the top edge, deepens
+             through the middle and lifts again at the bottom, which is what
+             separates a struck surface from a flat fill. -->
+        <linearGradient [attr.id]="faceId" x1="0.15" y1="0" x2="0.7" y2="1">
           <stop offset="0" stop-color="var(--tt-gold-300)"/>
-          <stop offset="0.5" stop-color="var(--tt-gold-500)"/>
-          <stop offset="1" stop-color="var(--tt-gold-600)"/>
+          <stop offset="0.42" stop-color="var(--tt-gold-500)"/>
+          <stop offset="0.78" stop-color="var(--tt-gold-600)"/>
+          <stop offset="1" stop-color="var(--tt-gold-400)"/>
         </linearGradient>
-        <radialGradient [attr.id]="glowId" cx="50%" cy="70%" r="52%">
-          <stop offset="0" stop-color="var(--tt-gold-500)" stop-opacity="0.26"/>
+
+        <!-- The extruded side, always darker than the face above it. -->
+        <linearGradient [attr.id]="edgeId" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="var(--tt-gold-600)"/>
+          <stop offset="1" stop-color="#7A4E10"/>
+        </linearGradient>
+
+        <linearGradient [attr.id]="sheenId" x1="0" y1="0" x2="0.55" y2="1">
+          <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.5"/>
+          <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.05"/>
+          <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+        </linearGradient>
+
+        <radialGradient [attr.id]="glowId" cx="50%" cy="74%" r="55%">
+          <stop offset="0" stop-color="var(--tt-gold-500)" stop-opacity="0.20"/>
           <stop offset="1" stop-color="var(--tt-gold-500)" stop-opacity="0"/>
         </radialGradient>
       </defs>
 
-      <!-- Light pooling under the stack. Wider on the bigger tiers, which is
-           most of what gives them weight. -->
-      <ellipse cx="100" cy="120" [attr.rx]="glowWidth" ry="26"
+      <ellipse cx="100" cy="122" [attr.rx]="glowWidth" ry="20"
                [attr.fill]="'url(#' + glowId + ')'"/>
 
-      <!-- The stack, bottom plate first. The shear matches the brand mark, so
-           the product art and the logo are cut from the same angle. -->
-      <g class="stack" transform="skewX(-9) translate(9,0)">
-        <g *ngFor="let plate of plates" [attr.opacity]="plate.opacity">
-          <rect [attr.x]="100 - plate.width / 2" [attr.y]="plate.y"
-                [attr.width]="plate.width" height="15" rx="7.5"
-                [attr.fill]="'url(#' + faceId + ')'"/>
-          <!-- A lit top edge. Without it the plates read as flat bars. -->
-          <rect [attr.x]="100 - plate.width / 2 + 8" [attr.y]="plate.y + 2.5"
-                [attr.width]="plate.width - 16" height="2.5" rx="1.25"
-                fill="#FFF6DC" opacity="0.42"/>
+      <g class="cluster">
+        <g *ngFor="let token of tokens" [attr.opacity]="token.dim">
+          <!-- Extruded side, drawn first and offset downward. -->
+          <polygon [attr.points]="octagon(token, token.depth)"
+                   [attr.fill]="'url(#' + edgeId + ')'"/>
+          <!-- Struck face. -->
+          <polygon [attr.points]="octagon(token, 0)"
+                   [attr.fill]="'url(#' + faceId + ')'"/>
+          <!-- Chamfer: an inset outline, which is what makes this read as a rim
+               rather than as a flat gold shape. -->
+          <polygon [attr.points]="octagon(token, 0, 0.82)"
+                   fill="none" stroke="#7A4E10" stroke-opacity="0.34"
+                   [attr.stroke-width]="token.r > 30 ? 1.6 : 1"/>
+          <!-- Specular sweep along the upper edge of the face. -->
+          <polygon [attr.points]="octagon(token, 0, 0.95)"
+                   [attr.fill]="'url(#' + sheenId + ')'"/>
+
+          <!-- The brand Z, struck into the face. Omitted on the small
+               background tokens, where it would only be noise. -->
+          <g *ngIf="token.face"
+             [attr.transform]="faceTransform(token)"
+             fill="#5A390A" fill-opacity="0.66">
+            <path d="M15 14 H47 V21.5 L29 41 H47 V49.5 H15 V42 L33 22.5 H15 Z"/>
+          </g>
         </g>
       </g>
     </svg>
@@ -70,15 +108,15 @@ interface Plate {
     :host { display: block; inline-size: 100%; }
     .art { inline-size: 100%; block-size: auto; display: block; }
 
-    /* The largest tier drifts, which reads as weight rather than as animation.
-       Everything else is still. */
-    .art--hero .stack { animation: tt-plate-drift 6s var(--tt-ease) infinite alternate; }
-    @keyframes tt-plate-drift {
-      from { transform: skewX(-9deg) translate(9px, 0); }
-      to { transform: skewX(-9deg) translate(9px, -3px); }
+    /* The largest composition drifts, which reads as weight rather than as an
+       animation. Nothing spins: a spinning coin is a casino, not a shop. */
+    .art--hero .cluster { animation: tt-token-drift 7s var(--tt-ease) infinite alternate; }
+    @keyframes tt-token-drift {
+      from { transform: translateY(0); }
+      to { transform: translateY(-3px); }
     }
     @media (prefers-reduced-motion: reduce) {
-      .art--hero .stack { animation: none; }
+      .art--hero .cluster { animation: none; }
     }
   `],
 })
@@ -91,19 +129,20 @@ export class CoinTierComponent {
   @Input() tier: CoinTier = 'standard';
 
   /**
-   * An explicit plate count, overriding the tier.
+   * An explicit token count, overriding the tier.
    *
-   * The price ladder uses this. Its five bundles can fall inside the same
-   * quantity band, and two tiers sitting side by side with identical artwork
-   * tells a customer the wrong thing. Given a rank the ladder gets five
-   * visibly distinct stacks, which is a truthful depiction of the order it
-   * already sorted them into.
+   * The price ladder uses this. Its bundles can fall inside the same quantity
+   * band, and two tiers side by side with identical artwork tells a customer
+   * the wrong thing. Given a rank the ladder gets visibly distinct objects,
+   * which is a truthful depiction of the order it already sorted them into.
    */
   @Input() steps?: number;
 
   /** Unique per instance so two illustrations cannot share a gradient id. */
   private readonly uid = Math.random().toString(36).slice(2, 8);
   readonly faceId = `zc-face-${this.uid}`;
+  readonly edgeId = `zc-edge-${this.uid}`;
+  readonly sheenId = `zc-sheen-${this.uid}`;
   readonly glowId = `zc-glow-${this.uid}`;
 
   /**
@@ -126,31 +165,64 @@ export class CoinTierComponent {
     return quantity <= 2_000_000 ? 'premium' : 'hero';
   }
 
-  private get depth(): number {
+  private get count(): number {
     if (this.steps !== undefined) {
-      return Math.min(6, Math.max(1, Math.round(this.steps)));
+      return Math.min(5, Math.max(1, Math.round(this.steps)));
     }
-    return { entry: 2, standard: 3, premium: 4, hero: 5 }[this.tier];
+    return { entry: 1, standard: 2, premium: 3, hero: 4 }[this.tier];
   }
 
   get glowWidth(): number {
-    return { entry: 44, standard: 54, premium: 64, hero: 74 }[this.tier];
+    return 34 + this.count * 10;
   }
 
   /**
-   * The plates, bottom to top.
+   * The cluster, painted back to front.
    *
-   * Each one above the last is a little narrower and a little brighter, so the
-   * stack has perspective and a clear top rather than reading as a flat ladder.
+   * Fixed positions rather than generated ones, so a given bundle always looks
+   * identical. Artwork that shifts between renders reads as a fault.
    */
-  get plates(): readonly Plate[] {
-    const count = this.depth;
-    const base = 112;
+  get tokens(): readonly Token[] {
+    const all: Token[] = [
+      { cx: 100, cy: 82, r: 46, squash: 0.58, depth: 13, dim: 1, face: true },
+      { cx: 45, cy: 103, r: 29, squash: 0.58, depth: 9, dim: 0.92, face: true },
+      { cx: 157, cy: 97, r: 25, squash: 0.58, depth: 8, dim: 0.8, face: false },
+      { cx: 134, cy: 42, r: 19, squash: 0.58, depth: 6, dim: 0.62, face: false },
+      { cx: 62, cy: 38, r: 15, squash: 0.58, depth: 5, dim: 0.5, face: false },
+    ];
 
-    return Array.from({ length: count }, (_, index) => ({
-      y: base - index * 21,
-      width: 112 - index * 7,
-      opacity: 0.62 + (index / Math.max(1, count - 1)) * 0.38,
-    }));
+    // Reversed so the smallest background tokens paint first and the largest
+    // lands on top of the cluster.
+    return all.slice(0, this.count).slice().reverse();
+  }
+
+  /**
+   * An octagon in three-quarter view.
+   *
+   * Vertices are offset by half a step so the shape has flat top, bottom and
+   * side edges. A vertex-up octagon reads as a gemstone; a flat-edged one reads
+   * as something struck in a press.
+   */
+  octagon(token: Token, dy: number, scale = 1): string {
+    const points: string[] = [];
+
+    for (let index = 0; index < 8; index += 1) {
+      const angle = ((index * 45 + 22.5) * Math.PI) / 180;
+      const x = token.cx + Math.cos(angle) * token.r * scale;
+      const y = token.cy + Math.sin(angle) * token.r * token.squash * scale + dy;
+      points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+    }
+
+    return points.join(' ');
+  }
+
+  /** Places the 64-unit brand Z inside a token's face. */
+  faceTransform(token: Token): string {
+    const size = (token.r * 1.02) / 64;
+    const heightScale = size * token.squash * 1.55;
+    const offsetX = token.cx - 32 * size;
+    const offsetY = token.cy - 32 * heightScale;
+    return `translate(${offsetX.toFixed(1)},${offsetY.toFixed(1)}) `
+      + `scale(${size.toFixed(3)},${heightScale.toFixed(3)}) skewX(-9)`;
   }
 }

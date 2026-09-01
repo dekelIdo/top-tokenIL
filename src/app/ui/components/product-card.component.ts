@@ -9,38 +9,40 @@ import { CatalogLookups } from '../../state/catalog.facade';
 import { MoneyPipe } from '../money.pipe';
 import { PlatformBadgeComponent, RegionBadgeComponent } from './badges.component';
 import { CoinTierComponent } from './coin-tier.component';
+import { IconComponent } from './icon.component';
 
 /**
- * The catalog's primary card.
+ * A purchase unit.
  *
- * Rebuilt for density and for commerce. The previous card was tall, mostly
- * illustration, and told a customer only a name and a "from" price, which meant
- * one card filled a phone screen and answered none of the questions a buyer
- * actually has. This one answers four in the space the old one used for one:
- * what it is, how much you get, what it costs, and what you save.
+ * Rebuilt around the order a buyer actually reads a card in: how much am I
+ * getting, what does it cost, and where do I press. The previous card led with
+ * the product's name in the largest type on it, which is the least useful thing
+ * on the card. Everyone browsing already knows they are looking at coins; what
+ * they are choosing between is amounts and prices.
  *
- * Two cards fit across a 360px phone. That is the difference between browsing a
- * catalogue and scrolling a brochure.
+ * So the hierarchy is now quantity first at display size, price second in gold,
+ * savings third and small, and a visible action last. The name drops to a
+ * caption above the figure, where it identifies the product without competing
+ * with it.
  *
- * Colour carries meaning and is not decoration: gold is money, violet is
+ * Colour carries meaning and is never decoration: gold is money, blue is
  * something you can press, white is information. Nothing here invents a badge.
- * "Sale" appears only against a real strike-through price, and the quantity
- * range is read from the product's own variants.
+ * A saving appears only against a real strike-through price the server sent,
+ * and the quantity is read from the product's own variants.
  */
 @Component({
   selector: 'tt-product-card',
   standalone: true,
   imports: [
     CommonModule, RouterLink, LocalizePipe, MoneyPipe,
-    PlatformBadgeComponent, RegionBadgeComponent, CoinTierComponent,
+    PlatformBadgeComponent, RegionBadgeComponent, CoinTierComponent, IconComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <a class="card" [routerLink]="['/products', product.slug]" [attr.aria-label]="product.name | t">
       <div class="media">
-        <!-- Coin bundles are drawn from their quantity, so the tier is visible
-             rather than being the same picture with a different label. Anything
-             else uses its own illustration. -->
+        <!-- Coin bundles draw their own tier, so the artwork carries the size
+             of the bundle. Anything else uses its own illustration. -->
         <tt-coin-tier *ngIf="largestQuantity as quantity; else artwork"
                       class="media__art" [quantity]="quantity"></tt-coin-tier>
         <ng-template #artwork>
@@ -48,18 +50,19 @@ import { CoinTierComponent } from './coin-tier.component';
                [src]="image.url" [alt]="image.alt" loading="lazy" decoding="async" />
         </ng-template>
 
-        <span class="flag flag--save" *ngIf="saved as amount">
-          חוסכים {{ amount | money }}
-        </span>
-        <span class="flag flag--featured" *ngIf="!saved && product.featured">מומלץ</span>
+        <span class="flag" *ngIf="saved as amount">חוסכים {{ amount | money }}</span>
       </div>
 
       <div class="body">
-        <h3 class="name">{{ product.name | t }}</h3>
-
-        <!-- How much you get. Read from the product's own variants, so a card
-             with no quantity tiers simply does not show one. -->
-        <p class="range" *ngIf="quantityRange as range">{{ range }}</p>
+        <!-- Caption then figure. A product with no quantity has no figure, so
+             it promotes its name rather than printing it on both lines. -->
+        <ng-container *ngIf="quantityRange as range; else named">
+          <p class="name">{{ product.name | t }}</p>
+          <p class="amount tt-numeric">{{ range }}</p>
+        </ng-container>
+        <ng-template #named>
+          <p class="amount amount--words">{{ product.name | t }}</p>
+        </ng-template>
 
         <div class="chips">
           <tt-platform-badge *ngFor="let platform of platforms | slice:0:3" [platform]="platform"></tt-platform-badge>
@@ -68,11 +71,14 @@ import { CoinTierComponent } from './coin-tier.component';
       </div>
 
       <div class="foot">
-        <div class="foot__price">
+        <span class="foot__price">
           <span class="foot__from">החל מ־</span>
           <span class="tt-price">{{ product.fromPrice?.current | money }}</span>
-        </div>
-        <span class="was" *ngIf="product.fromPrice?.compareAt as was">{{ was | money }}</span>
+          <span class="was" *ngIf="product.fromPrice?.compareAt as was">{{ was | money }}</span>
+        </span>
+        <span class="go" aria-hidden="true">
+          <tt-icon name="chevron" [size]="15" dir="auto"></tt-icon>
+        </span>
       </div>
     </a>
   `,
@@ -83,89 +89,94 @@ import { CoinTierComponent } from './coin-tier.component';
       block-size: 100%;
       background: var(--tt-surface);
       border: 1px solid var(--tt-border);
-      border-radius: var(--tt-radius-lg);
+      border-radius: var(--tt-radius-md);
       overflow: hidden;
       color: inherit;
       text-decoration: none;
-      transition: transform var(--tt-duration) var(--tt-ease),
-                  border-color var(--tt-duration) var(--tt-ease),
-                  box-shadow var(--tt-duration) var(--tt-ease);
+      transition: transform var(--tt-duration-fast) var(--tt-ease),
+                  border-color var(--tt-duration-fast) var(--tt-ease);
     }
     .card:hover {
       transform: translateY(-2px);
-      border-color: var(--tt-border-brand);
-      box-shadow: var(--tt-shadow-2);
+      border-color: var(--tt-border-strong);
       text-decoration: none;
     }
-    .card:hover .media img { transform: scale(1.05); }
 
     .media {
       position: relative;
-      /* A ratio rather than a fixed height, so the card scales with the column
-         instead of leaving a tall empty box on a narrow screen. */
-      aspect-ratio: 16 / 10;
+      /* Cropped tighter than before. The artwork identifies the product; it is
+         not the reason anyone is looking at the card. */
+      aspect-ratio: 16 / 8;
       display: grid;
       place-items: center;
       overflow: hidden;
-      background:
-        radial-gradient(circle at 50% 118%, var(--tt-brand-tint), transparent 60%),
-        var(--tt-surface-2);
-      border-block-end: 1px solid var(--tt-border);
+      background: var(--tt-bg-elevated);
     }
-    .media__art { inline-size: 84%; }
+    .media__art { inline-size: 76%; }
     .media img {
-      inline-size: 62%;
-      max-block-size: 78%;
+      inline-size: 56%;
+      max-block-size: 82%;
       object-fit: contain;
       transition: transform var(--tt-duration-slow) var(--tt-ease-out);
     }
+    .card:hover .media img { transform: scale(1.04); }
 
+    /* Money saved is the loudest thing a card can say, so it takes the gold. */
     .flag {
       position: absolute;
       inset-block-start: var(--tt-space-2);
       inset-inline-start: var(--tt-space-2);
-      padding: 0.15rem 0.5rem;
+      padding: 0.1rem 0.4rem;
       border-radius: var(--tt-radius-sm);
-      font-size: 11px;
+      background: var(--tt-gold-500);
+      color: var(--tt-text-on-gold);
+      font-size: 10px;
       font-weight: 800;
-      line-height: 1.6;
+      line-height: 1.7;
       white-space: nowrap;
     }
-    /* Money saved is the loudest thing a card can say, so it takes the gold. */
-    .flag--save { background: var(--tt-gold-500); color: var(--tt-text-on-gold); }
-    .flag--featured { background: var(--tt-brand-tint); color: var(--tt-brand-300); }
 
     .body {
       display: flex;
       flex-direction: column;
-      gap: var(--tt-space-1);
-      padding: var(--tt-space-3);
+      padding: var(--tt-space-3) var(--tt-space-3) var(--tt-space-2);
       flex: 1;
       min-block-size: 0;
     }
+
+    /* A caption, not a heading. It identifies the product above the figure. */
     .name {
       margin: 0;
-      font-size: var(--tt-text-sm);
-      font-weight: 700;
-      line-height: var(--tt-leading-snug);
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-    .range {
-      margin: 0;
-      font-family: var(--tt-font-numeric);
-      font-variant-numeric: tabular-nums;
       font-size: var(--tt-text-xs);
-      color: var(--tt-text-muted);
+      font-weight: 600;
+      color: var(--tt-text-faint);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .amount {
+      margin: 2px 0 0;
+      font-size: var(--tt-text-xl);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -0.025em;
       /* A numeric range reads left to right even inside Hebrew. Without the
-         isolate the bidi algorithm reorders it and "50 - 250" renders as
-         "250 - 50", which states the opposite of the truth. */
+         isolate the bidi algorithm reorders it and "100K-2M" renders as
+         "2M-100K", which states the opposite of the truth. */
       direction: ltr;
       unicode-bidi: isolate;
       text-align: end;
     }
+    /* Products with no quantity fall back to their name, which is prose and
+       must not inherit the numeric direction or the tight tracking. */
+    .amount--words {
+      direction: rtl;
+      font-size: var(--tt-text-md);
+      letter-spacing: normal;
+      line-height: var(--tt-leading-snug);
+    }
+
     .chips {
       display: flex;
       flex-wrap: wrap;
@@ -176,27 +187,43 @@ import { CoinTierComponent } from './coin-tier.component';
 
     .foot {
       display: flex;
-      align-items: baseline;
+      align-items: center;
+      justify-content: space-between;
       gap: var(--tt-space-2);
       padding: var(--tt-space-2) var(--tt-space-3);
       border-block-start: 1px solid var(--tt-border);
-      background: var(--tt-bg-elevated);
     }
-    .foot__price { display: flex; align-items: baseline; gap: 4px; }
+    .foot__price { display: flex; align-items: baseline; gap: 4px; min-inline-size: 0; }
     .foot__from { font-size: 10px; color: var(--tt-text-faint); }
     .was {
-      margin-inline-start: auto;
       font-family: var(--tt-font-numeric);
       font-size: var(--tt-text-xs);
       color: var(--tt-text-faint);
       text-decoration: line-through;
     }
 
+    /* The action. A chevron in the interactive colour rather than a button:
+       the whole card is the target, and a button inside a link is a lie about
+       what is clickable. */
+    .go {
+      display: grid;
+      place-items: center;
+      inline-size: 26px;
+      block-size: 26px;
+      flex: none;
+      border-radius: var(--tt-radius-sm);
+      background: var(--tt-brand-tint);
+      color: var(--tt-brand-300);
+      transition: background-color var(--tt-duration-fast) var(--tt-ease);
+    }
+    .card:hover .go { background: var(--tt-brand-500); color: var(--tt-text-on-brand); }
+
     /* Chips are the first thing to go when the card gets narrow: a platform
-       badge matters less than the price being readable. */
+       badge matters less than the price staying readable. */
     @media (max-width: 400px) {
       .chips { display: none; }
-      .body { padding: var(--tt-space-2); }
+      .body { padding: var(--tt-space-2) var(--tt-space-2) var(--tt-space-1); }
+      .amount { font-size: var(--tt-text-lg); }
     }
   `],
 })
@@ -220,9 +247,9 @@ export class ProductCardComponent {
   /**
    * The span of quantities this product sells, as players say them.
    *
-   * Undefined when the variants carry no quantity, which is the case for a gift
-   * card or a subscription. Those cards simply omit the line rather than
-   * showing something invented.
+   * Undefined when the variants carry no quantity, which is the case for a
+   * service. Those cards fall back to the product name rather than showing
+   * something invented.
    */
   get quantityRange(): string | undefined {
     const quantities = this.product.variants

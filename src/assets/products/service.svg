@@ -1,28 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" role="img" aria-label="שירות לחשבון">
-  <!-- ZuzCOINS product art. Original geometry, cut on the same nine-degree
-       shear as the brand mark, so every thumbnail in the catalogue belongs to
-       one family. Gold is value, blue is the interactive colour, and nothing
-       here depicts a publisher's property. -->
+  <!-- ZuzCOINS product art. Machined octagonal tokens, struck with the brand Z
+       and cut on the same nine-degree shear as the mark, so every thumbnail in
+       the catalogue belongs to one family and matches the artwork the app
+       renders inline. Original geometry; no publisher property is depicted. -->
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="0.4" y2="1">
-      <stop offset="0" stop-color="#FFE6AE"/>
-      <stop offset="0.5" stop-color="#F2B33D"/>
-      <stop offset="1" stop-color="#D9942A"/>
+    <linearGradient id="g" x1="0.15" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#FFE6AE"/><stop offset="0.42" stop-color="#F2B33D"/>
+      <stop offset="0.78" stop-color="#D9942A"/><stop offset="1" stop-color="#FFD371"/>
+    </linearGradient>
+    <linearGradient id="e" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D9942A"/><stop offset="1" stop-color="#7A4E10"/>
+    </linearGradient>
+    <linearGradient id="s" x1="0" y1="0" x2="0.55" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.5"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
     </linearGradient>
     <linearGradient id="b" x1="0" y1="0" x2="0.4" y2="1">
-      <stop offset="0" stop-color="#A8C0FF"/>
-      <stop offset="1" stop-color="#3B6DFF"/>
+      <stop offset="0" stop-color="#A8C0FF"/><stop offset="1" stop-color="#2E5FF0"/>
     </linearGradient>
-    <radialGradient id="p" cx="50%" cy="72%" r="52%">
-      <stop offset="0" stop-color="#F2B33D" stop-opacity="0.24"/>
+    <radialGradient id="p" cx="50%" cy="74%" r="55%">
+      <stop offset="0" stop-color="#F2B33D" stop-opacity="0.20"/>
       <stop offset="1" stop-color="#F2B33D" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <ellipse cx="100" cy="118" rx="62" ry="24" fill="url(#p)"/>
-  <g transform="skewX(-9) translate(9,0)">
-    <rect x="44" y="74" width="112" height="44" rx="22" fill="#1F1D1A" opacity="1"/>
-    <rect x="44" y="74" width="112" height="44" rx="22" fill="none" stroke="url(#b)" stroke-width="2"/>
-    <path d="M78 96 L94 110 L124 82" fill="none" stroke="url(#b)" stroke-width="9"
-          stroke-linecap="square"/>
-  </g>
+  <ellipse cx="100" cy="122" rx="56" ry="20" fill="url(#p)"/>
+  <polygon points="153.6,102.9 122.2,121.1 77.8,121.1 46.4,102.9 46.4,77.1 77.8,58.9 122.2,58.9 153.6,77.1" fill="#1F1D1A"/>
+  <polygon points="153.6,102.9 122.2,121.1 77.8,121.1 46.4,102.9 46.4,77.1 77.8,58.9 122.2,58.9 153.6,77.1" fill="none" stroke="url(#b)" stroke-width="2"/>
+  <path d="M78 94 L94 108 L124 78" fill="none" stroke="url(#b)" stroke-width="9" stroke-linecap="square"/>
 </svg>

@@ -6,9 +6,19 @@ import { BRAND } from '../../core/brand';
 import { BrandLogoComponent } from './brand-logo.component';
 
 /**
- * Footer. It carries the legal and policy links an Israeli consumer store needs,
- * and states plainly that the site is in development and runs a payment
- * simulation — the storefront never implies a live integration it lacks.
+ * Footer.
+ *
+ * Grouped by what a customer came looking for rather than dumped into one long
+ * column: what we sell, how to get help, who we are, and the legal pages an
+ * Israeli consumer store has to publish. The eight-link "information" column it
+ * replaced was a sitemap, and a sitemap is what a footer looks like when nobody
+ * decided what belongs in it.
+ *
+ * The reviews link is gone. It pointed at a page with nothing on it, because
+ * the shop has no real reviews and will not carry invented ones.
+ *
+ * It also states plainly that the site is in development and runs a payment
+ * simulation. The storefront never implies a live integration it lacks.
  */
 @Component({
   selector: 'tt-app-footer',
@@ -27,7 +37,6 @@ import { BrandLogoComponent } from './brand-logo.component';
             <h2 class="col-title">חנות</h2>
             <a routerLink="/store">כל החבילות</a>
             <a routerLink="/deals">מבצעים</a>
-            <a routerLink="/reviews">ביקורות</a>
           </nav>
           <nav>
             <h2 class="col-title">שירות</h2>
@@ -37,13 +46,16 @@ import { BrandLogoComponent } from './brand-logo.component';
             <a routerLink="/account/orders">ההזמנות שלי</a>
           </nav>
           <nav>
-            <h2 class="col-title">מידע</h2>
+            <h2 class="col-title">העסק</h2>
             <a routerLink="/about">אודות</a>
             <a routerLink="/business-details">פרטי העסק</a>
-            <a routerLink="/terms">תנאי שימוש</a>
             <a routerLink="/delivery">אספקה</a>
+          </nav>
+          <nav>
+            <h2 class="col-title">משפטי</h2>
+            <a routerLink="/terms">תנאי שימוש</a>
             <a routerLink="/privacy">פרטיות</a>
-            <a routerLink="/refund-policy">מדיניות החזרים</a>
+            <a routerLink="/refund-policy">ביטול והחזרים</a>
             <a routerLink="/accessibility">נגישות</a>
             <a routerLink="/ip">סימני מסחר</a>
           </nav>

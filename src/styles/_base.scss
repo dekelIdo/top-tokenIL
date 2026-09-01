@@ -127,12 +127,15 @@ img { max-width: 100%; display: block; }
 
 .tt-muted { color: var(--tt-text-muted); }
 .tt-faint { color: var(--tt-text-faint); font-size: var(--tt-text-sm); }
+/* Muted, not blue. An eyebrow is a label, and blue in this system means the
+   thing can be pressed. Colouring static text with the interactive colour
+   teaches customers that the colour means nothing. */
 .tt-eyebrow {
   text-transform: uppercase;
   letter-spacing: var(--tt-tracking-eyebrow);
   font-size: var(--tt-text-xs);
   font-weight: 700;
-  color: var(--tt-brand-400);
+  color: var(--tt-text-muted);
 }
 
 // --- Surfaces ----------------------------------------------------------------

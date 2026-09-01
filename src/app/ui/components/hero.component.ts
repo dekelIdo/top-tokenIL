@@ -57,13 +57,13 @@ import { IconComponent } from './icon.component';
             </div>
             <div class="deal__note">
               <span class="deal__unit">לכל מיליון קוינס</span>
-              <span class="deal__sub">בחבילה הגדולה. המחיר של כל חבילה מופיע למטה.</span>
+              <span class="deal__sub">בחבילה הגדולה. המחיר של כל חבילה למטה.</span>
             </div>
           </div>
 
           <div class="cta">
             <a class="tt-btn tt-btn--buy tt-btn--lg" routerLink="/store">
-              בחרו חבילה <tt-icon name="arrow" [size]="18" dir="auto"></tt-icon>
+              קנייה עכשיו <tt-icon name="arrow" [size]="18" dir="auto"></tt-icon>
             </a>
             <a class="compare" href="#bundles">השוואת כל החבילות</a>
           </div>
@@ -152,7 +152,11 @@ import { IconComponent } from './icon.component';
       letter-spacing: -0.035em;
       font-weight: 900;
     }
-    .hl { display: block; color: var(--tt-gold-400); }
+    /* Not gold. The fold had the headline, the price and the buy button all in
+       the value colour, which spends gold on a slogan and leaves the actual
+       number no louder than the words above it. Gold is money here, so the
+       fold carries exactly two: the price, and the button that spends it. */
+    .hl { display: block; color: var(--tt-text); opacity: 0.62; }
 
     /* The figure and its explanation, joined by a rule rather than boxed. */
     .deal {
@@ -230,6 +234,20 @@ import { IconComponent } from './icon.component';
       margin-inline-end: var(--tt-space-2);
     }
 
+    /* On a phone the row wrapped and the separator dot landed at the start of
+       the second line, where it read as a bullet list. Three columns instead,
+       with no separators to misplace. */
+    @media (max-width: 620px) {
+      .facts {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--tt-space-2);
+        text-align: center;
+      }
+      .facts li { display: block; line-height: var(--tt-leading-snug); }
+      .facts li + li::before { content: none; }
+    }
+
     .art { display: flex; justify-content: center; }
     .art tt-coin-tier { inline-size: min(100%, 380px); }
 
@@ -246,7 +264,7 @@ import { IconComponent } from './icon.component';
         inset-block-start: calc(var(--tt-header-height) + var(--tt-space-1));
         inset-inline-end: -22%;
         inline-size: 62%;
-        opacity: 0.55;
+        opacity: 0.72;
         z-index: -1;
         pointer-events: none;
       }
@@ -255,7 +273,9 @@ import { IconComponent } from './icon.component';
       .art { opacity: 0.5; }
 
       .deal { gap: var(--tt-space-3); }
-      .deal__sub { display: none; }
+      /* Kept on a phone. Hiding it left a large gold number with no statement
+         of what it was the price of. */
+      .deal__sub { max-inline-size: 18ch; }
     }
 
     /* Full-width action on a phone only. Stretched across a 768px tablet the

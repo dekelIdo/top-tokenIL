@@ -46,9 +46,15 @@ interface StoreViewModel {
     <div class="tt-container tt-section">
       <header class="head">
         <span class="tt-eyebrow">EA SPORTS FC</span>
-        <h1>קוינס וקודים</h1>
-        <p class="tt-muted">חבילות קוינס, נקודות FC ושירותים לחשבון. המחיר, הפלטפורמה ואזור החנות מופיעים על כל אפשרות.</p>
+        <h1>כמה קוינס אתם צריכים?</h1>
+        <p class="tt-muted">בחרו חבילה. ככל שהיא גדולה יותר, המחיר לכל מיליון יורד.</p>
       </header>
+
+      <!-- The bundle tiers for the focus game, above the catalogue grid. -->
+      <section class="tiers" *ngIf="ladder$ | async as ladder">
+        <h2 class="tt-visually-hidden">חבילות קוינס</h2>
+        <tt-bundle-ladder [detail]="ladder" [productSlug]="ladder.product.slug"></tt-bundle-ladder>
+      </section>
 
       <form class="filters" (submit)="$event.preventDefault()">
         <label class="tt-field grow search-field">
@@ -109,15 +115,6 @@ interface StoreViewModel {
           </div>
         </details>
       </form>
-
-      <!-- The bundle tiers for the focus game, above the catalogue grid. -->
-      <section class="tiers" *ngIf="ladder$ | async as ladder">
-        <div class="tiers__head">
-          <h2>חבילות קוינס</h2>
-          <p>המחיר לכל מיליון יורד ככל שהחבילה גדלה</p>
-        </div>
-        <tt-bundle-ladder [detail]="ladder" [productSlug]="ladder.product.slug"></tt-bundle-ladder>
-      </section>
 
       <ng-container *ngIf="error(); else content">
         <tt-error-state [error]="error()" (retry)="retry()"></tt-error-state>
@@ -214,15 +211,6 @@ interface StoreViewModel {
        open on the thing that game's players are actually choosing between,
        rather than on three parent products that each hide a price range. */
     .tiers { margin-block-end: var(--tt-space-6); }
-    .tiers__head {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: var(--tt-space-3);
-      margin-block-end: var(--tt-space-3);
-    }
-    .tiers__head h2 { margin: 0; font-size: var(--tt-text-lg); }
-    .tiers__head p { margin: 0; color: var(--tt-text-faint); font-size: var(--tt-text-xs); }
     /* One skeleton row's worth of space, so the first response does not jump. */
     .tt-grid { min-block-size: 260px; }
     .more { display: flex; justify-content: center; margin-block-start: var(--tt-space-5); }
