@@ -1,4 +1,4 @@
-# Top Token: compliance boundary
+# EASYCOINS: compliance boundary
 
 **This document is not legal advice, and nothing in this repository is a claim
 of legal compliance.** It records what a professional must review before Top

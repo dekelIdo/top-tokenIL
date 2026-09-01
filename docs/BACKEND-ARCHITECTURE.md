@@ -1,4 +1,4 @@
-# Top Token: backend architecture
+# EASYCOINS: backend architecture
 
 The intended production architecture. **Nothing here is implemented.** This
 document exists so the backend can be built in the next phase without
@@ -9,7 +9,7 @@ reverse-engineering the Angular app.
 ## 1. System overview
 
 ```
-                                  TOP TOKEN
+                                  EASYCOINS
                                       │
               ┌───────────────────────┴───────────────────────┐
               │                                               │
@@ -135,7 +135,7 @@ imports** — a deliberate Phase 1 decision. Two options:
 1. **Recommended first step:** copy the domain enums and interfaces into the
    backend and keep the wire DTOs as the contract. Two codebases, one contract,
    no build coupling. The mapper layer already absorbs drift.
-2. **Later, if it earns its keep:** extract `@toptoken/domain` as a shared
+2. **Later, if it earns its keep:** extract `@easycoins/domain` as a shared
    package in a monorepo. Only worth the tooling cost once both sides are
    actively changing together.
 

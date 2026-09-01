@@ -33,8 +33,8 @@ import { IconComponent } from './icon.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="picker" *ngIf="plan() as current">
-      <header class="picker__head">
-        <h2>כמה קוינס אתם צריכים?</h2>
+      <header class="picker__head" *ngIf="heading">
+        <h2>{{ heading }}</h2>
         <p>בחרו סכום. אנחנו מרכיבים אותו מהחבילות שיוצאות הכי משתלם.</p>
       </header>
 
@@ -306,6 +306,13 @@ export class AmountSelectorComponent {
 
   /** Set while the caller is adding the plan to the cart. */
   @Input() busy = false;
+
+  /**
+   * The block's own heading, omitted when the page already asks the question.
+   * On the store the page title is the question, and printing it twice inside
+   * one screen is how the page came to have three headings in a row.
+   */
+  @Input() heading?: string;
 
   @Output() readonly confirm = new EventEmitter<CoinPlan>();
 

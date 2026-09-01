@@ -1,6 +1,6 @@
-# Top Token: fulfillment architecture
+# EASYCOINS: fulfillment architecture
 
-How a paid order becomes a delivered product. This is the part of Top Token that
+How a paid order becomes a delivered product. This is the part of EASYCOINS that
 differs most between product categories, so it is built as a set of providers
 behind one port rather than one generic implementation.
 
@@ -21,7 +21,7 @@ digital codes are the only mechanisms the business can honestly operate today.
    business cannot keep.
 4. **A method with no live integration is `NOT_SUPPORTED` and unsellable.**
    `AUTOMATED_API` may only be used where a real, authorised supplier exists.
-5. **Manual is a first-class provider**, not a fallback. Most of what Top Token
+5. **Manual is a first-class provider**, not a fallback. Most of what EASYCOINS
    sells today is delivered by a person.
 
 ## 2. The port

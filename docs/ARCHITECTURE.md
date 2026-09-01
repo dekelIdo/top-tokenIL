@@ -1,4 +1,4 @@
-# Top Token: architecture report
+# EASYCOINS: architecture report
 
 Companion to `ARCHITECTURE-AUDIT.md`, which describes the codebase this replaced.
 Updated in Phase 3 with the HTTP data layer; see `docs/README.md` for the full
