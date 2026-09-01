@@ -14,6 +14,7 @@ import { CartFacade, CatalogFacade } from '../../state';
 import {
   AmountSelectorComponent,
   BundleLadderComponent, FaqAccordionComponent, HeroComponent, IconComponent,
+  ValueStripComponent,
   ProductCardComponent, ReviewCardComponent, SkeletonGridComponent,
 } from '../../ui';
 
@@ -46,6 +47,7 @@ const REVIEW_PAGE: PageRequest = { page: 1, pageSize: 2 };
   imports: [
     CommonModule, RouterLink, LocalizePipe,
     BundleLadderComponent, HeroComponent, IconComponent, AmountSelectorComponent,
+    ValueStripComponent,
     ProductCardComponent, ReviewCardComponent, FaqAccordionComponent, SkeletonGridComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -53,7 +55,14 @@ const REVIEW_PAGE: PageRequest = { page: 1, pageSize: 2 };
     <ng-container *ngIf="vm$ | async as vm; else loading">
       <tt-hero [ladder]="vm.ladder"></tt-hero>
 
-      <!-- 2. The question the shop exists to answer, directly under the hero.
+      <!-- 2. What the shop promises, as objects rather than a row of grey
+           glyphs. Only claims that are actually kept. -->
+      <section class="tt-container tt-section--tight">
+        <h2 class="tt-visually-hidden">למה ZuzCOINS</h2>
+        <tt-value-strip></tt-value-strip>
+      </section>
+
+      <!-- 3. The question the shop exists to answer, directly under the hero.
            It was only reachable from the store, which meant the homepage could
            show a price but not let anyone act on it. -->
       <section class="tt-container tt-section chooser" *ngIf="vm.ladder as ladder">

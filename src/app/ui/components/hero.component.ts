@@ -68,14 +68,6 @@ import { IconComponent } from './icon.component';
             <a class="compare" href="#bundles">השוואת כל החבילות</a>
           </div>
 
-          <!-- Three facts on a rule. Not four cards. Each carries the icon for
-               the thing it describes, which is the only reason an icon earns a
-               place here. -->
-          <ul class="facts">
-            <li><tt-icon name="tag" [size]="15"></tt-icon>מחיר סופי לפני תשלום</li>
-            <li><tt-icon name="card" [size]="15"></tt-icon>אשראי דרך ספק סליקה</li>
-            <li><tt-icon name="truck" [size]="15"></tt-icon>מעקב הזמנה</li>
-          </ul>
         </div>
 
         <div class="art" aria-hidden="true">

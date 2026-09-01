@@ -2,15 +2,21 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 /**
- * The icon set.
+ * The ZuzCOINS icon set.
  *
- * Inline SVG paths rather than an icon font or a package. Three reasons: they
- * inherit `currentColor` so an icon always matches the text beside it, they cost
- * no extra request, and nothing arrives late and shifts the layout.
+ * Rebuilt away from uniform thin outlines. Every icon used to be the same
+ * 1.75px stroke on the same rounded geometry, which is the house style of every
+ * icon package and read as a placeholder next to the product artwork.
  *
- * This replaces the emoji the header used to use. Emoji render differently on
- * every platform, cannot be recoloured, sit on the wrong baseline, and are the
- * clearest possible signal that nobody designed the interface.
+ * These are built the way the rest of the brand is: a solid body carrying the
+ * silhouette, with stroked detail on top only where detail is needed. A filled
+ * shape survives being drawn at sixteen pixels; a hairline outline turns to
+ * mush. Corners are mitred rather than rounded, matching the angular cut of the
+ * mark, and the octagon that the coins and the pack are built from shows up
+ * here too, so a coin in a menu row is the same object as a coin in the hero.
+ *
+ * Colour still comes from `currentColor`, so an icon always matches the text
+ * beside it and the palette stays in one place.
  *
  * Icons are decorative by default and hidden from assistive technology; the
  * control around them carries the label.
@@ -42,36 +48,132 @@ export type IconName =
   | 'logout'
   | 'edit'
   | 'refresh'
-  | 'filter';
+  | 'filter'
+  | 'coins'
+  | 'crown';
 
-const PATHS: Record<IconName, string> = {
-  cart: 'M3 4h2.2l2.1 10.4a2 2 0 0 0 2 1.6h7.5a2 2 0 0 0 2-1.55L20.5 8H6.4M10 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2Zm8 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z',
-  user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0',
-  search: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Zm5.2-1.8L21 21',
-  menu: 'M4 7h16M4 12h16M4 17h16',
-  close: 'M6 6l12 12M18 6L6 18',
-  chevron: 'M9 6l6 6-6 6',
-  check: 'M5 13l4 4L19 7',
-  shield: 'M12 3l7 3v6c0 4.4-3 8-7 9-4-1-7-4.6-7-9V6l7-3Zm-2.5 9 2 2 4-4.5',
-  bolt: 'M13 3 5 14h6l-1 7 8-11h-6l1-7Z',
-  clock: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-14v5l3.5 2',
-  globe: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm-9-9h18M12 3c2.5 2.4 3.8 5.6 3.8 9S14.5 18.6 12 21c-2.5-2.4-3.8-5.6-3.8-9S9.5 5.4 12 3Z',
-  tag: 'M3 12.5V4h8.5L21 13.5 13.5 21 3 12.5Zm4.5-5.2h.01',
-  gamepad: 'M7 12h4m-2-2v4m6.5 0h.01M18 11h.01M8.5 6h7a5.5 5.5 0 0 1 5.4 6.5l-.6 3.3A3 3 0 0 1 17.4 18c-1 0-1.9-.5-2.5-1.3l-.6-.9h-4.6l-.6.9A3 3 0 0 1 6.6 18a3 3 0 0 1-2.9-2.2l-.6-3.3A5.5 5.5 0 0 1 8.5 6Z',
-  arrow: 'M5 12h14m-6-6 6 6-6 6',
-  box: 'M21 8.5v7a2 2 0 0 1-1 1.73l-7 4a2 2 0 0 1-2 0l-7-4A2 2 0 0 1 3 15.5v-7a2 2 0 0 1 1-1.73l7-4a2 2 0 0 1 2 0l7 4A2 2 0 0 1 21 8.5ZM3.3 7.5 12 12.5l8.7-5M12 22v-9.5',
-  alert: 'M12 9v4m0 4h.01M10.3 3.9 2.4 17.4A2 2 0 0 0 4.1 20.4h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z',
-  info: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-9v4m0-8h.01',
-  flask: 'M9 3h6M10 3v6.5L4.6 18A2 2 0 0 0 6.3 21h11.4a2 2 0 0 0 1.7-3L14 9.5V3M7.5 15h9',
-  truck: 'M3 7a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v9H3V7Zm11 3h3.4a1 1 0 0 1 .82.43l2.6 3.7a1 1 0 0 1 .18.57V16h-7v-6ZM7 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm10 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z',
-  headset: 'M4 13v-1a8 8 0 0 1 16 0v1M4 13h1.5a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1Zm16 0h-1.5a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1H20a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1Zm-2 6v.5a2 2 0 0 1-2 2h-3',
-  card: 'M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8Zm0 3h18M6.5 15h3',
-  lock: 'M6 11V8a6 6 0 0 1 12 0v3M5 11h14a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1Zm7 4v2',
-  copy: 'M9 9a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2V9ZM5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1',
-  logout: 'M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 8l-4 4 4 4M6 12h11',
-  edit: 'M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17v3ZM14.5 6.5l3 3',
-  refresh: 'M20 12a8 8 0 1 1-2.4-5.7M20 4v4h-4',
-  filter: 'M3 5h18l-7 8v5.5l-4 2V13L3 5Z',
+interface IconArt {
+  /** The silhouette. Drawn filled, and it is what reads at small sizes. */
+  readonly fill?: string;
+  /** Detail drawn over the body, stroked in the surrounding colour. */
+  readonly stroke?: string;
+  /** Detail knocked out of the body, for counters inside a solid shape. */
+  readonly knockout?: string;
+}
+
+/**
+ * An octagon in three-quarter view on the 24 grid.
+ *
+ * The same construction as the coin artwork, so currency reads as one object
+ * across the whole product rather than as an icon that happens to be round.
+ */
+function coin(cx: number, cy: number, r: number, squash = 0.62): string {
+  const points: string[] = [];
+
+  for (let index = 0; index < 8; index += 1) {
+    const angle = ((index * 45 + 22.5) * Math.PI) / 180;
+    points.push(
+      `${(cx + Math.cos(angle) * r).toFixed(2)},${(cy + Math.sin(angle) * r * squash).toFixed(2)}`,
+    );
+  }
+
+  return `M${points.join('L')}Z`;
+}
+
+const ART: Record<IconName, IconArt> = {
+  // --- Commerce ------------------------------------------------------------
+  cart: {
+    fill: 'M2.4 3h2.6a1 1 0 0 1 .98.8L6.3 6H20.4a1 1 0 0 1 .97 1.25l-1.6 6.2A2 2 0 0 1 17.83 15H8.6a2 2 0 0 1-1.96-1.6L4.6 5H2.4Z',
+    stroke: 'M9.6 19.4h.01M17 19.4h.01',
+  },
+  coins: { fill: `${coin(9, 13.5, 6.4)}${coin(15.5, 9.5, 5.6)}` },
+  tag: {
+    fill: 'M3 3h7.6a2 2 0 0 1 1.42.6l8.4 8.4a2 2 0 0 1 0 2.82l-6.6 6.6a2 2 0 0 1-2.82 0L3.6 13A2 2 0 0 1 3 11.6Z',
+    knockout: 'M7.4 8.6m-1.6 0a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0-3.2 0',
+  },
+  card: {
+    fill: 'M2 6.6A2.6 2.6 0 0 1 4.6 4h14.8A2.6 2.6 0 0 1 22 6.6v10.8a2.6 2.6 0 0 1-2.6 2.6H4.6A2.6 2.6 0 0 1 2 17.4Z',
+    knockout: 'M2 9h20v2.6H2ZM5 14.6h4.4v1.8H5Z',
+  },
+  box: {
+    fill: 'M12 1.9 21.4 7v10L12 22.1 2.6 17V7Z',
+    knockout: 'M12 11.1 4.2 6.8 2.6 7.7 12 13.1l9.4-5.4-1.6-.9Z',
+    stroke: 'M12 13.1V22',
+  },
+  crown: { fill: 'M2.6 7.4 7 11l5-7.4L17 11l4.4-3.6-1.7 11.2H4.3Z' },
+
+  // --- Trust ---------------------------------------------------------------
+  shield: {
+    fill: 'M12 1.8 21 5.4v6.2c0 4.9-3.6 8.9-9 10.6-5.4-1.7-9-5.7-9-10.6V5.4Z',
+    knockout: 'M8.1 11.7 6.8 13l3.6 3.6 6.8-6.8-1.3-1.3-5.5 5.5Z',
+  },
+  lock: {
+    fill: 'M4 10.2h16V21a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Z',
+    stroke: 'M7.4 10.2V7a4.6 4.6 0 0 1 9.2 0v3.2',
+    knockout: 'M11 14.2h2v4h-2Z',
+  },
+  check: { stroke: 'M4 12.6 9.4 18 20 6.6' },
+
+  // --- Service -------------------------------------------------------------
+  headset: {
+    fill: 'M3 13.4h2.6a1.2 1.2 0 0 1 1.2 1.2v4.2a1.2 1.2 0 0 1-1.2 1.2H3Zm15.4 0H21v6.6h-2.6a1.2 1.2 0 0 1-1.2-1.2v-4.2a1.2 1.2 0 0 1 1.2-1.2Z',
+    stroke: 'M3 13.4v-1.2a9 9 0 0 1 18 0v1.2M19 20v.6a2.4 2.4 0 0 1-2.4 2.4H13',
+  },
+  truck: {
+    fill: 'M2 6.6a1 1 0 0 1 1-1h9.6a1 1 0 0 1 1 1v9.8H2Zm12.6 3.2h3.1a1 1 0 0 1 .82.43l2.3 3.3a1 1 0 0 1 .18.57v2.3h-6.4Z',
+    stroke: 'M6.6 19.6h.01M17.4 19.6h.01',
+  },
+  bolt: { fill: 'M13.6 1.8 4.4 14.2h5.8l-1.8 8 9.2-12.4h-5.8Z' },
+  clock: {
+    fill: 'M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Z',
+    knockout: 'M11 6.4h2v6.2l4 2.4-1 1.7-5-3Z',
+  },
+
+  // --- Navigation ----------------------------------------------------------
+  menu: { stroke: 'M3.4 6.6h17.2M3.4 12h17.2M3.4 17.4h17.2' },
+  close: { stroke: 'M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4' },
+  chevron: { stroke: 'M9 5.4 15.6 12 9 18.6' },
+  arrow: { stroke: 'M3.6 12h16M13.4 5.6 19.8 12l-6.4 6.4' },
+  search: {
+    stroke: 'M10.6 3.4a7.2 7.2 0 1 1 0 14.4 7.2 7.2 0 0 1 0-14.4ZM16 16l4.6 4.6',
+  },
+  user: {
+    fill: 'M12 3.4a4.3 4.3 0 1 1 0 8.6 4.3 4.3 0 0 1 0-8.6ZM12 13.6c4.4 0 8 2.8 8 6.2v.8H4v-.8c0-3.4 3.6-6.2 8-6.2Z',
+  },
+  filter: { fill: 'M2.6 4.4h18.8l-7.4 8.6v6l-4 2.2V13Z' },
+  logout: {
+    fill: 'M13.6 3H19a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5.4v-2H19V5h-5.4Z',
+    stroke: 'M9.6 8 5.6 12l4 4M6 12h7',
+  },
+
+  // --- Status and meta -----------------------------------------------------
+  alert: {
+    fill: 'M10.28 3.3 2.4 16.8A2 2 0 0 0 4.12 19.8h15.76a2 2 0 0 0 1.72-3L13.72 3.3a2 2 0 0 0-3.44 0Z',
+    knockout: 'M11 8.4h2v5h-2Zm0 6.6h2v2h-2Z',
+  },
+  info: {
+    fill: 'M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Z',
+    knockout: 'M11 10.6h2v7h-2Zm0-4.4h2v2.2h-2Z',
+  },
+  globe: {
+    fill: 'M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20Z',
+    knockout: 'M2.6 11h18.8v2H2.6Z',
+    stroke: 'M12 2.4c2.6 2.6 3.9 6 3.9 9.6s-1.3 7-3.9 9.6c-2.6-2.6-3.9-6-3.9-9.6S9.4 5 12 2.4Z',
+  },
+  gamepad: {
+    fill: 'M8.4 5.6h7.2a5.6 5.6 0 0 1 5.5 6.6l-.6 3.4a3 3 0 0 1-5.5 1.1l-.7-1h-4.6l-.7 1a3 3 0 0 1-5.5-1.1l-.6-3.4a5.6 5.6 0 0 1 5.5-6.6Z',
+    knockout: 'M6.4 10.2h1.6V8.6h1.6v1.6h1.6v1.6H9.6v1.6H8V11.8H6.4Zm9 0h1.6v1.6h-1.6Zm2.2-1.6h1.6v1.6h-1.6Z',
+  },
+  flask: { fill: 'M9 2.6h6v1.8h-1v5.2l5.4 8.6a2 2 0 0 1-1.7 3H6.3a2 2 0 0 1-1.7-3L10 9.6V4.4H9Z' },
+  copy: {
+    fill: 'M9 6.6h10.4a2 2 0 0 1 2 2V19a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V8.6a2 2 0 0 1 2-2Z',
+    stroke: 'M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1',
+  },
+  edit: {
+    fill: 'M3.4 20.6h4L19.1 8.9a2.2 2.2 0 0 0-3.1-3.1L4.4 17.5Z',
+    stroke: 'M14.6 6.4l3.1 3.1',
+  },
+  refresh: { stroke: 'M20 12a8 8 0 1 1-2.4-5.7M20.4 4v4.4H16' },
 };
 
 @Component({
@@ -85,14 +187,24 @@ const PATHS: Record<IconName, string> = {
       [attr.height]="size"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="currentColor"
-      [attr.stroke-width]="strokeWidth"
-      stroke-linecap="round"
-      stroke-linejoin="round"
       [attr.aria-hidden]="label ? null : 'true'"
       [attr.role]="label ? 'img' : null"
       [attr.aria-label]="label">
-      <path [attr.d]="path"></path>
+      <!-- Body and its counters as one path, so the knockout is a real hole
+           rather than a shape painted in the background colour. That is what
+           lets an icon sit on any surface without carrying a patch with it. -->
+      <path *ngIf="art.fill"
+            [attr.d]="body"
+            fill="currentColor"
+            fill-rule="evenodd"
+            clip-rule="evenodd"></path>
+      <path *ngIf="art.stroke"
+            [attr.d]="art.stroke"
+            fill="none"
+            stroke="currentColor"
+            [attr.stroke-width]="strokeWidth"
+            stroke-linecap="round"
+            stroke-linejoin="miter"></path>
     </svg>
   `,
   styles: [`
@@ -104,12 +216,20 @@ const PATHS: Record<IconName, string> = {
 export class IconComponent {
   @Input({ required: true }) name!: IconName;
   @Input() size = 20;
-  @Input() strokeWidth = 1.75;
+
+  /** Only affects stroked detail; filled bodies carry their own weight. */
+  @Input() strokeWidth = 2;
 
   /** Set only when the icon is the sole meaning; otherwise the control labels it. */
   @Input() label?: string;
 
-  get path(): string {
-    return PATHS[this.name] ?? '';
+  get art(): IconArt {
+    return ART[this.name] ?? {};
+  }
+
+  /** Body plus counters, relying on the even-odd rule to cut the holes. */
+  get body(): string {
+    const art = this.art;
+    return art.knockout ? `${art.fill}${art.knockout}` : (art.fill ?? '');
   }
 }
