@@ -70,8 +70,11 @@ export class HttpCustomerApiService extends CustomerApiService {
     return this.api.get<AuthMethods>('/auth/methods');
   }
 
-  register(email: string, password: string): Observable<void> {
-    return this.api.post<void>('/auth/register', { email, password });
+  register(email: string, password: string, displayName?: string): Observable<void> {
+    const name = displayName?.trim();
+    // Omitted rather than sent empty, so the server's optional-field validation
+    // sees an absent value and not a blank one.
+    return this.api.post<void>('/auth/register', name ? { email, password, displayName: name } : { email, password });
   }
 
   login(email: string, password: string): Observable<AuthState> {

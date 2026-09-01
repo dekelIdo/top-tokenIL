@@ -68,11 +68,13 @@ import { IconComponent } from './icon.component';
             <a class="compare" href="#bundles">השוואת כל החבילות</a>
           </div>
 
-          <!-- Three facts on a rule. Not four cards. -->
+          <!-- Three facts on a rule. Not four cards. Each carries the icon for
+               the thing it describes, which is the only reason an icon earns a
+               place here. -->
           <ul class="facts">
-            <li>מחיר סופי לפני תשלום</li>
-            <li>אשראי דרך ספק סליקה</li>
-            <li>מעקב הזמנה</li>
+            <li><tt-icon name="tag" [size]="15"></tt-icon>מחיר סופי לפני תשלום</li>
+            <li><tt-icon name="card" [size]="15"></tt-icon>אשראי דרך ספק סליקה</li>
+            <li><tt-icon name="truck" [size]="15"></tt-icon>מעקב הזמנה</li>
           </ul>
         </div>
 
@@ -224,7 +226,8 @@ import { IconComponent } from './icon.component';
       color: var(--tt-text-faint);
       font-size: var(--tt-text-xs);
     }
-    .facts li { display: flex; align-items: center; gap: var(--tt-space-2); }
+    .facts li { display: flex; align-items: center; gap: 6px; }
+    .facts tt-icon { color: var(--tt-text-faint); flex: none; }
     .facts li + li::before {
       content: '';
       inline-size: 3px;
@@ -244,7 +247,13 @@ import { IconComponent } from './icon.component';
         gap: var(--tt-space-2);
         text-align: center;
       }
-      .facts li { display: block; line-height: var(--tt-leading-snug); }
+      .facts li {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        line-height: var(--tt-leading-snug);
+      }
       .facts li + li::before { content: none; }
     }
 
@@ -259,12 +268,16 @@ import { IconComponent } from './icon.component';
          and the button still land on the first screen. Cropping it is what
          makes it read as art direction rather than as a picture dropped into a
          box below the text. */
+      /* Full strength, and pushed further off the trailing edge so it does not
+         need transparency to stay out of the headline's way. Fading metal to
+         seventy percent over a dark ground turns gold to brown, which made an
+         object that had just been given a material look like a smudge. */
       .art {
         position: absolute;
-        inset-block-start: calc(var(--tt-header-height) + var(--tt-space-1));
-        inset-inline-end: -22%;
+        inset-block-start: calc(var(--tt-header-height) - var(--tt-space-2));
+        inset-inline-end: -16%;
         inline-size: 62%;
-        opacity: 0.72;
+        opacity: 1;
         z-index: -1;
         pointer-events: none;
       }

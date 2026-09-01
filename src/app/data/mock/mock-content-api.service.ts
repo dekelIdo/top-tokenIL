@@ -96,12 +96,16 @@ export class MockCustomerApiService extends CustomerApiService {
     return this.backend.respond({ password: true, google: false, emailCode: true }, 80);
   }
 
-  register(email: string, password: string): Observable<void> {
+  register(email: string, password: string, displayName?: string): Observable<void> {
     // The mock signs the customer straight in, which is what the real backend
     // does for a new address. The password is used to decide nothing and is not
     // retained anywhere.
     void password;
-    this.state.next({ kind: 'AUTHENTICATED', customer: this.customerFor(email) });
+    const customer = this.customerFor(email);
+    const named = displayName?.trim()
+      ? { ...customer, displayName: displayName.trim() }
+      : customer;
+    this.state.next({ kind: 'AUTHENTICATED', customer: named });
     return this.backend.respond(undefined, 300);
   }
 

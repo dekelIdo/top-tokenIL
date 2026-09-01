@@ -32,7 +32,8 @@ export abstract class CustomerApiService {
   /** What the server supports, so the UI never offers a button that cannot work. */
   abstract getAuthMethods(): Observable<AuthMethods>;
 
-  abstract register(email: string, password: string): Observable<void>;
+  /** `displayName` is optional; the server stores null when it is absent. */
+  abstract register(email: string, password: string, displayName?: string): Observable<void>;
   abstract login(email: string, password: string): Observable<AuthState>;
 
   abstract requestPasswordReset(email: string): Observable<void>;

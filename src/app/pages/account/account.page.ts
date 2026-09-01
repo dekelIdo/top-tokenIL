@@ -61,9 +61,28 @@ type Mode = 'signIn' | 'register' | 'forgot';
               </a>
 
               <div class="divider" *ngIf="available.google"><span>או</span></div>
+
+              <!-- Development only. In production an unconfigured provider is
+                   simply absent: showing customers a button that cannot work is
+                   worse than not offering it. This note exists so the missing
+                   configuration is obvious to whoever is running it locally. -->
+              <p class="config-note" *ngIf="!available.google && showConfigHint">
+                כניסה עם Google לא מוגדרת בסביבה הזו.
+                <span class="config-note__keys">GOOGLE_CLIENT_ID · GOOGLE_CLIENT_SECRET · GOOGLE_REDIRECT_URI</span>
+                <span class="config-note__doc">ההוראות המלאות נמצאות ב־docs/GOOGLE-OAUTH.md</span>
+              </p>
             </ng-container>
 
             <form (submit)="submit($event)" novalidate>
+              <!-- Asked for on signup only, and optional. One more field on a
+                   phone is one more reason to abandon, so it never blocks. -->
+              <label class="tt-field" *ngIf="mode() === 'register'">
+                <span class="tt-label" for="acc-name">שם</span>
+                <input id="acc-name" class="tt-input" type="text" name="name"
+                       autocomplete="given-name" [(ngModel)]="displayName"
+                       maxlength="80" placeholder="איך לפנות אליכם" />
+              </label>
+
               <label class="tt-field">
                 <span class="tt-label" for="acc-email">אימייל</span>
                 <input id="acc-email" class="tt-input" type="email" name="email" autocomplete="email"
@@ -215,6 +234,27 @@ type Mode = 'signIn' | 'register' | 'forgot';
     }
     .secret__toggle:hover { color: var(--tt-text); background: var(--tt-surface-3); }
 
+    .config-note {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      margin: 0 0 var(--tt-space-4);
+      padding: var(--tt-space-3);
+      border: 1px dashed var(--tt-border-strong);
+      border-radius: var(--tt-radius-md);
+      color: var(--tt-text-muted);
+      font-size: var(--tt-text-xs);
+      line-height: var(--tt-leading-snug);
+    }
+    .config-note__keys {
+      font-family: var(--tt-font-numeric);
+      color: var(--tt-text-faint);
+      direction: ltr;
+      unicode-bidi: isolate;
+      text-align: start;
+    }
+    .config-note__doc { color: var(--tt-text-faint); }
+
     .divider {
       display: flex;
       align-items: center;
@@ -281,6 +321,9 @@ export class AccountPage {
 
   readonly mode = signal<Mode>('signIn');
   readonly busy = signal(false);
+  /** Optional, and only collected when opening an account. */
+  displayName = '';
+
   /** Whether the password field is showing its value. */
   readonly revealed = signal(false);
 
@@ -298,6 +341,14 @@ export class AccountPage {
    * and sets the session cookie on the way back, so the browser has to leave.
    */
   readonly googleUrl = `${environment.apiBaseUrl}/${environment.apiVersion}/auth/google?returnTo=/account`;
+
+  /**
+   * Whether to explain a missing Google configuration on screen.
+   *
+   * Development and staging only. A customer on the live site should never be
+   * told which environment variables the operator forgot to set.
+   */
+  readonly showConfigHint = !environment.production;
 
   constructor() {
     this.analytics.pageView('/account', 'Account');
@@ -349,7 +400,7 @@ export class AccountPage {
     }
 
     if (this.mode() === 'register') {
-      this.customerApi.register(this.email, this.password).subscribe({
+      this.customerApi.register(this.email, this.password, this.displayName).subscribe({
         next: () => {
           done();
           this.password = '';

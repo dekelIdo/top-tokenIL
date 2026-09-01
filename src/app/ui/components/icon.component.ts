@@ -33,7 +33,16 @@ export type IconName =
   | 'box'
   | 'alert'
   | 'info'
-  | 'flask';
+  | 'flask'
+  | 'truck'
+  | 'headset'
+  | 'card'
+  | 'lock'
+  | 'copy'
+  | 'logout'
+  | 'edit'
+  | 'refresh'
+  | 'filter';
 
 const PATHS: Record<IconName, string> = {
   cart: 'M3 4h2.2l2.1 10.4a2 2 0 0 0 2 1.6h7.5a2 2 0 0 0 2-1.55L20.5 8H6.4M10 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2Zm8 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z',
@@ -54,6 +63,15 @@ const PATHS: Record<IconName, string> = {
   alert: 'M12 9v4m0 4h.01M10.3 3.9 2.4 17.4A2 2 0 0 0 4.1 20.4h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z',
   info: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-9v4m0-8h.01',
   flask: 'M9 3h6M10 3v6.5L4.6 18A2 2 0 0 0 6.3 21h11.4a2 2 0 0 0 1.7-3L14 9.5V3M7.5 15h9',
+  truck: 'M3 7a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v9H3V7Zm11 3h3.4a1 1 0 0 1 .82.43l2.6 3.7a1 1 0 0 1 .18.57V16h-7v-6ZM7 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm10 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z',
+  headset: 'M4 13v-1a8 8 0 0 1 16 0v1M4 13h1.5a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1Zm16 0h-1.5a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1H20a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1Zm-2 6v.5a2 2 0 0 1-2 2h-3',
+  card: 'M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8Zm0 3h18M6.5 15h3',
+  lock: 'M6 11V8a6 6 0 0 1 12 0v3M5 11h14a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1Zm7 4v2',
+  copy: 'M9 9a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2V9ZM5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1',
+  logout: 'M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 8l-4 4 4 4M6 12h11',
+  edit: 'M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17v3ZM14.5 6.5l3 3',
+  refresh: 'M20 12a8 8 0 1 1-2.4-5.7M20 4v4h-4',
+  filter: 'M3 5h18l-7 8v5.5l-4 2V13L3 5Z',
 };
 
 @Component({

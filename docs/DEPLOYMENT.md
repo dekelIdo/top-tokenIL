@@ -119,3 +119,22 @@ has been exercised.
 - **CI.** No pipeline runs the suite automatically. It is run by hand.
 - **`embedded-postgres`.** Development and test only. It must never appear in a
   deployed environment, which is why `DATABASE_URL` is required there.
+
+## Google sign-in
+
+The implementation is complete and inert until an OAuth client exists. Creating
+one is an owner task and is documented step by step, including the exact
+redirect URI to paste into Google Cloud, in
+[GOOGLE-OAUTH.md](GOOGLE-OAUTH.md).
+
+Summary of what the backend service needs:
+
+```
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+GOOGLE_REDIRECT_URI=https://top-tokenil.onrender.com/api/v1/auth/google/callback
+APP_BASE_URL=https://top-tokenil.onrender.com
+```
+
+The client secret belongs to the backend only. It must never appear in an
+Angular `environment.*.ts` file, because those ship to the browser.

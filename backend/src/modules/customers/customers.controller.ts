@@ -72,7 +72,12 @@ export class CustomersController {
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ): Promise<void> {
-    const customer = await this.accounts.register(body.email, body.password, request.ip ?? null);
+    const customer = await this.accounts.register(
+      body.email,
+      body.password,
+      request.ip ?? null,
+      body.displayName,
+    );
 
     if (customer) {
       await this.orderAccess.claimSessionOrders(

@@ -50,7 +50,12 @@ export class AccountService {
    * session: the real owner can still sign in, and the person probing learns
    * nothing.
    */
-  async register(email: string, password: string, ip: string | null): Promise<Customer | null> {
+  async register(
+    email: string,
+    password: string,
+    ip: string | null,
+    displayName?: string,
+  ): Promise<Customer | null> {
     const normalised = this.normalise(email);
 
     await this.rateLimit.consume(RATE_LIMITS.registerPerIp, ip ?? 'unknown');
@@ -78,6 +83,9 @@ export class AccountService {
         email: normalised,
         passwordHash: await hashPassword(password),
         passwordUpdatedAt: new Date(),
+        // Trimmed, and stored as null rather than an empty string so "has a
+        // name" stays a single check everywhere downstream.
+        displayName: displayName?.trim() || null,
         // Not verified by registering. Owning the address is proven by the
         // sign-in code or by Google, not by typing it into a form.
         emailVerified: false,

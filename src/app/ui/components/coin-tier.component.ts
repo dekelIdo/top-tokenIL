@@ -49,10 +49,10 @@ interface Token {
              through the middle and lifts again at the bottom, which is what
              separates a struck surface from a flat fill. -->
         <linearGradient [attr.id]="faceId" x1="0.15" y1="0" x2="0.7" y2="1">
-          <stop offset="0" stop-color="var(--tt-gold-300)"/>
-          <stop offset="0.42" stop-color="var(--tt-gold-500)"/>
-          <stop offset="0.78" stop-color="var(--tt-gold-600)"/>
-          <stop offset="1" stop-color="var(--tt-gold-400)"/>
+          <stop offset="0" stop-color="#FFF3D2"/>
+          <stop offset="0.34" stop-color="var(--tt-gold-400)"/>
+          <stop offset="0.72" stop-color="var(--tt-gold-500)"/>
+          <stop offset="1" stop-color="var(--tt-gold-600)"/>
         </linearGradient>
 
         <!-- The extruded side, always darker than the face above it. -->
@@ -78,27 +78,43 @@ interface Token {
 
       <g class="cluster">
         <g *ngFor="let token of tokens" [attr.opacity]="token.dim">
-          <!-- Extruded side, drawn first and offset downward. -->
-          <polygon [attr.points]="octagon(token, token.depth)"
-                   [attr.fill]="'url(#' + edgeId + ')'"/>
+          <!-- The rim, drawn facet by facet. A single dark shape under the face
+               reads as a sticker with a shadow; eight quads each lit by their
+               own angle read as a machined edge, which is the whole difference
+               between a flat icon and something with a material. -->
+          <polygon *ngFor="let facet of facets(token)"
+                   [attr.points]="facet.points"
+                   [attr.fill]="facet.fill"/>
+
           <!-- Struck face. -->
           <polygon [attr.points]="octagon(token, 0)"
                    [attr.fill]="'url(#' + faceId + ')'"/>
-          <!-- Chamfer: an inset outline, which is what makes this read as a rim
-               rather than as a flat gold shape. -->
-          <polygon [attr.points]="octagon(token, 0, 0.82)"
-                   fill="none" stroke="#7A4E10" stroke-opacity="0.34"
-                   [attr.stroke-width]="token.r > 30 ? 1.6 : 1"/>
-          <!-- Specular sweep along the upper edge of the face. -->
-          <polygon [attr.points]="octagon(token, 0, 0.95)"
+
+          <!-- A recessed field inside the rim. The step between the two is what
+               gives the face somewhere for the mark to sit. -->
+          <polygon [attr.points]="octagon(token, 0, 0.84)"
+                   fill="#000000" fill-opacity="0.09"/>
+          <polygon [attr.points]="octagon(token, -0.9, 0.84)"
+                   [attr.fill]="'url(#' + faceId + ')'"/>
+
+          <!-- Specular sweep along the upper edge. -->
+          <polygon [attr.points]="octagon(token, 0, 0.98)"
                    [attr.fill]="'url(#' + sheenId + ')'"/>
+
+          <!-- Rim light along the lower edge, where the ground bounces back.
+               Without it the object floats instead of sitting somewhere. -->
+          <polyline [attr.points]="lowerArc(token)"
+                    fill="none" stroke="var(--tt-gold-300)" stroke-opacity="0.5"
+                    [attr.stroke-width]="token.r > 30 ? 1.4 : 0.9"
+                    stroke-linecap="round"/>
 
           <!-- The brand Z, struck into the face. Omitted on the small
                background tokens, where it would only be noise. -->
-          <g *ngIf="token.face"
-             [attr.transform]="faceTransform(token)"
-             fill="#5A390A" fill-opacity="0.66">
-            <path d="M15 14 H47 V21.5 L29 41 H47 V49.5 H15 V42 L33 22.5 H15 Z"/>
+          <g *ngIf="token.face" [attr.transform]="faceTransform(token)">
+            <path d="M15 14 H47 V21.5 L29 41 H47 V49.5 H15 V42 L33 22.5 H15 Z"
+                  fill="#000000" fill-opacity="0.28" transform="translate(0,1.2)"/>
+            <path d="M15 14 H47 V21.5 L29 41 H47 V49.5 H15 V42 L33 22.5 H15 Z"
+                  fill="#8A5C12" fill-opacity="0.85"/>
           </g>
         </g>
       </g>
@@ -185,10 +201,10 @@ export class CoinTierComponent {
   get tokens(): readonly Token[] {
     const all: Token[] = [
       { cx: 100, cy: 82, r: 46, squash: 0.58, depth: 13, dim: 1, face: true },
-      { cx: 45, cy: 103, r: 29, squash: 0.58, depth: 9, dim: 0.92, face: true },
-      { cx: 157, cy: 97, r: 25, squash: 0.58, depth: 8, dim: 0.8, face: false },
-      { cx: 134, cy: 42, r: 19, squash: 0.58, depth: 6, dim: 0.62, face: false },
-      { cx: 62, cy: 38, r: 15, squash: 0.58, depth: 5, dim: 0.5, face: false },
+      { cx: 45, cy: 103, r: 29, squash: 0.58, depth: 9, dim: 0.95, face: true },
+      { cx: 157, cy: 97, r: 25, squash: 0.58, depth: 8, dim: 0.87, face: false },
+      { cx: 134, cy: 42, r: 19, squash: 0.58, depth: 6, dim: 0.74, face: false },
+      { cx: 62, cy: 38, r: 15, squash: 0.58, depth: 5, dim: 0.64, face: false },
     ];
 
     // Reversed so the smallest background tokens paint first and the largest
@@ -210,6 +226,81 @@ export class CoinTierComponent {
       const angle = ((index * 45 + 22.5) * Math.PI) / 180;
       const x = token.cx + Math.cos(angle) * token.r * scale;
       const y = token.cy + Math.sin(angle) * token.r * token.squash * scale + dy;
+      points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+    }
+
+    return points.join(' ');
+  }
+
+  /**
+   * The visible side facets, each shaded by which way it faces.
+   *
+   * Light is treated as coming from the upper left, so a facet turned toward it
+   * is nearly the face colour and one turned away falls to the shadow tone.
+   * Only the facets on the lower silhouette can be seen from this angle; the
+   * ones behind the face are skipped rather than drawn and covered.
+   */
+  facets(token: Token): readonly { points: string; fill: string }[] {
+    const out: { points: string; fill: string }[] = [];
+
+    for (let index = 0; index < 8; index += 1) {
+      const a0 = ((index * 45 + 22.5) * Math.PI) / 180;
+      const a1 = (((index + 1) * 45 + 22.5) * Math.PI) / 180;
+
+      // The direction this facet points, from the midpoint of its edge.
+      const mid = (a0 + a1) / 2;
+      const facingDown = Math.sin(mid);
+      if (facingDown < -0.15) {
+        continue;
+      }
+
+      const p = (angle: number, dy: number) => {
+        const x = token.cx + Math.cos(angle) * token.r;
+        const y = token.cy + Math.sin(angle) * token.r * token.squash + dy;
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      };
+
+      // Lambert-ish term against a light at the upper left.
+      const lambert = (-Math.cos(mid) * 0.6 - Math.sin(mid) * 0.8 + 1) / 2;
+      const shade = Math.max(0, Math.min(1, lambert));
+
+      out.push({
+        points: [p(a0, 0), p(a1, 0), p(a1, token.depth), p(a0, token.depth)].join(' '),
+        fill: CoinTierComponent.mixGold(shade),
+      });
+    }
+
+    return out;
+  }
+
+  /**
+   * Blends between the shadow tone and the lit tone.
+   *
+   * Hard-coded hexes rather than theme variables: an SVG fill cannot interpolate
+   * two custom properties, and these are the material's own shading, not part of
+   * the palette a theme would restyle.
+   */
+  private static mixGold(t: number): string {
+    const dark = [0x5C, 0x39, 0x0B];
+    const light = [0xFF, 0xD3, 0x71];
+    const channel = (index: number) =>
+      Math.round(dark[index] + (light[index] - dark[index]) * t)
+        .toString(16)
+        .padStart(2, '0');
+    return `#${channel(0)}${channel(1)}${channel(2)}`;
+  }
+
+  /** The lower silhouette, for the bounce light along the bottom edge. */
+  lowerArc(token: Token): string {
+    const points: string[] = [];
+
+    for (let index = 0; index < 8; index += 1) {
+      const angle = ((index * 45 + 22.5) * Math.PI) / 180;
+      if (Math.sin(angle) < 0.3) {
+        continue;
+      }
+      const x = token.cx + Math.cos(angle) * token.r;
+      const y = token.cy + Math.sin(angle) * token.r * token.squash + token.depth;
       points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
     }
 
