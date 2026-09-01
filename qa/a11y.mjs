@@ -154,8 +154,12 @@ const animationDuration = await reducedPage.evaluate(() => {
   const el = document.querySelector('.tt-skeleton') ?? document.querySelector('.tt-btn');
   return el ? getComputedStyle(el).animationDuration : 'none';
 });
+// Compared as a number, not as a string. The stylesheet sets 0.01ms, which
+// Chrome serialises as "1e-05s" and never as "0.01ms", so the old string list
+// could only pass on an element the rule had not reached.
+const durationSeconds = animationDuration === 'none' ? 0 : parseFloat(animationDuration);
 check('animations are suppressed under prefers-reduced-motion',
-  animationDuration === '0.01ms' || animationDuration === '0s' || animationDuration === 'none',
+  Number.isFinite(durationSeconds) && durationSeconds <= 0.0001,
   animationDuration);
 await reducedContext.close();
 

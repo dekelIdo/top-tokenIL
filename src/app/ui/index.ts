@@ -1,3 +1,4 @@
+export * from './components/amount-selector.component';
 export * from './components/app-footer.component';
 export * from './components/app-header.component';
 export * from './components/badges.component';

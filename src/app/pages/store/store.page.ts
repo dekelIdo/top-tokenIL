@@ -2,20 +2,22 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { BehaviorSubject, EMPTY, Observable, combineLatest, of, timer } from 'rxjs';
+import { BehaviorSubject, EMPTY, Observable, combineLatest, concat, of, timer } from 'rxjs';
 import {
   catchError, debounce, distinctUntilChanged, filter, map, startWith, switchMap,
 } from 'rxjs/operators';
 
 import { AnalyticsService } from '../../core/analytics';
 import { STOREFRONT } from '../../core/brand';
+import { CoinPlan } from '../../core/value';
 import { LocalizePipe } from '../../core/i18n';
 import {
   AppError, CatalogQuery, CatalogSort, DEFAULT_PAGE_SIZE, Page, Platform, Product, ProductType,
   Region, toAppError,
 } from '../../domain';
-import { CatalogFacade, CatalogLookups } from '../../state';
+import { CartFacade, CatalogFacade, CatalogLookups } from '../../state';
 import {
+  AmountSelectorComponent,
   BundleLadderComponent, EmptyStateComponent, ErrorStateComponent, ProductCardComponent,
   SkeletonGridComponent,
 } from '../../ui';
@@ -39,22 +41,32 @@ interface StoreViewModel {
   imports: [
     CommonModule, FormsModule, LocalizePipe,
     ProductCardComponent, SkeletonGridComponent, EmptyStateComponent, ErrorStateComponent,
-    BundleLadderComponent,
+    BundleLadderComponent, AmountSelectorComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="tt-container tt-section">
       <header class="head">
         <span class="tt-eyebrow">EA SPORTS FC</span>
-        <h1>כמה קוינס אתם צריכים?</h1>
-        <p class="tt-muted">בחרו חבילה. ככל שהיא גדולה יותר, המחיר לכל מיליון יורד.</p>
+        <h1>קוינס ל־EA SPORTS FC</h1>
+        <p class="tt-muted">כל הכמויות זמינות. המחיר לכל מיליון יורד ככל שקונים יותר.</p>
       </header>
 
-      <!-- The bundle tiers for the focus game, above the catalogue grid. -->
-      <section class="tiers" *ngIf="ladder$ | async as ladder">
-        <h2 class="tt-visually-hidden">חבילות קוינס</h2>
-        <tt-bundle-ladder [detail]="ladder" [productSlug]="ladder.product.slug"></tt-bundle-ladder>
-      </section>
+      <ng-container *ngIf="ladder$ | async as ladder">
+        <!-- The question the shop exists to answer, before anything else. -->
+        <section class="chooser">
+          <tt-amount-selector [detail]="ladder"
+                              [busy]="adding()"
+                              (confirm)="addPlan($event)">
+          </tt-amount-selector>
+        </section>
+
+        <!-- The fixed bundles, for anyone who would rather just pick one. -->
+        <section class="tiers">
+          <h2 class="tiers__title">או בחרו חבילה מוכנה</h2>
+          <tt-bundle-ladder [detail]="ladder" [productSlug]="ladder.product.slug"></tt-bundle-ladder>
+        </section>
+      </ng-container>
 
       <form class="filters" (submit)="$event.preventDefault()">
         <label class="tt-field grow search-field">
@@ -210,7 +222,13 @@ interface StoreViewModel {
     /* The coin tiers, shown before the grid. A shop that sells one game should
        open on the thing that game's players are actually choosing between,
        rather than on three parent products that each hide a price range. */
+    .chooser {
+      margin-block-end: var(--tt-space-7);
+      padding-block-end: var(--tt-space-6);
+      border-block-end: 1px solid var(--tt-border);
+    }
     .tiers { margin-block-end: var(--tt-space-6); }
+    .tiers__title { font-size: var(--tt-text-lg); margin-block-end: var(--tt-space-3); }
     /* One skeleton row's worth of space, so the first response does not jump. */
     .tt-grid { min-block-size: 260px; }
     .more { display: flex; justify-content: center; margin-block-start: var(--tt-space-5); }
@@ -229,6 +247,7 @@ interface StoreViewModel {
 })
 export class StorePage {
   private readonly catalog = inject(CatalogFacade);
+  private readonly cart = inject(CartFacade);
   private readonly analytics = inject(AnalyticsService);
   private readonly route = inject(ActivatedRoute);
 
@@ -243,6 +262,31 @@ export class StorePage {
   private firstQuery = true;
 
   readonly error = signal<AppError | undefined>(undefined);
+
+  /** Set while a plan is being added, so the button cannot be double-pressed. */
+  readonly adding = signal(false);
+
+  /**
+   * Adds every bundle in the plan to the cart.
+   *
+   * The plan is a list of real offers the server priced; this just posts them.
+   * Sequential rather than parallel: the cart merges by offer, and firing
+   * several writes at once at the same line is how you get a lost update.
+   */
+  addPlan(plan: CoinPlan): void {
+    if (this.adding()) {
+      return;
+    }
+    this.adding.set(true);
+
+    concat(...plan.lines.map((line) => this.cart.add({
+      offerId: line.offer.id,
+      quantity: line.count,
+    }))).subscribe({
+      complete: () => this.adding.set(false),
+      error: () => this.adding.set(false),
+    });
+  }
 
   readonly lookups$ = this.catalog.lookups$;
 
