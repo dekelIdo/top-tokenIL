@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { BehaviorSubject, EMPTY, Observable, combineLatest, concat, of, timer } from 'rxjs';
 import {
@@ -18,8 +17,8 @@ import {
 import { CartFacade, CatalogFacade, CatalogLookups } from '../../state';
 import {
   AmountSelectorComponent,
-  BundleLadderComponent, EmptyStateComponent, ErrorStateComponent, ProductCardComponent,
-  SkeletonGridComponent,
+  BundleLadderComponent, EmptyStateComponent, ErrorStateComponent, FilterBarComponent,
+  FilterChange, FilterGroup, ProductCardComponent, SkeletonGridComponent,
 } from '../../ui';
 
 interface StoreViewModel {
@@ -39,9 +38,9 @@ interface StoreViewModel {
   selector: 'tt-store-page',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, LocalizePipe,
+    CommonModule, LocalizePipe,
     ProductCardComponent, SkeletonGridComponent, EmptyStateComponent, ErrorStateComponent,
-    BundleLadderComponent, AmountSelectorComponent,
+    BundleLadderComponent, AmountSelectorComponent, FilterBarComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -68,65 +67,14 @@ interface StoreViewModel {
         </section>
       </ng-container>
 
-      <form class="filters" (submit)="$event.preventDefault()">
-        <label class="tt-field grow search-field">
-          <span class="tt-label">חיפוש</span>
-          <input class="tt-input" type="search" [ngModel]="search$ | async" name="search"
-                 (ngModelChange)="setSearch($event)" placeholder="שם מוצר, משחק או תגית…" />
-        </label>
-
-        <!-- On a phone the five selects filled the entire first screen, so a
-             customer saw filters and no products. They collapse behind a
-             summary below 720px and are forced open above it, which needs no
-             JavaScript and stays keyboard accessible. -->
-        <details class="refine" [open]="filtersOpen()" (toggle)="onFiltersToggle($event)">
-          <summary>
-            <span>סינון</span>
-            <span class="refine__sign" aria-hidden="true"></span>
-          </summary>
-          <div class="refine__body">
-
-        <label class="tt-field">
-          <span class="tt-label">פלטפורמה</span>
-          <select class="tt-select" name="platform" [ngModel]="platformId" (ngModelChange)="setPlatform($event)">
-            <option value="">כל הפלטפורמות</option>
-            <option *ngFor="let platform of platforms(lookups$ | async)" [value]="platform.id">
-              {{ platform.name | t }}
-            </option>
-          </select>
-        </label>
-
-        <label class="tt-field">
-          <span class="tt-label">אזור</span>
-          <select class="tt-select" name="region" [ngModel]="regionId" (ngModelChange)="setRegion($event)">
-            <option value="">כל האזורים</option>
-            <option *ngFor="let region of regions(lookups$ | async)" [value]="region.id">{{ region.name | t }}</option>
-          </select>
-        </label>
-
-        <label class="tt-field">
-          <span class="tt-label">סוג מוצר</span>
-          <select class="tt-select" name="type" [ngModel]="type" (ngModelChange)="setType($event)">
-            <option value="">כל הסוגים</option>
-            <option *ngFor="let entry of productTypes" [value]="entry.value">{{ entry.label }}</option>
-          </select>
-        </label>
-
-        <label class="tt-field">
-          <span class="tt-label">מיון</span>
-          <select class="tt-select" name="sort" [ngModel]="sort" (ngModelChange)="setSort($event)">
-            <option value="relevance">מומלץ</option>
-            <option value="price-asc">מחיר: מהזול ליקר</option>
-            <option value="price-desc">מחיר: מהיקר לזול</option>
-            <option value="popular">פופולרי</option>
-            <option value="name-asc">שם</option>
-          </select>
-        </label>
-
-        <button type="button" class="tt-btn tt-btn--quiet" (click)="clear()" *ngIf="hasFilters">איפוס</button>
-          </div>
-        </details>
-      </form>
+      <tt-filter-bar class="filters"
+                     [groups]="filterGroups(lookups$ | async)"
+                     [search]="(search$ | async) ?? ''"
+                     [activeCount]="activeFilterCount"
+                     (changed)="onFilter($event)"
+                     (searchChange)="setSearch($event)"
+                     (clear)="clear()">
+      </tt-filter-bar>
 
       <ng-container *ngIf="error(); else content">
         <tt-error-state [error]="error()" (retry)="retry()"></tt-error-state>
@@ -401,6 +349,66 @@ export class StorePage {
     const query = this.querySubject.value;
     return Boolean(query.search || query.platformIds?.length
       || query.regionIds?.length || query.types?.length);
+  }
+
+  /**
+   * The filter groups, built from whatever the catalog actually offers.
+   *
+   * Options come from the lookups rather than a hard-coded list, so a new
+   * platform or region appears here on its own and a removed one disappears.
+   */
+  filterGroups(lookups: CatalogLookups | null): readonly FilterGroup[] {
+    return [
+      {
+        key: 'platform',
+        label: 'פלטפורמה',
+        anyLabel: 'לא משנה',
+        selected: this.platformId,
+        options: this.platforms(lookups).map((platform) => ({
+          value: platform.id,
+          label: platform.name.he,
+        })),
+      },
+      {
+        key: 'type',
+        label: 'סוג מוצר',
+        anyLabel: 'לא משנה',
+        selected: this.type,
+        options: this.productTypes.map((entry) => ({ value: entry.value, label: entry.label })),
+      },
+      {
+        key: 'sort',
+        label: 'מיון',
+        anyLabel: 'מומלץ',
+        selected: this.sort === 'relevance' ? '' : this.sort,
+        options: [
+          { value: 'price-asc', label: 'מהזול ליקר' },
+          { value: 'price-desc', label: 'מהיקר לזול' },
+          { value: 'name-asc', label: 'שם' },
+        ],
+      },
+    ];
+  }
+
+  /** How many groups the customer has narrowed, for the sheet's badge. */
+  get activeFilterCount(): number {
+    const query = this.querySubject.value;
+    return [
+      query.platformIds?.length,
+      query.types?.length,
+      query.sort && query.sort !== 'relevance' ? 1 : 0,
+      query.search ? 1 : 0,
+    ].filter(Boolean).length;
+  }
+
+  onFilter(change: FilterChange): void {
+    if (change.key === 'platform') {
+      this.setPlatform(change.value);
+    } else if (change.key === 'type') {
+      this.setType(change.value);
+    } else if (change.key === 'sort') {
+      this.setSort((change.value || 'relevance') as CatalogSort);
+    }
   }
 
   platforms(lookups: CatalogLookups | null): readonly Platform[] {

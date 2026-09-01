@@ -1,3 +1,4 @@
+export * from './components/filter-bar.component';
 export * from './components/value-strip.component';
 export * from './components/coin-pack.component';
 export * from './components/amount-selector.component';
