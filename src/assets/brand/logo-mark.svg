@@ -1,28 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ZuzCOINS">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="EASYCOINS">
   <!--
-    The ZuzCOINS mark.
+    The EASYCOINS mark.
 
-    An italic Z cut on a 9-degree shear, with two trailing slivers where the
-    stroke has been torn away by the movement. It is a letter and a velocity
-    glyph at the same time: value that arrives fast, which is the whole promise
-    of the shop.
+    An E built from three bars whose ends are cut as coin edges, leaning
+    forward. Three bars and a spine is a silhouette that survives being drawn at
+    sixteen pixels, which a letter inside a circle does not, and the rounded
+    terminals tie the letter to the currency without drawing a coin next to it.
 
-    Deliberately not a coin. A coin is what every currency shop draws, it is
-    unreadable at 24px, and it says "money" without saying whose. This says
-    Z first and reads at favicon size.
+    The detached sliver behind the top arm is the same motion cue the product
+    artwork uses, so the mark and the packs belong to one system.
 
     Original artwork. No publisher, game or third-party asset is involved.
   -->
   <defs>
-    <linearGradient id="zc-mark" x1="0" y1="0" x2="0.35" y2="1">
+    <linearGradient id="ec-mark" x1="0" y1="0" x2="0.35" y2="1">
       <stop offset="0" stop-color="#FFE6AE"/>
       <stop offset="0.5" stop-color="#F2B33D"/>
       <stop offset="1" stop-color="#D9942A"/>
     </linearGradient>
   </defs>
-  <g transform="translate(6,0) skewX(-9)" fill="url(#zc-mark)">
-    <path d="M15 14 H47 V21.5 L29 41 H47 V49.5 H15 V42 L33 22.5 H15 Z"/>
-    <rect x="1" y="14" width="8" height="7.5" opacity="0.5"/>
-    <rect x="5" y="26" width="5.5" height="5" opacity="0.26"/>
+  <g transform="translate(5,0) skewX(-8)" fill="url(#ec-mark)">
+    <rect x="14" y="12" width="10" height="40" rx="3"/>
+    <rect x="14" y="12" width="34" height="10" rx="5"/>
+    <rect x="14" y="27" width="26" height="10" rx="5"/>
+    <rect x="14" y="42" width="34" height="10" rx="5"/>
+    <rect x="3" y="12" width="7" height="10" rx="5" opacity="0.45"/>
   </g>
 </svg>

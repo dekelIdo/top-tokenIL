@@ -48,10 +48,10 @@ export class MockBackendService {
     return `${prefix}_${this.sequence.toString().padStart(6, '0')}`;
   }
 
-  /** Human-facing order reference, e.g. TT-000123. */
+  /** Human-facing order reference, e.g. EC-000123. */
   nextOrderReference(): string {
     this.sequence += 1;
-    return `TT-${this.sequence.toString().padStart(6, '0')}`;
+    return `EC-${this.sequence.toString().padStart(6, '0')}`;
   }
 
   now(): string {

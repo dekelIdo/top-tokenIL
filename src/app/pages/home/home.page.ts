@@ -58,7 +58,7 @@ const REVIEW_PAGE: PageRequest = { page: 1, pageSize: 2 };
       <!-- 2. What the shop promises, as objects rather than a row of grey
            glyphs. Only claims that are actually kept. -->
       <section class="tt-container tt-section--tight">
-        <h2 class="tt-visually-hidden">למה ZuzCOINS</h2>
+        <h2 class="tt-visually-hidden">למה EASYCOINS</h2>
         <tt-value-strip></tt-value-strip>
       </section>
 

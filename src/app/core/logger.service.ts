@@ -14,18 +14,18 @@ export class LoggerService {
   debug(message: string, context?: Record<string, string | number | boolean>): void {
     if (environment.debugLogging) {
       // eslint-disable-next-line no-console
-      console.debug(`[zuzcoins] ${message}`, context ?? '');
+      console.debug(`[easycoins] ${message}`, context ?? '');
     }
   }
 
   warn(message: string, context?: Record<string, string | number | boolean>): void {
     if (environment.debugLogging) {
-      console.warn(`[zuzcoins] ${message}`, context ?? '');
+      console.warn(`[easycoins] ${message}`, context ?? '');
     }
   }
 
   /** Errors are always reported; the message must already be sanitised. */
   error(message: string, context?: Record<string, string | number | boolean>): void {
-    console.error(`[zuzcoins] ${message}`, context ?? '');
+    console.error(`[easycoins] ${message}`, context ?? '');
   }
 }

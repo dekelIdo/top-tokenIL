@@ -4,7 +4,7 @@ import { mkdirSync } from 'node:fs';
 import { startServer } from './serve.mjs';
 
 const PORT = Number(process.argv[2] ?? 4399);
-const OUT = 'qa/screenshots/zuzcoins';
+const OUT = 'qa/screenshots/easycoins';
 mkdirSync(OUT, { recursive: true });
 
 const server = await startServer(PORT);

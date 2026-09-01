@@ -379,7 +379,7 @@ interface ProductSeed {
   /**
    * A star average, when one genuinely exists.
    *
-   * No seeded product carries one. ZuzCOINS has not taken an order yet, so any
+   * No seeded product carries one. EASYCOINS has not taken an order yet, so any
    * figure here would be an invented claim about customers who do not exist,
    * and a rating is the single most load-bearing thing a shop can fake. The
    * field stays so real aggregates can populate it later; the product page

@@ -268,7 +268,7 @@ describe('mappers: payment and orders', () => {
 
   it('maps an order and defaults its optional collections', () => {
     const order = Map.toOrder({
-      id: 'ord_1', reference: 'TT-000001', contactEmail: 'a@b.co', status: 'PAID',
+      id: 'ord_1', reference: 'EC-000001', contactEmail: 'a@b.co', status: 'PAID',
       items: [], totals: { subtotal: money(100), discount: money(0), total: money(100) },
       createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
     });

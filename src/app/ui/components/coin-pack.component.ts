@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 /**
- * A ZuzCOINS pack.
+ * A EASYCOINS pack.
  *
  * The catalogue kept reading as "a website that sells a number" because the
  * artwork was only ever coins. Coins say money; they do not say Ultimate Team.
@@ -103,7 +103,7 @@ import { CommonModule } from '@angular/common';
           <polygon [attr.points]="octagon(0, 6, 42 * 0.82, 0.82)" fill="none"
                    stroke="#7A4E10" stroke-opacity="0.34" stroke-width="1.6"/>
           <g transform="translate(-21,-14) scale(0.66,0.55) skewX(-9)" fill="#5A390A" fill-opacity="0.7">
-            <path d="M15 14 H47 V21.5 L29 41 H47 V49.5 H15 V42 L33 22.5 H15 Z"/>
+            <path d="M14 12h10v40H14ZM14 12h34v10H14ZM14 27h26v10H14ZM14 42h34v10H14Z"/>
           </g>
         </g>
 
@@ -156,7 +156,7 @@ export class CoinPackComponent {
   private readonly uid = Math.random().toString(36).slice(2, 8);
 
   id(part: string): string {
-    return `zp-${part}-${this.uid}`;
+    return `ep-${part}-${this.uid}`;
   }
 
   /**

@@ -24,5 +24,5 @@ bootstrapApplication(AppComponent, {
     { provide: ErrorHandler, useClass: GlobalErrorHandler },
   ],
 }).catch((error: unknown) => {
-  console.error('[zuzcoins] bootstrap failed', error);
+  console.error('[easycoins] bootstrap failed', error);
 });

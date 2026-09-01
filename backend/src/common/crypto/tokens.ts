@@ -151,5 +151,5 @@ export function generateId(prefix: string): string {
  * so it is short and readable, and it grants no access on its own.
  */
 export function generateOrderNumber(sequence: number): string {
-  return `TT-${sequence.toString().padStart(6, '0')}`;
+  return `EC-${sequence.toString().padStart(6, '0')}`;
 }

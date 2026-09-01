@@ -1,7 +1,7 @@
 /**
  * What the storefront actually sells today.
  *
- * ZuzCOINS is built as a multi-game commerce platform: the catalog, the domain
+ * EASYCOINS is built as a multi-game commerce platform: the catalog, the domain
  * and the backend all handle several games without knowing which. The shop we
  * are opening does not. It sells EA SPORTS FC, and pretending otherwise would
  * mean a customer clicking "games" to find a list of one.

@@ -1,11 +1,11 @@
 /**
- * Renders the ZuzCOINS raster brand assets from the vector identity.
+ * Renders the EASYCOINS raster brand assets from the vector identity.
  *
  * Run by hand when the mark changes; the output is committed. Chromium is used
  * because it is already a dev dependency for the QA harnesses, so no image
  * library is added to the project for a job done a few times a year.
  *
- * Everything drawn here is original: the italic-Z mark and the brand palette.
+ * Everything drawn here is original: the EASYCOINS E mark and the brand palette.
  * No publisher logo, game art or third-party asset is involved.
  *
  * Run: node qa/make-brand-assets.mjs
@@ -14,7 +14,15 @@ import { chromium } from '@playwright/test';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const Z_PATH = 'M15 14 H47 V21.5 L29 41 H47 V49.5 H15 V42 L33 22.5 H15 Z';
+// The E, as bars. Kept as markup rather than one path so the arms can carry
+// their own rounding, which is what makes the terminals read as coin edges.
+const MARK_BARS = `
+      <rect x="14" y="12" width="10" height="40" rx="3"/>
+      <rect x="14" y="12" width="34" height="10" rx="5"/>
+      <rect x="14" y="27" width="26" height="10" rx="5"/>
+      <rect x="14" y="42" width="34" height="10" rx="5"/>`;
+const MARK_SPEED = `
+      <rect x="3" y="12" width="7" height="10" rx="5" opacity="0.45"/>`;
 
 const OUT = 'src/assets/brand';
 mkdirSync(OUT, { recursive: true });
@@ -35,9 +43,9 @@ const mark = (size) => `
       </linearGradient>
     </defs>
     <rect width="64" height="64" rx="15" fill="${INK}"/>
-    <g transform="translate(6,0) skewX(-9) scale(0.94) translate(2,2)" fill="url(#c)">
-      <path d="${Z_PATH}"/>
-      <rect x="1" y="14" width="8" height="7.5" opacity="0.5"/>
+    <g transform="translate(6,0) skewX(-8) scale(0.92) translate(1,3)" fill="url(#c)">
+      ${MARK_BARS}
+
     </g>
   </svg>`;
 
@@ -51,10 +59,9 @@ const markOnTile = (size) => `
         <stop offset="1" stop-color="${GOLD_B}"/>
       </linearGradient>
     </defs>
-    <g transform="translate(6,0) skewX(-9)" fill="url(#d)">
-      <path d="${Z_PATH}"/>
-      <rect x="1" y="14" width="8" height="7.5" opacity="0.5"/>
-      <rect x="5" y="26" width="5.5" height="5" opacity="0.26"/>
+    <g transform="translate(5,0) skewX(-8)" fill="url(#d)">
+      ${MARK_BARS}
+      ${MARK_SPEED}
     </g>
   </svg>`;
 
@@ -110,7 +117,7 @@ function icoFromPng(png) {
 }
 
 writeFileSync('src/favicon.ico', icoFromPng(png32));
-console.log(`  src/favicon.ico (rebuilt from the ZuzCOINS mark)`);
+console.log(`  src/favicon.ico (rebuilt from the EASYCOINS mark)`);
 
 /**
  * The social preview.
@@ -149,7 +156,7 @@ const og = `
     <div style="position:relative;display:flex;align-items:center;gap:20px;margin-bottom:36px">
       ${mark(76)}
       <div style="font-size:52px;line-height:1;letter-spacing:-.01em">
-        <span style="font-weight:800">Zuz</span><span style="font-weight:600;color:#ADA69A">COINS</span>
+        <span style="font-weight:800">EASY</span><span style="font-weight:600;color:#ADA69A">COINS</span>
       </div>
     </div>
 

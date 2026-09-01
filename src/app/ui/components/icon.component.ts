@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 /**
- * The ZuzCOINS icon set.
+ * The EASYCOINS icon set.
  *
  * Rebuilt away from uniform thin outlines. Every icon used to be the same
  * 1.75px stroke on the same rounded geometry, which is the house style of every

@@ -1,11 +1,11 @@
-# ZuzCOINS: brand and asset specification
+# EASYCOINS: brand and asset specification
 
 What the brand is, what art exists, and exactly what a designer or illustrator
 needs to produce to replace the temporary pieces.
 
 ## The name
 
-**ZuzCOINS**, always in that casing. It resolves from `src/app/core/brand/brand.ts`
+**EASYCOINS**, always in that casing. It resolves from `src/app/core/brand/brand.ts`
 and nothing else in the application hard-codes it, so a rename is one file.
 
 "זוז" is an ancient Hebrew silver coin and also the Hebrew verb *to move*. The
@@ -16,7 +16,7 @@ coin lying flat.
 ### A naming risk that needs a human decision
 
 [Zucoins](https://zucoins.com/) is an active Australian cryptocurrency company
-founded in 2018, with exchange listings and the `zucoins.com` domain. **ZuzCOINS**
+founded in 2018, with exchange listings and the `zucoins.com` domain. **EASYCOINS**
 differs by one letter and sounds nearly identical.
 
 The sectors differ, which reduces trademark exposure, but both trade on "coins"

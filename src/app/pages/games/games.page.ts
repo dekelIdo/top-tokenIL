@@ -30,7 +30,7 @@ import { GameCardComponent } from '../../ui';
     <div class="tt-container tt-section">
       <span class="tt-eyebrow">קטלוג</span>
       <h1>מה אנחנו מוכרים</h1>
-      <p class="tt-muted">כרגע ZuzCOINS מתמקדת ב{{ focusGameName }} בלבד.</p>
+      <p class="tt-muted">כרגע EASYCOINS מתמקדת ב{{ focusGameName }} בלבד.</p>
 
       <div class="tt-grid">
         <tt-game-card *ngFor="let game of games$ | async" [game]="game"></tt-game-card>

@@ -1,4 +1,4 @@
-# ZuzCOINS: Israeli regulatory requirements
+# EASYCOINS: Israeli regulatory requirements
 
 Research notes and an inventory of what the business owner must supply before
 the store takes real money.
@@ -44,7 +44,7 @@ What changed that matters here:
 - Broader powers for the Privacy Protection Authority and materially larger
   penalties.
 - Some organisations must appoint a **privacy officer**, and some an
-  **information security officer**. Whether ZuzCOINS crosses those thresholds
+  **information security officer**. Whether EASYCOINS crosses those thresholds
   depends on data volume and business structure. **Needs a determination.**
 - Strengthened information-security obligations for websites, including
   responsibility for the vendors that process data on your behalf.
@@ -135,7 +135,7 @@ Nothing below can be invented, and each blocks a page that is otherwise built:
 9. Decision on whether a privacy officer or information-security officer is required
 10. Chosen payment provider, mail provider and analytics, so the privacy notice can name them
 11. Accountant's answer on invoices, receipts and VAT presentation
-12. Trademark clearance on the ZuzCOINS name (see `BRAND-AND-ASSETS.md`)
+12. Trademark clearance on the EASYCOINS name (see `BRAND-AND-ASSETS.md`)
 13. The retention period for closed accounts, and who runs the erasure process
 14. Whether marketing email will be sent at all, which decides whether a consent
     checkbox is needed at registration

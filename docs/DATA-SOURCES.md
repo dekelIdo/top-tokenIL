@@ -1,4 +1,4 @@
-# ZuzCOINS: data and asset provenance
+# EASYCOINS: data and asset provenance
 
 Every external thing the product depends on, where it comes from, and whether we
 are allowed to use it. Anything whose rights are uncertain is listed as blocked
@@ -49,7 +49,7 @@ All original, produced for this project. Sources and regeneration are in
 
 | Asset | Origin | Rights |
 |---|---|---|
-| `logo-mark.svg`, `favicon.svg` | Drawn for ZuzCOINS | Ours |
+| `logo-mark.svg`, `favicon.svg` | Drawn for EASYCOINS | Ours |
 | `icon-32.png`, `apple-touch-icon.png`, `icon-512.png`, `favicon.ico` | Rendered from the vector mark by `qa/make-brand-assets.mjs` | Ours |
 | `social-preview.png` | Composed from the mark and brand palette | Ours |
 | 18 interface icons | Hand-drawn SVG paths in `icon.component.ts` | Ours |
