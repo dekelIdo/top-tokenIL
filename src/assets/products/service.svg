@@ -1,12 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" role="img" aria-label="In-game service">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" role="img" aria-label="שירות לחשבון">
+  <!-- ZuzCOINS product art. Original geometry, cut on the same nine-degree
+       shear as the brand mark, so every thumbnail in the catalogue belongs to
+       one family. Gold is value, blue is the interactive colour, and nothing
+       here depicts a publisher's property. -->
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#00e5a0"/><stop offset="1" stop-color="#4f8cff"/>
+    <linearGradient id="g" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#FFE6AE"/>
+      <stop offset="0.5" stop-color="#F2B33D"/>
+      <stop offset="1" stop-color="#D9942A"/>
     </linearGradient>
+    <linearGradient id="b" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#A8C0FF"/>
+      <stop offset="1" stop-color="#3B6DFF"/>
+    </linearGradient>
+    <radialGradient id="p" cx="50%" cy="72%" r="52%">
+      <stop offset="0" stop-color="#F2B33D" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#F2B33D" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <rect width="240" height="180" fill="none"/>
-  <circle cx="120" cy="68" r="22" fill="url(#g)"/>
-  <path d="M78 138c0-23 19-34 42-34s42 11 42 34z" fill="url(#g)" opacity=".85"/>
-  <circle cx="168" cy="112" r="20" fill="#0a0d14"/>
-  <path d="M168 100v12l8 6" fill="none" stroke="#00e5a0" stroke-width="4" stroke-linecap="round"/>
+  <ellipse cx="100" cy="118" rx="62" ry="24" fill="url(#p)"/>
+  <g transform="skewX(-9) translate(9,0)">
+    <rect x="44" y="74" width="112" height="44" rx="22" fill="#1F1D1A" opacity="1"/>
+    <rect x="44" y="74" width="112" height="44" rx="22" fill="none" stroke="url(#b)" stroke-width="2"/>
+    <path d="M78 96 L94 110 L124 82" fill="none" stroke="url(#b)" stroke-width="9"
+          stroke-linecap="square"/>
+  </g>
 </svg>

@@ -20,17 +20,23 @@ import { BRAND } from '../../core/brand';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <span class="lockup" [class.compact]="compact">
+      <!-- The mark is an italic Z on a 9-degree shear with the stroke torn
+           away behind it. It reads as a letter and as movement, and unlike a
+           coin it survives being drawn at 24 pixels. -->
       <svg class="mark" [attr.width]="markSize" [attr.height]="markSize"
-           viewBox="0 0 48 48" aria-hidden="true">
+           viewBox="0 0 64 64" aria-hidden="true">
         <defs>
-          <linearGradient [attr.id]="gradientId" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="var(--tt-gold-400)"/>
+          <linearGradient [attr.id]="gradientId" x1="0" y1="0" x2="0.35" y2="1">
+            <stop offset="0" stop-color="var(--tt-gold-300)"/>
+            <stop offset="0.5" stop-color="var(--tt-gold-500)"/>
             <stop offset="1" stop-color="var(--tt-gold-600)"/>
           </linearGradient>
         </defs>
-        <circle cx="24" cy="24" r="19" [attr.fill]="'url(#' + gradientId + ')'"/>
-        <path d="M15 15h18L19 33h14" fill="none" stroke="#12101C"
-              stroke-width="5" stroke-linecap="square"/>
+        <g transform="translate(6,0) skewX(-9)" [attr.fill]="'url(#' + gradientId + ')'">
+          <path d="M15 14 H47 V21.5 L29 41 H47 V49.5 H15 V42 L33 22.5 H15 Z"/>
+          <rect x="1" y="14" width="8" height="7.5" opacity="0.5"/>
+          <rect x="5" y="26" width="5.5" height="5" opacity="0.26"/>
+        </g>
       </svg>
 
       <span class="word" *ngIf="!compact">

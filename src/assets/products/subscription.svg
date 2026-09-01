@@ -1,12 +1,30 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" role="img" aria-label="Subscription membership">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" role="img" aria-label="מנוי">
+  <!-- ZuzCOINS product art. Original geometry, cut on the same nine-degree
+       shear as the brand mark, so every thumbnail in the catalogue belongs to
+       one family. Gold is value, blue is the interactive colour, and nothing
+       here depicts a publisher's property. -->
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#4f8cff"/><stop offset="1" stop-color="#7c5cff"/>
+    <linearGradient id="g" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#FFE6AE"/>
+      <stop offset="0.5" stop-color="#F2B33D"/>
+      <stop offset="1" stop-color="#D9942A"/>
     </linearGradient>
+    <linearGradient id="b" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#A8C0FF"/>
+      <stop offset="1" stop-color="#3B6DFF"/>
+    </linearGradient>
+    <radialGradient id="p" cx="50%" cy="72%" r="52%">
+      <stop offset="0" stop-color="#F2B33D" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#F2B33D" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <rect width="240" height="180" fill="none"/>
-  <circle cx="120" cy="90" r="46" fill="url(#g)"/>
-  <circle cx="120" cy="90" r="46" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="2"/>
-  <path d="M104 90l12 12 22-24" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M120 30a60 60 0 0 1 0 120" fill="none" stroke="url(#g)" stroke-width="4" stroke-dasharray="8 8" opacity=".6"/>
+  <ellipse cx="100" cy="118" rx="62" ry="24" fill="url(#p)"/>
+  <g transform="skewX(-9) translate(9,0)">
+    <rect x="48" y="104" width="104" height="15" rx="7.5" fill="url(#g)" opacity="1"/>
+    <rect x="56" y="106.5" width="88" height="2.5" rx="1.25" fill="#FFF6DC" opacity="0.42"/>
+    <rect x="52" y="86" width="96" height="15" rx="7.5" fill="url(#g)" opacity="0.8"/>
+    <rect x="60" y="88.5" width="80" height="2.5" rx="1.25" fill="#FFF6DC" opacity="0.336"/>
+    <rect x="56" y="66" width="88" height="15" rx="7.5" fill="none"
+          stroke="url(#b)" stroke-width="2" stroke-dasharray="9 7"/>
+  </g>
 </svg>

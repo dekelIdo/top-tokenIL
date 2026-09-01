@@ -60,7 +60,18 @@ import { BrandLogoComponent } from './brand-logo.component';
   `,
   styles: [`
     .foot { margin-block-start: var(--tt-space-8); border-block-start: 1px solid var(--tt-border); padding-block: var(--tt-space-6); background: var(--tt-surface); }
-    .cols { display: grid; gap: var(--tt-space-5); grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+    /* Two columns on a phone rather than one. At minmax(180px) the link groups
+       collapsed to a single column and the footer ran for most of a screen,
+       which on a page we are trying to shorten is a lot of height spent on
+       navigation nobody scrolled down for. */
+    .cols {
+      display: grid;
+      gap: var(--tt-space-5) var(--tt-space-4);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    @media (min-width: 720px) {
+      .cols { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+    }
     nav { display: flex; flex-direction: column; gap: var(--tt-space-2); }
     /* Footer links are a primary navigation path on mobile, so they get a
        comfortable target rather than the 22px a bare inline link would be. */

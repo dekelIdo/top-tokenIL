@@ -1,28 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="ZuzCOINS">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ZuzCOINS">
   <!--
     The ZuzCOINS mark.
 
-    A Z cut as a chevron pair, reading as both the letter and a fast-forward
-    arrow. "זוז" is an old Hebrew coin and the verb "move", so the mark carries
-    currency and speed in one shape rather than illustrating a coin.
+    An italic Z cut on a 9-degree shear, with two trailing slivers where the
+    stroke has been torn away by the movement. It is a letter and a velocity
+    glyph at the same time: value that arrives fast, which is the whole promise
+    of the shop.
 
-    Built from two strokes and a disc so it survives 16px in a browser tab.
-    There is no gradient mesh, no bevel and no particle: at favicon size those
-    turn to mud.
+    Deliberately not a coin. A coin is what every currency shop draws, it is
+    unreadable at 24px, and it says "money" without saying whose. This says
+    Z first and reads at favicon size.
+
+    Original artwork. No publisher, game or third-party asset is involved.
   -->
   <defs>
-    <linearGradient id="zc-edge" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#FFD873"/>
-      <stop offset="1" stop-color="#E0972B"/>
+    <linearGradient id="zc-mark" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#FFE6AE"/>
+      <stop offset="0.5" stop-color="#F2B33D"/>
+      <stop offset="1" stop-color="#D9942A"/>
     </linearGradient>
   </defs>
-
-  <!-- The value disc, offset so the Z overhangs it. -->
-  <circle cx="24" cy="24" r="19" fill="url(#zc-edge)"/>
-
-  <!-- The Z, drawn as two horizontals and a diagonal with squared ends. The
-       diagonal leans forward, which is what makes it read as motion. -->
-  <path d="M15 15h18L19 33h14"
-        fill="none" stroke="#12101C" stroke-width="5"
-        stroke-linecap="square" stroke-linejoin="miter"/>
+  <g transform="translate(6,0) skewX(-9)" fill="url(#zc-mark)">
+    <path d="M15 14 H47 V21.5 L29 41 H47 V49.5 H15 V42 L33 22.5 H15 Z"/>
+    <rect x="1" y="14" width="8" height="7.5" opacity="0.5"/>
+    <rect x="5" y="26" width="5.5" height="5" opacity="0.26"/>
+  </g>
 </svg>

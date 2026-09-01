@@ -10,19 +10,24 @@ import { CoinTierComponent } from './coin-tier.component';
 import { IconComponent } from './icon.component';
 
 /**
- * The bundle ladder: the price argument, made visible.
+ * The price ladder: the value argument, made visible.
  *
  * A column of prices tells a customer what each bundle costs. It does not tell
  * them which one is worth buying, which is the question they are actually
- * asking. This shows the relationship instead: quantity, price, and what a
- * million coins costs at that tier, with a bar whose length is the value.
+ * asking. This shows the relationship instead: quantity, price, what a million
+ * coins costs at that tier, and a bar whose length is the value. "Buy more, pay
+ * less per coin" stops being marketing copy and becomes something read off the
+ * page in a second.
  *
- * The effect is that "buy more, pay less per coin" stops being a claim in
- * marketing copy and becomes something the customer reads off the page in a
- * second.
+ * On a phone it is a horizontal snap rail, not five stacked rectangles. Five
+ * full-width rows meant a customer had to scroll through the whole range to
+ * compare its ends, which defeats the point of a comparison. Swiping a rail
+ * puts two tiers on screen at once and matches how every other price selector
+ * on a phone behaves.
  *
- * Every figure comes from offers the server priced. The component computes
- * ratios and nothing else; it never decides what anything costs.
+ * Every figure comes from offers the server priced. This computes ratios and
+ * nothing else; it never decides what anything costs, and it has no concept of
+ * a popular or best-selling tier because no such data exists.
  */
 @Component({
   selector: 'tt-bundle-ladder',
@@ -30,99 +35,118 @@ import { IconComponent } from './icon.component';
   imports: [CommonModule, RouterLink, LocalizePipe, MoneyPipe, CoinTierComponent, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="ladder" *ngIf="rows.length > 0">
-      <div class="row"
-           *ngFor="let row of rows"
-           [class.row--best]="row.isBestValue">
-        <a class="row__link"
-           [routerLink]="['/products', productSlug]"
-           [queryParams]="{ variant: row.variant.id }">
+    <div class="rail" *ngIf="rows.length > 0">
+      <ul class="ladder">
+        <li class="tier"
+            *ngFor="let row of rows; let i = index"
+            [class.tier--best]="row.isBestValue">
+          <a class="tier__link"
+             [routerLink]="['/products', productSlug]"
+             [queryParams]="{ variant: row.variant.id }">
 
-          <div class="row__head">
-            <tt-coin-tier class="row__art" [quantity]="row.variant.quantityValue"></tt-coin-tier>
-            <span class="qty">{{ label(row) }}</span>
-            <span class="tt-badge tt-badge--accent best" *ngIf="row.isBestValue">
-              <tt-icon name="bolt" [size]="13"></tt-icon> הכי משתלם
+            <span class="tier__flag" *ngIf="row.isBestValue">
+              <tt-icon name="bolt" [size]="12"></tt-icon> הערך הגבוה ביותר
             </span>
-          </div>
 
-          <!-- The bar is the argument. Longer means more coins for each shekel. -->
-          <div class="meter" aria-hidden="true">
-            <span class="meter__fill" [style.inline-size.%]="fillPercent(row)"></span>
-          </div>
+            <tt-coin-tier class="tier__art"
+                          [quantity]="row.variant.quantityValue"
+                          [steps]="i + 1"></tt-coin-tier>
 
-          <div class="row__foot">
+            <span class="qty tt-numeric">{{ label(row) }}</span>
+
+            <!-- The bar is the argument: longer means more coins per shekel. -->
+            <span class="meter" aria-hidden="true">
+              <span class="meter__fill" [style.inline-size.%]="fillPercent(row)"></span>
+            </span>
+
             <span class="per-unit tt-numeric" *ngIf="row.perUnitMinor as perUnit">
               {{ { amountMinor: perUnit, currency: row.offer.price.current.currency } | money }}
               <span class="per-unit__label">למיליון</span>
             </span>
-            <span class="tt-price">{{ row.offer.price.current | money }}</span>
-          </div>
-        </a>
-      </div>
+
+            <span class="tier__buy">
+              <span class="tt-price">{{ row.offer.price.current | money }}</span>
+              <tt-icon class="tier__go" name="chevron" [size]="16" dir="auto"></tt-icon>
+            </span>
+          </a>
+        </li>
+      </ul>
     </div>
   `,
   styles: [`
     :host { display: block; }
 
-    /* Stacked on a phone, a row of tiers on anything wider. Five full-width
-       rectangles down a 1200px page was a list, not a pricing table. */
+    /* The rail bleeds to the viewport edge on a phone so the last tier is
+       visibly cut off, which is what tells a thumb there is more to swipe. */
+    .rail { position: relative; }
+
     .ladder {
       display: grid;
-      gap: var(--tt-space-2);
-    }
-    @media (min-width: 760px) {
-      .ladder {
-        grid-auto-flow: column;
-        grid-auto-columns: 1fr;
-        gap: var(--tt-space-3);
-        align-items: end;
-      }
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(0, 1fr);
+      gap: var(--tt-space-3);
+      align-items: stretch;
+      margin: 0;
+      padding: 0;
+      list-style: none;
     }
 
-    .row {
+    .tier {
+      display: flex;
       border: 1px solid var(--tt-border);
-      border-radius: var(--tt-radius-lg);
+      border-radius: var(--tt-radius-md);
       background: var(--tt-surface);
       transition: border-color var(--tt-duration-fast) var(--tt-ease),
-                  background-color var(--tt-duration-fast) var(--tt-ease),
-                  transform var(--tt-duration) var(--tt-ease);
+                  background-color var(--tt-duration-fast) var(--tt-ease);
     }
-    .row:hover { border-color: var(--tt-border-strong); background: var(--tt-surface-2); }
+    .tier:hover { border-color: var(--tt-border-strong); background: var(--tt-surface-2); }
 
-    /* The best tier is marked in the value colour and lifted, so the ranking is
-       visible before a number is read. */
-    .row--best {
+    /* The strongest tier is marked in the value colour. It is a ranking this
+       component computed, not a claim about what other people bought. */
+    .tier--best {
       border-color: var(--tt-gold-500);
-      background: linear-gradient(180deg, var(--tt-gold-tint), transparent 65%), var(--tt-surface);
-    }
-    @media (min-width: 760px) {
-      .row--best { transform: translateY(-10px); box-shadow: var(--tt-ring-gold), var(--tt-shadow-2); }
+      background: linear-gradient(180deg, var(--tt-gold-tint), transparent 60%), var(--tt-surface);
     }
 
-    .row__link { display: block; padding: var(--tt-space-3) var(--tt-space-4); color: inherit; }
-    .row__link:hover { text-decoration: none; }
-
-    .row__head {
+    .tier__link {
+      position: relative;
       display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--tt-space-2);
+      inline-size: 100%;
+      padding: var(--tt-space-4) var(--tt-space-3) var(--tt-space-3);
+      color: inherit;
+    }
+    .tier__link:hover { text-decoration: none; }
+
+    .tier__flag {
+      display: inline-flex;
       align-items: center;
-      gap: var(--tt-space-3);
-      margin-block-end: var(--tt-space-2);
-    }
-    .row__art { inline-size: 52px; flex: none; }
-    .row--best .row__art { inline-size: 62px; }
-    .qty {
-      flex: none;
-      font-family: var(--tt-font-numeric);
-      font-variant-numeric: tabular-nums;
-      font-size: var(--tt-text-lg);
+      gap: 3px;
+      padding: 0.1rem 0.4rem;
+      border-radius: var(--tt-radius-sm);
+      background: var(--tt-gold-500);
+      color: var(--tt-text-on-gold);
+      font-size: 10px;
       font-weight: 800;
-      letter-spacing: -0.01em;
+      white-space: nowrap;
     }
-    .best { margin-inline-start: auto; gap: 3px; }
+
+    .tier__art { inline-size: 58px; }
+    .tier--best .tier__art { inline-size: 70px; }
+
+    .qty {
+      font-size: var(--tt-text-xl);
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
 
     .meter {
-      block-size: 5px;
+      display: block;
+      inline-size: 100%;
+      block-size: 4px;
       border-radius: var(--tt-radius-pill);
       background: var(--tt-surface-3);
       overflow: hidden;
@@ -135,23 +159,58 @@ import { IconComponent } from './icon.component';
       transition: inline-size var(--tt-duration-slow) var(--tt-ease-out);
     }
 
-    .row__foot {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: var(--tt-space-2);
-      margin-block-start: var(--tt-space-2);
-    }
-    .per-unit { color: var(--tt-text-muted); font-size: var(--tt-text-xs); }
+    .per-unit { color: var(--tt-text-faint); font-size: var(--tt-text-xs); }
     .per-unit__label { color: var(--tt-text-faint); }
 
-    /* In a column the tier reads top to bottom: artwork, quantity, price. */
-    @media (min-width: 760px) {
-      .row__head { flex-direction: column; align-items: flex-start; gap: var(--tt-space-2); }
-      .row__art { inline-size: 64px; }
-      .row--best .row__art { inline-size: 76px; }
-      .best { margin-inline-start: 0; }
-      .row__foot { flex-direction: column; align-items: flex-start; gap: 2px; }
+    .tier__buy {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--tt-space-2);
+      inline-size: 100%;
+      margin-block-start: auto;
+      padding-block-start: var(--tt-space-2);
+      border-block-start: 1px solid var(--tt-border);
+    }
+    .tier__go { color: var(--tt-text-faint); flex: none; }
+    .tier:hover .tier__go { color: var(--tt-brand-400); }
+
+    /* --- Phone: a swipeable rail ------------------------------------------ */
+    @media (max-width: 959px) {
+      /* Pull out to the viewport edges so a tier can be cut by the screen. */
+      .rail {
+        margin-inline: calc(var(--tt-space-4) * -1);
+      }
+      .ladder {
+        /* Wide enough to read, narrow enough that the next tier is visibly
+           cut by the screen edge, which is the affordance. */
+        grid-auto-columns: min(60%, 210px);
+        gap: var(--tt-space-2);
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        padding-inline: var(--tt-space-4);
+        padding-block-end: var(--tt-space-2);
+        /* Scrollbar hidden: this is a product rail, not a document pane. */
+        scrollbar-width: none;
+        overscroll-behavior-x: contain;
+      }
+      .ladder::-webkit-scrollbar { display: none; }
+      .tier { scroll-snap-align: start; }
+      .tier__link { padding: var(--tt-space-3); }
+      .tier__art { inline-size: 46px; }
+      .tier--best .tier__art { inline-size: 54px; }
+      .qty { font-size: var(--tt-text-lg); }
+    }
+
+    /* --- Wide: a row of tiers, the best one lifted ------------------------ */
+    @media (min-width: 960px) {
+      .ladder { align-items: end; }
+      .tier--best {
+        transform: translateY(-10px);
+        box-shadow: var(--tt-ring-gold), var(--tt-shadow-2);
+      }
+      .tier__art { inline-size: 66px; }
+      .tier--best .tier__art { inline-size: 80px; }
     }
   `],
 })

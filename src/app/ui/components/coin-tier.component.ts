@@ -2,23 +2,30 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 /**
- * Coin-bundle artwork, drawn from the quantity.
+ * Bundle artwork, drawn from the quantity.
  *
- * The catalog previously used one illustration for every coin product, so a
- * 100K bundle and a 2M bundle were the same picture with a different number
- * under it. Quantity is the thing a buyer is choosing between, and it was
- * carrying no visual weight at all.
+ * The catalog used to show a cartoon pile of coins, the same picture on every
+ * product with a different number underneath. It had two problems. A pile is
+ * unreadable at card size, and a drawn coin is the single most generic thing a
+ * currency shop can put on a page.
  *
- * This renders the tier instead: how many discs, how they stack, how dense the
- * field behind them, and how much light is on them. A larger bundle is visibly
- * a larger bundle before the label is read.
+ * This draws the bundle as a stack of sheared plates instead: tokens seen edge
+ * on, cut at the same nine degrees as the brand mark. Depth is the tier, so a
+ * larger bundle is visibly a larger bundle, and the whole catalogue reads as
+ * one family rather than one clipart.
  *
- * Pure inline SVG driven by CSS variables. No image files, no 3D, nothing to
- * download, and it recolours with the theme. Four tiers rather than a smooth
- * function, because a customer is choosing between discrete packages and the
- * steps should be legible.
+ * Inline SVG driven by theme variables. No image files, nothing to download,
+ * and it recolours with the theme. Four tiers rather than a smooth function,
+ * because a customer is choosing between discrete packages and the steps have
+ * to be legible.
  */
 export type CoinTier = 'entry' | 'standard' | 'premium' | 'hero';
+
+interface Plate {
+  readonly y: number;
+  readonly width: number;
+  readonly opacity: number;
+}
 
 @Component({
   selector: 'tt-coin-tier',
@@ -26,43 +33,36 @@ export type CoinTier = 'entry' | 'standard' | 'premium' | 'hero';
   imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <svg [attr.viewBox]="'0 0 200 150'" class="art" [class]="'art--' + tier" aria-hidden="true">
+    <svg viewBox="0 0 200 150" class="art" [class]="'art--' + tier" aria-hidden="true">
       <defs>
         <linearGradient [attr.id]="faceId" x1="0" y1="0" x2="0.4" y2="1">
           <stop offset="0" stop-color="var(--tt-gold-300)"/>
-          <stop offset="0.55" stop-color="var(--tt-gold-500)"/>
+          <stop offset="0.5" stop-color="var(--tt-gold-500)"/>
           <stop offset="1" stop-color="var(--tt-gold-600)"/>
         </linearGradient>
-        <radialGradient [attr.id]="glowId" cx="50%" cy="62%" r="55%">
-          <stop offset="0" stop-color="var(--tt-gold-500)" stop-opacity="0.30"/>
+        <radialGradient [attr.id]="glowId" cx="50%" cy="70%" r="52%">
+          <stop offset="0" stop-color="var(--tt-gold-500)" stop-opacity="0.26"/>
           <stop offset="1" stop-color="var(--tt-gold-500)" stop-opacity="0"/>
         </radialGradient>
       </defs>
 
-      <!-- Light pooling under the stack. Stronger on the bigger tiers, which is
-           most of what makes them feel weightier. -->
-      <ellipse cx="100" cy="104" [attr.rx]="glowWidth" ry="34" [attr.fill]="'url(#' + glowId + ')'"/>
+      <!-- Light pooling under the stack. Wider on the bigger tiers, which is
+           most of what gives them weight. -->
+      <ellipse cx="100" cy="120" [attr.rx]="glowWidth" ry="26"
+               [attr.fill]="'url(#' + glowId + ')'"/>
 
-      <!-- Scattered discs behind the stack. Their count is the tier. -->
-      <g class="scatter">
-        <ellipse *ngFor="let disc of scatter"
-                 [attr.cx]="disc.x" [attr.cy]="disc.y"
-                 [attr.rx]="disc.r" [attr.ry]="disc.r * 0.42"
-                 [attr.fill]="'url(#' + faceId + ')'"
-                 [attr.opacity]="disc.opacity"/>
-      </g>
-
-      <!-- The stack. Drawn bottom up so each disc overlaps the one below. -->
-      <g class="stack">
-        <g *ngFor="let disc of stack; let i = index">
-          <ellipse [attr.cx]="100" [attr.cy]="disc.y" rx="42" ry="17"
-                   [attr.fill]="'url(#' + faceId + ')'"/>
-          <rect x="58" [attr.y]="disc.y - 8" width="84" height="8"
-                [attr.fill]="'url(#' + faceId + ')'" opacity="0.85"/>
+      <!-- The stack, bottom plate first. The shear matches the brand mark, so
+           the product art and the logo are cut from the same angle. -->
+      <g class="stack" transform="skewX(-9) translate(9,0)">
+        <g *ngFor="let plate of plates" [attr.opacity]="plate.opacity">
+          <rect [attr.x]="100 - plate.width / 2" [attr.y]="plate.y"
+                [attr.width]="plate.width" height="15" rx="7.5"
+                [attr.fill]="'url(#' + faceId + ')'"/>
+          <!-- A lit top edge. Without it the plates read as flat bars. -->
+          <rect [attr.x]="100 - plate.width / 2 + 8" [attr.y]="plate.y + 2.5"
+                [attr.width]="plate.width - 16" height="2.5" rx="1.25"
+                fill="#FFF6DC" opacity="0.42"/>
         </g>
-        <!-- Top face, lit. -->
-        <ellipse cx="100" [attr.cy]="topY" rx="42" ry="17" [attr.fill]="'url(#' + faceId + ')'"/>
-        <ellipse cx="100" [attr.cy]="topY - 2" rx="27" ry="10" fill="#FFF6DC" opacity="0.5"/>
       </g>
     </svg>
   `,
@@ -70,12 +70,15 @@ export type CoinTier = 'entry' | 'standard' | 'premium' | 'hero';
     :host { display: block; inline-size: 100%; }
     .art { inline-size: 100%; block-size: auto; display: block; }
 
-    /* The hero tier gets a slow drift, which reads as weight rather than as an
-       animation. Everything else is still. */
-    .art--hero .stack { animation: tt-coin-drift 5s var(--tt-ease) infinite alternate; }
-    @keyframes tt-coin-drift {
-      from { transform: translateY(0); }
-      to { transform: translateY(-2.5px); }
+    /* The largest tier drifts, which reads as weight rather than as animation.
+       Everything else is still. */
+    .art--hero .stack { animation: tt-plate-drift 6s var(--tt-ease) infinite alternate; }
+    @keyframes tt-plate-drift {
+      from { transform: skewX(-9deg) translate(9px, 0); }
+      to { transform: skewX(-9deg) translate(9px, -3px); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .art--hero .stack { animation: none; }
     }
   `],
 })
@@ -87,6 +90,17 @@ export class CoinTierComponent {
 
   @Input() tier: CoinTier = 'standard';
 
+  /**
+   * An explicit plate count, overriding the tier.
+   *
+   * The price ladder uses this. Its five bundles can fall inside the same
+   * quantity band, and two tiers sitting side by side with identical artwork
+   * tells a customer the wrong thing. Given a rank the ladder gets five
+   * visibly distinct stacks, which is a truthful depiction of the order it
+   * already sorted them into.
+   */
+  @Input() steps?: number;
+
   /** Unique per instance so two illustrations cannot share a gradient id. */
   private readonly uid = Math.random().toString(36).slice(2, 8);
   readonly faceId = `zc-face-${this.uid}`;
@@ -97,7 +111,7 @@ export class CoinTierComponent {
    *
    * Chosen to match how bundles are actually sold rather than a smooth curve:
    * up to a quarter million is entry, up to a million is standard, up to two is
-   * premium, above that is the hero package.
+   * premium, above that is the largest package.
    */
   static tierFor(quantity: number | undefined): CoinTier {
     if (!quantity) {
@@ -113,38 +127,30 @@ export class CoinTierComponent {
   }
 
   private get depth(): number {
-    return { entry: 2, standard: 4, premium: 6, hero: 8 }[this.tier];
+    if (this.steps !== undefined) {
+      return Math.min(6, Math.max(1, Math.round(this.steps)));
+    }
+    return { entry: 2, standard: 3, premium: 4, hero: 5 }[this.tier];
   }
 
   get glowWidth(): number {
-    return { entry: 46, standard: 56, premium: 66, hero: 76 }[this.tier];
-  }
-
-  /** Stack discs, bottom to top. More coins means a taller stack. */
-  get stack(): { y: number }[] {
-    const base = 96;
-    return Array.from({ length: this.depth }, (_, index) => ({ y: base - index * 9 }));
-  }
-
-  get topY(): number {
-    return 96 - this.depth * 9;
+    return { entry: 44, standard: 54, premium: 64, hero: 74 }[this.tier];
   }
 
   /**
-   * Loose discs around the stack.
+   * The plates, bottom to top.
    *
-   * Fixed positions rather than random ones, so the same bundle always looks
-   * the same. A picture that changes on every render reads as a glitch.
+   * Each one above the last is a little narrower and a little brighter, so the
+   * stack has perspective and a clear top rather than reading as a flat ladder.
    */
-  get scatter(): { x: number; y: number; r: number; opacity: number }[] {
-    const all = [
-      { x: 44, y: 100, r: 17, opacity: 0.9 },
-      { x: 158, y: 96, r: 15, opacity: 0.85 },
-      { x: 32, y: 78, r: 12, opacity: 0.6 },
-      { x: 170, y: 74, r: 13, opacity: 0.65 },
-      { x: 62, y: 62, r: 9, opacity: 0.45 },
-      { x: 140, y: 56, r: 10, opacity: 0.5 },
-    ];
-    return all.slice(0, { entry: 0, standard: 2, premium: 4, hero: 6 }[this.tier]);
+  get plates(): readonly Plate[] {
+    const count = this.depth;
+    const base = 112;
+
+    return Array.from({ length: count }, (_, index) => ({
+      y: base - index * 21,
+      width: 112 - index * 7,
+      opacity: 0.62 + (index / Math.max(1, count - 1)) * 0.38,
+    }));
   }
 }

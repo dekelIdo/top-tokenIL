@@ -5,7 +5,7 @@
  * because it is already a dev dependency for the QA harnesses, so no image
  * library is added to the project for a job done a few times a year.
  *
- * Everything drawn here is original: the coin-and-Z mark and the brand palette.
+ * Everything drawn here is original: the italic-Z mark and the brand palette.
  * No publisher logo, game art or third-party asset is involved.
  *
  * Run: node qa/make-brand-assets.mjs
@@ -14,41 +14,48 @@ import { chromium } from '@playwright/test';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+const Z_PATH = 'M15 14 H47 V21.5 L29 41 H47 V49.5 H15 V42 L33 22.5 H15 Z';
+
 const OUT = 'src/assets/brand';
 mkdirSync(OUT, { recursive: true });
 
-const INK = '#0B0A12';
-const GOLD_A = '#FFD873';
-const GOLD_B = '#E0972B';
-const VIOLET = '#6D4AFF';
+const INK = '#0C0B09';
+const GOLD_A = '#FFE6AE';
+const GOLD_B = '#D9942A';
+const BLUE = '#3B6DFF';
 
 /** The mark, sized to a square canvas. */
 const mark = (size) => `
   <svg width="${size}" height="${size}" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <linearGradient id="c" x1="0" y1="0" x2="1" y2="1">
+      <linearGradient id="c" x1="0" y1="0" x2="0.35" y2="1">
         <stop offset="0" stop-color="${GOLD_A}"/>
+        <stop offset="0.5" stop-color="#F2B33D"/>
         <stop offset="1" stop-color="${GOLD_B}"/>
       </linearGradient>
     </defs>
-    <rect width="64" height="64" rx="${Math.round(size >= 180 ? 15 : 16)}" fill="${INK}"/>
-    <circle cx="32" cy="32" r="23" fill="url(#c)"/>
-    <path d="M21 21h22L26 43h17" fill="none" stroke="#12101C"
-          stroke-width="6" stroke-linecap="square"/>
+    <rect width="64" height="64" rx="15" fill="${INK}"/>
+    <g transform="translate(6,0) skewX(-9) scale(0.94) translate(2,2)" fill="url(#c)">
+      <path d="${Z_PATH}"/>
+      <rect x="1" y="14" width="8" height="7.5" opacity="0.5"/>
+    </g>
   </svg>`;
 
 /** The mark without its tile, for placing directly on the brand ground. */
 const markOnTile = (size) => `
   <svg width="${size}" height="${size}" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <linearGradient id="d" x1="0" y1="0" x2="1" y2="1">
+      <linearGradient id="d" x1="0" y1="0" x2="0.35" y2="1">
         <stop offset="0" stop-color="${GOLD_A}"/>
+        <stop offset="0.5" stop-color="#F2B33D"/>
         <stop offset="1" stop-color="${GOLD_B}"/>
       </linearGradient>
     </defs>
-    <circle cx="32" cy="32" r="23" fill="url(#d)"/>
-    <path d="M21 21h22L26 43h17" fill="none" stroke="#12101C"
-          stroke-width="6" stroke-linecap="square"/>
+    <g transform="translate(6,0) skewX(-9)" fill="url(#d)">
+      <path d="${Z_PATH}"/>
+      <rect x="1" y="14" width="8" height="7.5" opacity="0.5"/>
+      <rect x="5" y="26" width="5.5" height="5" opacity="0.26"/>
+    </g>
   </svg>`;
 
 const browser = await chromium.launch();
@@ -118,7 +125,7 @@ const og = `
   <div style="
     width:1200px;height:630px;position:relative;overflow:hidden;
     background:${INK};
-    font-family:Heebo,'Segoe UI',system-ui,sans-serif;color:#F2EFFA;
+    font-family:Heebo,'Segoe UI',system-ui,sans-serif;color:#F6F2EA;
     display:flex;flex-direction:column;justify-content:center;
     padding:0 96px;box-sizing:border-box;direction:rtl;">
 
@@ -128,33 +135,33 @@ const og = `
       background-size:72px 72px;
       -webkit-mask-image:radial-gradient(ellipse at 70% 0%,#000 15%,transparent 65%);"></div>
     <div style="position:absolute;width:520px;height:520px;border-radius:50%;
-      top:-160px;left:-120px;background:${VIOLET};filter:blur(130px);opacity:.30"></div>
+      top:-160px;left:-120px;background:${BLUE};filter:blur(130px);opacity:.30"></div>
     <div style="position:absolute;width:360px;height:360px;border-radius:50%;
       bottom:-140px;right:-60px;background:${GOLD_B};filter:blur(130px);opacity:.16"></div>
 
     <!-- The mark, oversized and bleeding off the leading edge. The right half
          is text, which in RTL left the left half empty; the brand symbol earns
          that space better than an illustration of the product does. -->
-    <div style="position:absolute;left:-70px;top:50%;transform:translateY(-50%);opacity:.95">
-      ${markOnTile(400)}
+    <div style="position:absolute;left:-40px;top:50%;transform:translateY(-50%);opacity:.9">
+      ${markOnTile(360)}
     </div>
 
     <div style="position:relative;display:flex;align-items:center;gap:20px;margin-bottom:36px">
       ${mark(76)}
       <div style="font-size:52px;line-height:1;letter-spacing:-.01em">
-        <span style="font-weight:800">Zuz</span><span style="font-weight:600;color:#A79FC0">COINS</span>
+        <span style="font-weight:800">Zuz</span><span style="font-weight:600;color:#ADA69A">COINS</span>
       </div>
     </div>
 
     <div style="position:relative;font-size:76px;font-weight:800;line-height:1.12;
                 letter-spacing:-.02em;max-width:720px">
-      מטבעות, קודים ומנויים<br>
+      יותר קוינס.<br>
       <span style="background:linear-gradient(100deg,${GOLD_A},${GOLD_B});
-                   -webkit-background-clip:text;color:transparent">שמגיעים מהר</span>
+                   -webkit-background-clip:text;color:transparent">פחות כסף.</span>
     </div>
 
-    <div style="position:relative;margin-top:28px;font-size:29px;color:#A79FC0;max-width:660px;line-height:1.5">
-      פלטפורמה, אזור חנות וזמן אספקה גלויים לפני שמשלמים.
+    <div style="position:relative;margin-top:28px;font-size:29px;color:#ADA69A;max-width:660px;line-height:1.5">
+      קוינס ל-EA SPORTS FC. פלטפורמה, אזור חנות וזמן אספקה מופיעים לפני שמשלמים.
     </div>
   </div>
 </body>`;

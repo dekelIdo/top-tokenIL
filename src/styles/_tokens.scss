@@ -10,67 +10,88 @@
 // "זוז" is an old Hebrew silver coin and also the verb "to move". The system is
 // built on those two things: value, and speed.
 //
-//   ink      a deep violet-black ground, not a neutral grey. Gaming products
-//            live on dark surfaces, and a slight violet cast keeps it from
-//            reading as a developer's default #111.
-//   violet   the interactive colour. Everything a customer can press.
-//   gold     value. Prices, coin products, anything denominated in money. Gold
-//            gives a price visual authority without shouting, and ties to
-//            "coins" without drawing a literal coin next to every number.
+// The ground is a WARM near-black, not the cool violet-black every dark product
+// ships with. Warm dark is what makes gold read as metal rather than as yellow
+// text, and it is the single decision that stops this looking like the default
+// dark theme of a framework.
 //
-// Green was deliberately dropped as the primary. Dark plus neon mint is the
-// house style of every crypto exchange, and this is a gaming shop, not one.
-// Green survives only where it means "this worked".
-// -----------------------------------------------------------------------------
-
+// Three colours, three jobs, and nothing may borrow another's job:
+//
+//   blue     interaction. Anything a customer can press or focus. It is the
+//            complement of the warm ground, so a button separates from the page
+//            without a glow behind it.
+//   gold     money. Prices, savings, value. Never a border for decoration,
+//            never a button that does not spend money.
+//   lime     speed and liveness. Delivery, status, "this is happening now".
+//            Used in slivers, never in areas.
+//
+// Violet was removed outright. Dark plus violet gradient is the house style of
+// every generated dashboard, and it was making a shop look like a template.
+// Neon mint was rejected for the same reason in the other direction: that is a
+// crypto exchange, and we sell football coins.
+//
 :root {
-  // --- Brand ---------------------------------------------------------------
-  --tt-brand-300: #C4B2FF;
-  --tt-brand-400: #9B7CFF;
-  --tt-brand-500: #6D4AFF; // primary action
-  --tt-brand-600: #5836E0;
-  --tt-brand-700: #3F24AD;
-  --tt-brand-tint: rgba(109, 74, 255, 0.14);
-  --tt-brand-tint-strong: rgba(109, 74, 255, 0.26);
+  // --- Brand: interaction --------------------------------------------------
+  --tt-brand-300: #A8C0FF;
+  --tt-brand-400: #88A6FF; // body link colour; carries the AA contrast floor
+  // Deep enough that white text on it clears 4.5:1. The brighter blue above it
+  // failed AA on the skip link and on any filled button, and a primary colour
+  // that cannot carry its own label is not a primary colour.
+  --tt-brand-500: #2E5FF0; // primary action
+  --tt-brand-600: #2553E0;
+  --tt-brand-700: #1638A8;
+  --tt-brand-tint: rgba(46, 95, 240, 0.15);
+  --tt-brand-tint-strong: rgba(46, 95, 240, 0.28);
 
-  // Value. Prices, coin bundles, discounts.
-  --tt-gold-300: #FFE3A3;
-  --tt-gold-400: #FFD873;
-  --tt-gold-500: #F5B942;
-  --tt-gold-600: #E0972B;
-  --tt-gold-tint: rgba(245, 185, 66, 0.14);
+  // --- Gold: money ---------------------------------------------------------
+  --tt-gold-300: #FFE6AE;
+  --tt-gold-400: #FFD371;
+  --tt-gold-500: #F2B33D;
+  --tt-gold-600: #D9942A;
+  --tt-gold-tint: rgba(242, 179, 61, 0.14);
+
+  // --- Lime: speed and liveness --------------------------------------------
+  // Deliberately has no "surface" variant. The moment this becomes a card
+  // background it stops meaning anything.
+  --tt-accent-400: #D8FF74;
+  --tt-accent-500: #BEF23C;
+  --tt-accent-tint: rgba(190, 242, 60, 0.13);
+  --tt-text-on-accent: #161A06;
 
   // --- Surfaces ------------------------------------------------------------
-  // Five steps rather than four: cards sit on panels sit on the page, and with
-  // only three the middle layer had to do two jobs.
-  --tt-bg: #0B0A12;
-  --tt-bg-elevated: #100E1A;
-  --tt-surface: #15121F;
-  --tt-surface-2: #1C1829;
-  --tt-surface-3: #251F36;
-  --tt-overlay: rgba(6, 5, 12, 0.78);
+  // Warm graphite. The steps are close together on purpose: depth here comes
+  // from a hairline and a shift in warmth, not from stacking darker boxes.
+  --tt-bg: #0C0B09;
+  --tt-bg-elevated: #121110;
+  --tt-surface: #171614;
+  --tt-surface-2: #1F1D1A;
+  --tt-surface-3: #2A2723;
+  --tt-overlay: rgba(6, 5, 4, 0.80);
 
   // --- Text ----------------------------------------------------------------
-  --tt-text: #F2EFFA;
-  --tt-text-muted: #A79FC0;
-  --tt-text-faint: #8B83A6;
+  // Warm white. Pure #FFF on a warm ground reads blue and cheap.
+  --tt-text: #F6F2EA;
+  --tt-text-muted: #ADA69A;
+  // Lifted until it clears 4.5:1 on the lightest surface it is used on,
+  // not merely on the page ground.
+  --tt-text-faint: #9A9184;
   --tt-text-on-brand: #FFFFFF;
   --tt-text-on-gold: #241A05;
 
   // --- Lines ---------------------------------------------------------------
-  --tt-border: rgba(255, 255, 255, 0.09);
-  --tt-border-strong: rgba(255, 255, 255, 0.18);
-  --tt-border-brand: rgba(109, 74, 255, 0.45);
+  --tt-border: rgba(255, 248, 235, 0.09);
+  --tt-border-strong: rgba(255, 248, 235, 0.18);
+  --tt-border-brand: rgba(46, 95, 240, 0.50);
 
   // --- Status --------------------------------------------------------------
-  --tt-success: #2FD48F;
-  --tt-warning: #FFB020;
-  --tt-danger: #FF5C72;
-  --tt-info: #55A0FF;
-  --tt-success-tint: rgba(47, 212, 143, 0.14);
-  --tt-warning-tint: rgba(255, 176, 32, 0.14);
-  --tt-danger-tint: rgba(255, 92, 114, 0.14);
-  --tt-info-tint: rgba(85, 160, 255, 0.14);
+  --tt-success: #43D18A;
+  --tt-warning: #F2B33D;
+  --tt-danger: #FF6A5C;
+  --tt-info: #6E93FF;
+  --tt-success-tint: rgba(67, 209, 138, 0.14);
+  --tt-warning-tint: rgba(242, 179, 61, 0.14);
+  --tt-danger-tint: rgba(255, 106, 92, 0.14);
+  --tt-info-tint: rgba(110, 147, 255, 0.14);
 
   // --- Spacing (4px base) --------------------------------------------------
   --tt-space-1: 0.25rem;
@@ -98,8 +119,8 @@
   --tt-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5);
   --tt-shadow-2: 0 10px 30px rgba(0, 0, 0, 0.45);
   --tt-shadow-3: 0 24px 60px rgba(0, 0, 0, 0.55);
-  --tt-ring-brand: 0 0 0 1px var(--tt-border-brand), 0 8px 28px rgba(109, 74, 255, 0.28);
-  --tt-ring-gold: 0 0 0 1px rgba(245, 185, 66, 0.4);
+  --tt-ring-brand: 0 0 0 1px var(--tt-border-brand), 0 8px 28px rgba(46, 95, 240, 0.26);
+  --tt-ring-gold: 0 0 0 1px rgba(242, 179, 61, 0.42);
 
   // --- Typography ----------------------------------------------------------
   --tt-font: 'Heebo', 'Rubik', 'Segoe UI', system-ui, sans-serif;
@@ -155,27 +176,29 @@
 // The light theme re-declares only the tokens that change role, so no component
 // stylesheet needs a media query of its own.
 :root[data-theme='light'] {
-  --tt-bg: #F7F6FB;
+  --tt-bg: #F7F5F0;
   --tt-bg-elevated: #FFFFFF;
   --tt-surface: #FFFFFF;
-  --tt-surface-2: #F2F0F8;
-  --tt-surface-3: #E7E3F2;
-  --tt-overlay: rgba(11, 10, 18, 0.5);
+  --tt-surface-2: #F2EFE8;
+  --tt-surface-3: #E6E2D8;
+  --tt-overlay: rgba(12, 11, 9, 0.5);
 
-  --tt-text: #17132A;
-  --tt-text-muted: #544B72;
-  --tt-text-faint: #6E6690;
+  --tt-text: #17150F;
+  --tt-text-muted: #55503F;
+  --tt-text-faint: #6E6857;
   --tt-text-on-brand: #FFFFFF;
 
-  --tt-border: rgba(23, 19, 42, 0.11);
-  --tt-border-strong: rgba(23, 19, 42, 0.22);
-  --tt-border-brand: rgba(109, 74, 255, 0.4);
+  --tt-border: rgba(23, 21, 15, 0.11);
+  --tt-border-strong: rgba(23, 21, 15, 0.22);
+  --tt-border-brand: rgba(59, 109, 255, 0.4);
 
-  // Gold needs to darken on white or it disappears against the page.
-  --tt-gold-400: #C98A12;
-  --tt-gold-500: #A96F08;
+  // Gold and lime both vanish on white and have to darken to keep contrast.
+  --tt-gold-400: #B8830D;
+  --tt-gold-500: #8F6406;
+  --tt-accent-400: #6E8A12;
+  --tt-accent-500: #59720B;
 
-  --tt-shadow-1: 0 1px 2px rgba(23, 19, 42, 0.08);
-  --tt-shadow-2: 0 10px 30px rgba(23, 19, 42, 0.1);
-  --tt-shadow-3: 0 24px 60px rgba(23, 19, 42, 0.14);
+  --tt-shadow-1: 0 1px 2px rgba(23, 21, 15, 0.08);
+  --tt-shadow-2: 0 10px 30px rgba(23, 21, 15, 0.1);
+  --tt-shadow-3: 0 24px 60px rgba(23, 21, 15, 0.14);
 }

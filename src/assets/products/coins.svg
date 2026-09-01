@@ -1,19 +1,32 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" role="img" aria-label="Game currency coins">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" role="img" aria-label="חבילת קוינס">
+  <!-- ZuzCOINS product art. Original geometry, cut on the same nine-degree
+       shear as the brand mark, so every thumbnail in the catalogue belongs to
+       one family. Gold is value, blue is the interactive colour, and nothing
+       here depicts a publisher's property. -->
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ffd75e"/><stop offset="1" stop-color="#f0a800"/>
+    <linearGradient id="g" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#FFE6AE"/>
+      <stop offset="0.5" stop-color="#F2B33D"/>
+      <stop offset="1" stop-color="#D9942A"/>
     </linearGradient>
+    <linearGradient id="b" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#A8C0FF"/>
+      <stop offset="1" stop-color="#3B6DFF"/>
+    </linearGradient>
+    <radialGradient id="p" cx="50%" cy="72%" r="52%">
+      <stop offset="0" stop-color="#F2B33D" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#F2B33D" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <rect width="240" height="180" fill="none"/>
-  <ellipse cx="120" cy="132" rx="52" ry="16" fill="url(#g)" opacity=".35"/>
-  <g fill="url(#g)" stroke="#8a5a00" stroke-width="2">
-    <ellipse cx="120" cy="112" rx="48" ry="15"/>
-    <rect x="72" y="96" width="96" height="16" stroke="none"/>
-    <ellipse cx="120" cy="96" rx="48" ry="15"/>
-    <rect x="72" y="80" width="96" height="16" stroke="none"/>
-    <ellipse cx="120" cy="80" rx="48" ry="15"/>
-    <rect x="72" y="64" width="96" height="16" stroke="none"/>
-    <ellipse cx="120" cy="64" rx="48" ry="15"/>
+  <ellipse cx="100" cy="118" rx="62" ry="24" fill="url(#p)"/>
+  <g transform="skewX(-9) translate(9,0)">
+    <rect x="44" y="112" width="112" height="15" rx="7.5" fill="url(#g)" opacity="0.62"/>
+    <rect x="52" y="114.5" width="96" height="2.5" rx="1.25" fill="#FFF6DC" opacity="0.2604"/>
+    <rect x="47.5" y="91" width="105" height="15" rx="7.5" fill="url(#g)" opacity="0.746667"/>
+    <rect x="55.5" y="93.5" width="89" height="2.5" rx="1.25" fill="#FFF6DC" opacity="0.3136"/>
+    <rect x="51" y="70" width="98" height="15" rx="7.5" fill="url(#g)" opacity="0.873333"/>
+    <rect x="59" y="72.5" width="82" height="2.5" rx="1.25" fill="#FFF6DC" opacity="0.3668"/>
+    <rect x="54.5" y="49" width="91" height="15" rx="7.5" fill="url(#g)" opacity="1"/>
+    <rect x="62.5" y="51.5" width="75" height="2.5" rx="1.25" fill="#FFF6DC" opacity="0.42"/>
   </g>
-  <ellipse cx="120" cy="64" rx="30" ry="9" fill="#fff" opacity=".35"/>
 </svg>

@@ -45,55 +45,20 @@ export const COUPONS: readonly Coupon[] = [
   },
 ];
 
-export const REVIEWS: readonly Review[] = [
-  {
-    id: 'rev-1',
-    productId: 'prod-fc-coins',
-    authorDisplayName: 'עומר ל.',
-    rating: 5,
-    title: 'הגיע מהר',
-    body: 'הזמנתי 250K וקיבלתי תוך פחות מרבע שעה. התכתבו איתי כל הדרך.',
-    createdAt: '2026-07-02T10:12:00.000Z',
-    verifiedPurchase: true,
-  },
-  {
-    id: 'rev-2',
-    productId: 'prod-ps-gift-card',
-    authorDisplayName: 'Noa B.',
-    rating: 5,
-    title: 'בדיוק כמו שצריך',
-    body: 'הקוד עבד מיד בחשבון הישראלי. אהבתי שכתוב במפורש שזה אזור ישראל.',
-    createdAt: '2026-07-19T18:41:00.000Z',
-    verifiedPurchase: true,
-  },
-  {
-    id: 'rev-3',
-    productId: 'prod-ps-plus',
-    authorDisplayName: 'דניאל ק.',
-    rating: 4,
-    body: 'המנוי הופעל בלי בעיה. הייתי שמח לקבל מייל אישור מהר יותר.',
-    createdAt: '2026-08-01T09:05:00.000Z',
-    verifiedPurchase: true,
-  },
-  {
-    id: 'rev-4',
-    productId: 'prod-fortnite-vbucks',
-    authorDisplayName: 'Roi S.',
-    rating: 5,
-    body: 'קוד הגיע מיד אחרי התשלום. פשוט ונוח.',
-    createdAt: '2026-08-11T20:30:00.000Z',
-    verifiedPurchase: true,
-  },
-  {
-    id: 'rev-5',
-    productId: 'prod-fc-coins',
-    authorDisplayName: 'מאור ז.',
-    rating: 4,
-    body: 'שירות טוב. לקח קצת יותר מהצפי אבל עדכנו אותי בדף ההזמנה.',
-    createdAt: '2026-08-16T14:22:00.000Z',
-    verifiedPurchase: true,
-  },
-];
+/**
+ * Customer reviews.
+ *
+ * Deliberately empty. The seed used to carry written testimonials with names,
+ * star ratings and "verified purchase" badges, and every surface that renders
+ * them presents them as statements real buyers made. None of them were. An
+ * invented review is a claim about a person, and the storefront has no
+ * customers to quote yet.
+ *
+ * The rendering path is intact and every review surface already handles the
+ * empty case by hiding itself, so real reviews will appear here the moment
+ * there are any.
+ */
+export const REVIEWS: readonly Review[] = [];
 
 export const FAQ_ENTRIES: readonly FaqEntry[] = [
   {

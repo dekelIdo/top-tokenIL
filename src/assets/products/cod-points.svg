@@ -1,16 +1,30 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" role="img" aria-label="Digital code">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" role="img" aria-label="נקודות משחק">
+  <!-- ZuzCOINS product art. Original geometry, cut on the same nine-degree
+       shear as the brand mark, so every thumbnail in the catalogue belongs to
+       one family. Gold is value, blue is the interactive colour, and nothing
+       here depicts a publisher's property. -->
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ff8a3d"/><stop offset="1" stop-color="#ff4d6d"/>
+    <linearGradient id="g" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#FFE6AE"/>
+      <stop offset="0.5" stop-color="#F2B33D"/>
+      <stop offset="1" stop-color="#D9942A"/>
     </linearGradient>
+    <linearGradient id="b" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#A8C0FF"/>
+      <stop offset="1" stop-color="#3B6DFF"/>
+    </linearGradient>
+    <radialGradient id="p" cx="50%" cy="72%" r="52%">
+      <stop offset="0" stop-color="#F2B33D" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#F2B33D" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <rect width="240" height="180" fill="none"/>
-  <rect x="40" y="54" width="160" height="76" rx="10" fill="url(#g)"/>
-  <g fill="#0a0d14" opacity=".55">
-    <rect x="56" y="70" width="8" height="44"/><rect x="70" y="70" width="4" height="44"/>
-    <rect x="80" y="70" width="10" height="44"/><rect x="96" y="70" width="4" height="44"/>
-    <rect x="106" y="70" width="8" height="44"/><rect x="120" y="70" width="12" height="44"/>
-    <rect x="138" y="70" width="4" height="44"/><rect x="148" y="70" width="10" height="44"/>
-    <rect x="164" y="70" width="6" height="44"/><rect x="176" y="70" width="8" height="44"/>
+  <ellipse cx="100" cy="118" rx="62" ry="24" fill="url(#p)"/>
+  <g transform="skewX(-9) translate(9,0)">
+    <rect x="36" y="78" width="52" height="15" rx="7.5" fill="url(#g)" opacity="0.7"/>
+    <rect x="44" y="80.5" width="36" height="2.5" rx="1.25" fill="#FFF6DC" opacity="0.294"/>
+    <rect x="74" y="84" width="52" height="15" rx="7.5" fill="url(#g)" opacity="0.85"/>
+    <rect x="82" y="86.5" width="36" height="2.5" rx="1.25" fill="#FFF6DC" opacity="0.357"/>
+    <rect x="112" y="90" width="52" height="15" rx="7.5" fill="url(#g)" opacity="1"/>
+    <rect x="120" y="92.5" width="36" height="2.5" rx="1.25" fill="#FFF6DC" opacity="0.42"/>
   </g>
 </svg>

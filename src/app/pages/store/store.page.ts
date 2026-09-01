@@ -2,8 +2,10 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { BehaviorSubject, EMPTY, Observable, combineLatest } from 'rxjs';
-import { catchError, debounceTime, distinctUntilChanged, map, startWith, switchMap } from 'rxjs/operators';
+import { BehaviorSubject, EMPTY, Observable, combineLatest, of, timer } from 'rxjs';
+import {
+  catchError, debounce, distinctUntilChanged, filter, map, startWith, switchMap,
+} from 'rxjs/operators';
 
 import { AnalyticsService } from '../../core/analytics';
 import { STOREFRONT } from '../../core/brand';
@@ -14,7 +16,8 @@ import {
 } from '../../domain';
 import { CatalogFacade, CatalogLookups } from '../../state';
 import {
-  EmptyStateComponent, ErrorStateComponent, ProductCardComponent, SkeletonGridComponent,
+  BundleLadderComponent, EmptyStateComponent, ErrorStateComponent, ProductCardComponent,
+  SkeletonGridComponent,
 } from '../../ui';
 
 interface StoreViewModel {
@@ -36,6 +39,7 @@ interface StoreViewModel {
   imports: [
     CommonModule, FormsModule, LocalizePipe,
     ProductCardComponent, SkeletonGridComponent, EmptyStateComponent, ErrorStateComponent,
+    BundleLadderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -46,7 +50,7 @@ interface StoreViewModel {
         <p class="tt-muted">חבילות קוינס, נקודות FC ושירותים לחשבון. המחיר, הפלטפורמה ואזור החנות מופיעים על כל אפשרות.</p>
       </header>
 
-      <form class="filters tt-panel" (submit)="$event.preventDefault()">
+      <form class="filters" (submit)="$event.preventDefault()">
         <label class="tt-field grow search-field">
           <span class="tt-label">חיפוש</span>
           <input class="tt-input" type="search" [ngModel]="search$ | async" name="search"
@@ -106,6 +110,15 @@ interface StoreViewModel {
         </details>
       </form>
 
+      <!-- The bundle tiers for the focus game, above the catalogue grid. -->
+      <section class="tiers" *ngIf="ladder$ | async as ladder">
+        <div class="tiers__head">
+          <h2>חבילות קוינס</h2>
+          <p>המחיר לכל מיליון יורד ככל שהחבילה גדלה</p>
+        </div>
+        <tt-bundle-ladder [detail]="ladder" [productSlug]="ladder.product.slug"></tt-bundle-ladder>
+      </section>
+
       <ng-container *ngIf="error(); else content">
         <tt-error-state [error]="error()" (retry)="retry()"></tt-error-state>
       </ng-container>
@@ -141,11 +154,17 @@ interface StoreViewModel {
   styles: [`
     .head { margin-block-end: var(--tt-space-5); }
     .head h1 { margin-block: var(--tt-space-1) var(--tt-space-2); }
+    /* A toolbar, not a panel. The filters used to sit in a bordered card that
+       took two hundred pixels above the first product, which on a catalogue
+       this size meant a customer saw controls and no goods. Now it is a row on
+       a rule and the grid starts immediately under it. */
     .filters {
       display: grid;
       gap: var(--tt-space-3);
       align-items: end;
-      margin-block-end: var(--tt-space-5);
+      margin-block-end: var(--tt-space-4);
+      padding-block-end: var(--tt-space-3);
+      border-block-end: 1px solid var(--tt-border);
     }
     .grow { grid-column: 1 / -1; }
 
@@ -190,6 +209,20 @@ interface StoreViewModel {
       padding-block-start: var(--tt-space-3);
     }
     .count { margin-block-end: var(--tt-space-3); }
+
+    /* The coin tiers, shown before the grid. A shop that sells one game should
+       open on the thing that game's players are actually choosing between,
+       rather than on three parent products that each hide a price range. */
+    .tiers { margin-block-end: var(--tt-space-6); }
+    .tiers__head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--tt-space-3);
+      margin-block-end: var(--tt-space-3);
+    }
+    .tiers__head h2 { margin: 0; font-size: var(--tt-text-lg); }
+    .tiers__head p { margin: 0; color: var(--tt-text-faint); font-size: var(--tt-text-xs); }
     /* One skeleton row's worth of space, so the first response does not jump. */
     .tt-grid { min-block-size: 260px; }
     .more { display: flex; justify-content: center; margin-block-start: var(--tt-space-5); }
@@ -218,9 +251,27 @@ export class StorePage {
 
   private pageSize = DEFAULT_PAGE_SIZE;
 
+  /** Cleared after the first query; see the debounce in `vm$`. */
+  private firstQuery = true;
+
   readonly error = signal<AppError | undefined>(undefined);
 
   readonly lookups$ = this.catalog.lookups$;
+
+  /**
+   * The coin product's tiers, for the ladder above the grid.
+   *
+   * Resolved from the catalog rather than hard-coded to a slug, so the block
+   * disappears on its own if the shop stops selling game currency. A failure
+   * here is not an error state: the grid below is the page, and the ladder is
+   * an enhancement on top of it.
+   */
+  readonly ladder$ = this.catalog.productsForGame(STOREFRONT.focusGameSlug).pipe(
+    map((products) => products.find((product) => product.type === ProductType.GameCurrency)),
+    switchMap((coins) => (coins
+      ? this.catalog.productBySlug(coins.slug).pipe(catchError(() => of(null)))
+      : of(null))),
+  );
   readonly search$ = this.querySubject.pipe(map((query) => query.search ?? ''));
 
   readonly productTypes: readonly { value: ProductType; label: string }[] = [
@@ -237,7 +288,21 @@ export class StorePage {
    * subscriptions and nothing to unsubscribe.
    */
   readonly vm$: Observable<StoreViewModel> = combineLatest([
-    this.querySubject.pipe(debounceTime(200), distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b))),
+    this.querySubject.pipe(
+      // Nothing is requested until the storefront's game has resolved. Without
+      // this the first query runs unscoped and the grid renders the whole
+      // platform catalogue for a frame before correcting itself.
+      filter((query) => query.gameIds !== undefined),
+      // The debounce exists to coalesce typing, and the first query is not
+      // typing. Making the initial load wait 200ms on top of resolving the
+      // game meant the grid arrived noticeably late for no benefit.
+      debounce(() => {
+        const wait = timer(this.firstQuery ? 0 : 200);
+        this.firstQuery = false;
+        return wait;
+      }),
+      distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)),
+    ),
     this.lookups$,
   ]).pipe(
     switchMap(([query, lookups]) => this.catalog.search(query).pipe(
@@ -293,9 +358,16 @@ export class StorePage {
   get type(): string { return this.querySubject.value.types?.[0] ?? ''; }
   get sort(): CatalogSort { return this.querySubject.value.sort ?? 'relevance'; }
 
+  /**
+   * Whether the customer has narrowed anything.
+   *
+   * The storefront's own game scope does not count. It is always applied and is
+   * not the customer's choice, so counting it would leave the reset control
+   * permanently visible with nothing to reset.
+   */
   get hasFilters(): boolean {
     const query = this.querySubject.value;
-    return Boolean(query.search || query.gameIds?.length || query.platformIds?.length
+    return Boolean(query.search || query.platformIds?.length
       || query.regionIds?.length || query.types?.length);
   }
 
@@ -319,9 +391,19 @@ export class StorePage {
     this.patch({});
   }
 
+  /**
+   * Clears the customer's filters, keeping the storefront's game scope.
+   *
+   * Dropping `gameIds` here would silently widen the store to every game on the
+   * platform, which is the one thing this storefront must not show.
+   */
   clear(): void {
     this.pageSize = DEFAULT_PAGE_SIZE;
-    this.querySubject.next({ sort: 'relevance', page: { page: 1, pageSize: this.pageSize } });
+    this.querySubject.next({
+      sort: 'relevance',
+      gameIds: this.querySubject.value.gameIds,
+      page: { page: 1, pageSize: this.pageSize },
+    });
   }
 
   retry(): void {

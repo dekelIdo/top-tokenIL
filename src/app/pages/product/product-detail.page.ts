@@ -6,6 +6,7 @@ import { catchError, map, shareReplay, switchMap, tap } from 'rxjs/operators';
 
 import { AnalyticsEvent, AnalyticsService } from '../../core/analytics';
 import { LocalizePipe } from '../../core/i18n';
+import { formatQuantity } from '../../core/value';
 import {
   AppError, FulfillmentMethod, Offer, Platform, Product, ProductDetail, ProductVariant, Region,
   isPurchasable, toAppError,
@@ -75,7 +76,7 @@ interface ProductViewModel {
                           [class.on]="variant.id === variantId()"
                           (click)="selectVariant(variant)">
                     <span>{{ variant.name | t }}</span>
-                    <small *ngIf="variant.quantityValue !== undefined" class="tt-faint">
+                    <small *ngIf="showsQuantity(variant)" class="tt-faint">
                       {{ variant.quantityValue | compactNumber }} {{ variant.quantityUnit | t }}
                     </small>
                   </button>
@@ -210,16 +211,19 @@ interface ProductViewModel {
     .media {
       display: grid;
       place-items: center;
-      padding: var(--tt-space-6);
-      min-block-size: 320px;
-      border-radius: var(--tt-radius-xl);
+      padding: var(--tt-space-5);
+      /* A ratio rather than a fixed floor. At 320px the artwork box took most
+         of a phone screen before the name of the product appeared. */
+      aspect-ratio: 16 / 11;
+      min-block-size: 0;
+      border-radius: var(--tt-radius-lg);
       background:
         radial-gradient(circle at 50% 115%, var(--tt-brand-tint), transparent 62%),
         var(--tt-surface);
       border: 1px solid var(--tt-border);
     }
     .info-skeleton { min-block-size: 520px; }
-    .media img { max-block-size: 220px; object-fit: contain; }
+    .media img { max-block-size: 100%; object-fit: contain; }
     .info { display: flex; flex-direction: column; gap: var(--tt-space-3); }
     h1 { margin: 0; }
     .chooser { display: flex; flex-direction: column; gap: var(--tt-space-2); }
@@ -303,6 +307,21 @@ export class ProductDetailPage {
       productId: detail.product.id,
       type: detail.product.type,
     });
+  }
+
+  /**
+   * Whether the quantity line adds anything to the chip.
+   *
+   * Variants are named after their size, so "250K מטבעות" was printing its own
+   * quantity underneath itself in smaller grey type. The line is shown only
+   * when the name does not already state the amount.
+   */
+  showsQuantity(variant: ProductVariant): boolean {
+    if (variant.quantityValue === undefined) {
+      return false;
+    }
+    const compact = formatQuantity(variant.quantityValue);
+    return compact.length > 0 && !variant.name.he.includes(compact);
   }
 
   selectVariant(variant: ProductVariant): void {

@@ -162,7 +162,10 @@ img { max-width: 100%; display: block; }
   gap: var(--tt-space-2);
   padding: 0.7rem 1.25rem;
   border: 1px solid transparent;
-  border-radius: var(--tt-radius-pill);
+  /* Not a pill. Every control being a 999px oval is the single loudest tell of
+     a generated interface, and it leaves a button with no orientation on the
+     page. A tight radius reads as a manufactured object. */
+  border-radius: var(--tt-radius-md);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
@@ -184,13 +187,9 @@ img { max-width: 100%; display: block; }
 .tt-btn--primary {
   background: var(--tt-brand-500);
   color: var(--tt-text-on-brand);
-  box-shadow: 0 6px 20px rgba(109, 74, 255, 0.32);
 }
 
-.tt-btn--primary:hover:not(:disabled) {
-  background: var(--tt-brand-400);
-  box-shadow: 0 10px 28px rgba(109, 74, 255, 0.42);
-}
+.tt-btn--primary:hover:not(:disabled) { background: var(--tt-brand-400); }
 
 /* The buy action. Gold because it is the moment money is involved, and because
    a screen with two violet buttons has no primary action at all. */
@@ -198,11 +197,11 @@ img { max-width: 100%; display: block; }
   background: linear-gradient(135deg, var(--tt-gold-400), var(--tt-gold-600));
   color: var(--tt-text-on-gold);
   font-weight: 700;
-  box-shadow: 0 6px 20px rgba(224, 151, 43, 0.28);
 }
 
+/* Brightening the metal, rather than switching a glow on behind it. */
 .tt-btn--buy:hover:not(:disabled) {
-  box-shadow: 0 10px 28px rgba(224, 151, 43, 0.4);
+  background: linear-gradient(135deg, var(--tt-gold-300), var(--tt-gold-500));
 }
 
 .tt-btn--ghost {

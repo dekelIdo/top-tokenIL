@@ -91,7 +91,7 @@ import { IconComponent } from './icon.component';
       inline-size: 100%;
       padding: 0.55rem var(--tt-space-3);
       padding-inline-start: 2.4rem;
-      border-radius: var(--tt-radius-pill);
+      border-radius: var(--tt-radius-md);
       border: 1px solid var(--tt-border);
       background: var(--tt-surface);
       color: var(--tt-text);

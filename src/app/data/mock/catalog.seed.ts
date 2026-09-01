@@ -376,6 +376,15 @@ interface ProductSeed {
   readonly imageUrl: string;
   readonly termsHe?: string;
   readonly termsEn?: string;
+  /**
+   * A star average, when one genuinely exists.
+   *
+   * No seeded product carries one. ZuzCOINS has not taken an order yet, so any
+   * figure here would be an invented claim about customers who do not exist,
+   * and a rating is the single most load-bearing thing a shop can fake. The
+   * field stays so real aggregates can populate it later; the product page
+   * already renders nothing when it is absent.
+   */
   readonly ratingAverage?: number;
   readonly ratingCount?: number;
   readonly metadata?: Record<string, string | number | boolean>;
@@ -406,8 +415,6 @@ const PRODUCT_SEEDS: readonly ProductSeed[] = [
     imageUrl: 'assets/products/coins.svg',
     termsHe: 'האספקה מתבצעת בתיאום מולכם. לעולם לא נבקש סיסמה, קוד אימות או קודי גיבוי.',
     termsEn: 'Delivery is coordinated with you. We will never ask for a password, a verification code or backup codes.',
-    ratingAverage: 4.8,
-    ratingCount: 412,
     variants: [
       { key: '100k', nameHe: '100K מטבעות', nameEn: '100K coins', quantityValue: 100000, unitHe: 'מטבעות', unitEn: 'coins', priceMajor: 49 },
       { key: '250k', nameHe: '250K מטבעות', nameEn: '250K coins', quantityValue: 250000, unitHe: 'מטבעות', unitEn: 'coins', priceMajor: 119, compareAtMajor: 135 },
@@ -434,8 +441,6 @@ const PRODUCT_SEEDS: readonly ProductSeed[] = [
     tags: ['code', 'points'],
     featured: false,
     imageUrl: 'assets/products/points.svg',
-    ratingAverage: 4.6,
-    ratingCount: 128,
     variants: [
       { key: '1050', nameHe: '1050 נקודות', nameEn: '1050 points', quantityValue: 1050, unitHe: 'נקודות', unitEn: 'points', priceMajor: 45 },
       { key: '2200', nameHe: '2200 נקודות', nameEn: '2200 points', quantityValue: 2200, unitHe: 'נקודות', unitEn: 'points', priceMajor: 89 },
@@ -487,8 +492,6 @@ const PRODUCT_SEEDS: readonly ProductSeed[] = [
     imageUrl: 'assets/products/gift-card.svg',
     termsHe: 'קוד שנרכש לאזור חנות שגוי אינו ניתן למימוש ואינו ניתן להחזר.',
     termsEn: 'A code purchased for the wrong store region cannot be redeemed and cannot be refunded.',
-    ratingAverage: 4.9,
-    ratingCount: 356,
     variants: [
       { key: '50', nameHe: '50 ₪', nameEn: '50 ILS', quantityValue: 50, unitHe: 'ש"ח לארנק', unitEn: 'ILS wallet value', priceMajor: 52 },
       { key: '100', nameHe: '100 ₪', nameEn: '100 ILS', quantityValue: 100, unitHe: 'ש"ח לארנק', unitEn: 'ILS wallet value', priceMajor: 103 },
@@ -514,8 +517,6 @@ const PRODUCT_SEEDS: readonly ProductSeed[] = [
     tags: ['subscription', 'playstation'],
     featured: true,
     imageUrl: 'assets/products/subscription.svg',
-    ratingAverage: 4.7,
-    ratingCount: 201,
     variants: [
       { key: '1m', nameHe: 'חודש', nameEn: '1 month', quantityValue: 1, unitHe: 'חודשים', unitEn: 'months', priceMajor: 39 },
       { key: '3m', nameHe: '3 חודשים', nameEn: '3 months', quantityValue: 3, unitHe: 'חודשים', unitEn: 'months', priceMajor: 109 },
@@ -540,8 +541,6 @@ const PRODUCT_SEEDS: readonly ProductSeed[] = [
     tags: ['code', 'currency'],
     featured: true,
     imageUrl: 'assets/products/vbucks.svg',
-    ratingAverage: 4.5,
-    ratingCount: 97,
     variants: [
       { key: '1000', nameHe: '1000 V-Bucks', nameEn: '1000 V-Bucks', quantityValue: 1000, unitHe: 'V-Bucks', unitEn: 'V-Bucks', priceMajor: 39 },
       { key: '2800', nameHe: '2800 V-Bucks', nameEn: '2800 V-Bucks', quantityValue: 2800, unitHe: 'V-Bucks', unitEn: 'V-Bucks', priceMajor: 99 },
