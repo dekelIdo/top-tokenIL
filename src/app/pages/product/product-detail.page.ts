@@ -45,7 +45,8 @@ interface ProductViewModel {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="tt-container tt-section">
-      <tt-error-state *ngIf="error() as appError; else content" [error]="appError"></tt-error-state>
+      <tt-error-state *ngIf="error() as appError; else content"
+                      [error]="appError" (retry)="retry()"></tt-error-state>
 
       <ng-template #content>
         <ng-container *ngIf="vm$ | async as vm; else loading">
@@ -380,4 +381,19 @@ export class ProductDetailPage {
   private offersForVariant(vm: ProductViewModel): readonly Offer[] {
     return vm.detail.offers.filter((offer) => offer.variantId === this.variantId());
   }
+
+  /**
+   * Clears the error so the view re-subscribes.
+   *
+   * The stream ends in catchError -> EMPTY, which completes it, so nothing
+   * retries by itself. Dropping the error swaps the template back to the
+   * content branch, and because the stream is shared with refCount the last
+   * unsubscribe tears it down and the next subscribe runs it again. Without
+   * this the error component still drew a "try again" button that did nothing
+   * when pressed.
+   */
+  retry(): void {
+    this.error.set(undefined);
+  }
+
 }

@@ -5,13 +5,21 @@ import { catchError, switchMap, tap } from 'rxjs/operators';
 import { AnalyticsEvent, AnalyticsService } from '../core/analytics';
 import { NotificationService } from '../core/error';
 import {
-  CheckoutFieldValues, CheckoutSession, CheckoutValidationIssue, LocalizedText, OrderId,
+  CheckoutFieldValues, CheckoutSession, CheckoutSessionId, CheckoutValidationIssue,
+  LocalizedText, OrderId,
   PaymentInstrumentRef, PaymentIntent, PaymentProviderId, PaymentResult, PaymentStatus,
   SimulatedInstrument, localized, toAppError,
 } from '../domain';
 import { CheckoutApiService, OrderApiService, PaymentApiService } from '../data/api';
 import { environment } from '../../environments/environment';
 import { CartFacade } from './cart.facade';
+
+/**
+ * Where this tab remembers the checkout it is in the middle of.
+ *
+ * Versioned, so a future shape change cannot resurrect an incompatible id.
+ */
+const SESSION_KEY = 'easycoins.checkout.v1';
 
 /**
  * Drives the checkout flow: validate the cart, open a session whose required
@@ -59,7 +67,19 @@ export class CheckoutFacade {
     return status === PaymentStatus.Failed || status === PaymentStatus.Cancelled;
   });
 
-  /** Re-prices the cart, then opens a session shaped by what is actually in it. */
+  /**
+   * Re-prices the cart, then opens a session shaped by what is actually in it.
+   *
+   * If this tab already has a session, it is resumed rather than replaced. The
+   * server makes one order per session, so that guarantee only reaches the
+   * customer if the session survives: the page used to mint a fresh one on
+   * every mount, which meant a refresh after submitting produced a second
+   * session and, against a real backend, a second order. The checkout screen
+   * told the customer in as many words that this could not happen.
+   *
+   * `sessionStorage` rather than `localStorage`: a checkout in progress belongs
+   * to this tab and should not be adopted by another one or outlive the window.
+   */
   start(): Observable<CheckoutSession | null> {
     this.busySignal.set(true);
     this.analytics.track(AnalyticsEvent.BeginCheckout, { itemCount: this.cart.itemCount() });
@@ -72,11 +92,26 @@ export class CheckoutFacade {
         for (const issue of validation.issues) {
           this.notifications.info(issue.message);
         }
+
+        const resumed = this.readSessionId();
+        if (resumed) {
+          return this.checkoutApi.getSession(resumed).pipe(
+            // A session that no longer exists, from a closed window or a server
+            // restart, is not an error the customer should see. Start a new one.
+            catchError(() => {
+              this.forgetSessionId();
+              return this.checkoutApi.createSession(this.cart.cart());
+            }),
+          );
+        }
         return this.checkoutApi.createSession(this.cart.cart());
       }),
       tap((session) => {
         this.busySignal.set(false);
         this.sessionSignal.set(session);
+        if (session) {
+          this.rememberSessionId(session.id);
+        }
       }),
       catchError((error: unknown) => {
         this.busySignal.set(false);
@@ -186,6 +221,9 @@ export class CheckoutFacade {
           case PaymentStatus.Succeeded:
             this.analytics.track(AnalyticsEvent.PaymentSuccess, { orderId: result.orderId });
             this.cart.clear();
+            // The session has produced its order and must not be resumed by a
+            // later visit to checkout.
+            this.forgetSessionId();
             this.notifications.success(localized('התשלום אושר וההזמנה נוצרה.', 'Payment approved and your order was created.'));
             break;
           case PaymentStatus.Processing:
@@ -229,7 +267,42 @@ export class CheckoutFacade {
     );
   }
 
+  /**
+   * Abandons a payment the gateway is still holding.
+   *
+   * The timeout branch left the customer with a disabled pay button, a status
+   * that never changed and no way out except leaving the site. Cancelling is
+   * safe: the provider refuses to cancel an intent that has already settled, so
+   * this can never revoke a payment that actually went through.
+   */
+  cancelPayment(): Observable<PaymentResult | null> {
+    const intent = this.intentSignal();
+    if (!intent) {
+      return of(null);
+    }
+    this.busySignal.set(true);
+
+    return this.paymentApi.cancel(intent.id).pipe(
+      tap((result) => {
+        this.busySignal.set(false);
+        this.paymentStatusSignal.set(result.status);
+        if (result.status === PaymentStatus.Cancelled) {
+          this.paymentFailureSignal.set(localized(
+            'התשלום בוטל. אפשר לנסות שוב או לחזור לעגלה.',
+            'The payment was cancelled. You can try again or go back to your cart.',
+          ));
+        }
+      }),
+      catchError((error: unknown) => {
+        this.busySignal.set(false);
+        this.notifications.error(toAppError(error));
+        return of(null);
+      }),
+    );
+  }
+
   reset(): void {
+    this.forgetSessionId();
     this.sessionSignal.set(null);
     this.intentSignal.set(null);
     this.issuesSignal.set([]);
@@ -237,5 +310,34 @@ export class CheckoutFacade {
     this.instrumentsSignal.set([]);
     this.paymentFailureSignal.set(null);
     this.paymentStatusSignal.set(null);
+  }
+
+  // --- Session continuity ---------------------------------------------------
+  // Wrapped in try/catch throughout: a browser in private mode, or with storage
+  // disabled, throws on access. Losing continuity is acceptable there; throwing
+  // in the middle of a checkout is not.
+
+  private rememberSessionId(id: CheckoutSessionId): void {
+    try {
+      sessionStorage.setItem(SESSION_KEY, id);
+    } catch {
+      // No continuity across a reload in this browser. Checkout still works.
+    }
+  }
+
+  private readSessionId(): CheckoutSessionId | null {
+    try {
+      return (sessionStorage.getItem(SESSION_KEY) as CheckoutSessionId | null) ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  private forgetSessionId(): void {
+    try {
+      sessionStorage.removeItem(SESSION_KEY);
+    } catch {
+      // Nothing to clean up.
+    }
   }
 }

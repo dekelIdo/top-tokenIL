@@ -1,0 +1,80 @@
+# Render blueprint for EASYCOINS.
+#
+# Nothing here is live yet. This file exists so the deployment is described in
+# the repository instead of in someone's memory of a dashboard, and so the two
+# services and the database come up with the same settings every time.
+#
+# Secrets are deliberately NOT in this file. Every value marked `sync: false`
+# must be set by hand in the Render dashboard, once, per environment.
+services:
+  # --- API -------------------------------------------------------------------
+  - type: web
+    name: easycoins-api
+    runtime: node
+    rootDir: backend
+    plan: starter
+    healthCheckPath: /api/v1/health
+    # prisma generate is not part of `npm run build`, and without it the service
+    # builds cleanly and then cannot reach the database at runtime.
+    buildCommand: npm ci && npx prisma generate && npm run build
+    # Migrations run on boot rather than as a separate job, so a deploy can
+    # never serve a build against an older schema.
+    startCommand: npx prisma migrate deploy && node dist/main.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: easycoins-db
+          property: connectionString
+      # Startup refuses a plaintext redirect, a wildcard CORS origin, a short
+      # secret, or a placeholder value. See backend/src/config/environment.ts.
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: PAYMENT_WEBHOOK_SECRET
+        generateValue: true
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: COOKIE_SAME_SITE
+        value: lax
+      # The storefront's own origin. Must be exact; a wildcard is rejected.
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: APP_BASE_URL
+        sync: false
+      # name:token pairs for the people who fulfil orders by hand.
+      - key: ADMIN_TOKENS
+        sync: false
+      # 'log' is refused once deployed, and there is no mail provider wired up,
+      # so this is 'none' until one exists. See the note in the plan.
+      - key: NOTIFICATION_TRANSPORT
+        value: none
+      - key: OTP_DEV_ECHO
+        value: "false"
+      # Google sign-in stays dark until both of these are set together.
+      # docs/GOOGLE-OAUTH.md has the exact console steps.
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URI
+        sync: false
+
+  # --- Storefront ------------------------------------------------------------
+  - type: web
+    name: easycoins-web
+    runtime: static
+    buildCommand: npm ci && npm run build -- --configuration production
+    staticPublishPath: dist/top-token
+    # The same fallback as src/_redirects, declared here too so the rule holds
+    # even if the asset copy is ever dropped from angular.json.
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+databases:
+  - name: easycoins-db
+    plan: basic-256mb
+    # The catalog is Hebrew. A WIN1252 cluster rejects it outright.
+    postgresMajorVersion: "16"

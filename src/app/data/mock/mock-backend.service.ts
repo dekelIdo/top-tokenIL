@@ -4,7 +4,7 @@ import { delay } from 'rxjs/operators';
 
 import {
   AppError, CheckoutSession, FulfillmentStatus, Offer, Order, OrderStatus, PaymentIntent,
-  localized, notFoundError,
+  SupportTicket, localized, notFoundError,
 } from '../../domain';
 
 /**
@@ -25,6 +25,15 @@ export class MockBackendService {
   readonly checkoutSessions = new Map<string, CheckoutSession>();
   readonly paymentIntents = new Map<string, PaymentIntent>();
   readonly orders = new Map<string, Order>();
+
+  /**
+   * Support tickets.
+   *
+   * They were built, handed back with a reference number and then dropped on
+   * the floor. The screen tells the customer the message is held in the
+   * browser, so it has to actually be held somewhere.
+   */
+  readonly supportTickets = new Map<string, SupportTicket>();
 
   private sequence = 0;
   private readonly fulfillmentTimers = new Map<string, ReturnType<typeof setTimeout>>();

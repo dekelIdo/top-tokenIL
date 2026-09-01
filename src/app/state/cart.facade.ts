@@ -6,7 +6,7 @@ import { AnalyticsEvent, AnalyticsService } from '../core/analytics';
 import { NotificationService } from '../core/error';
 import {
   AddToCartRequest, Cart, CartIssue, CartItem, CartItemId, CartValidationResult,
-  computeTotals, localized, toAppError,
+  Money, computeTotals, localized, toAppError,
 } from '../domain';
 import { CartApiService } from '../data/api';
 import { CartStorageService } from './cart-storage.service';
@@ -31,13 +31,24 @@ export class CartFacade {
 
   private readonly itemsSignal = signal<readonly CartItem[]>(this.storage.load());
   private readonly couponSignal = signal<string | undefined>(undefined);
+
+  /**
+   * The discount the server calculated for the applied coupon.
+   *
+   * Held separately from the code because the code is not a price. The totals
+   * used to be computed from the items alone, so a coupon could be accepted,
+   * announced with a success toast and shown as applied while every figure on
+   * the page, and the order that followed, stayed at full price. Only a value
+   * the server returned is ever stored here.
+   */
+  private readonly discountSignal = signal<Money | undefined>(undefined);
   private readonly busySignal = signal(false);
   private readonly issuesSignal = signal<readonly CartIssue[]>([]);
 
   readonly items = this.itemsSignal.asReadonly();
   readonly busy = this.busySignal.asReadonly();
   readonly issues = this.issuesSignal.asReadonly();
-  readonly totals = computed(() => computeTotals(this.itemsSignal()));
+  readonly totals = computed(() => computeTotals(this.itemsSignal(), this.discountSignal()));
   readonly itemCount = computed(() => this.totals().itemCount);
   readonly isEmpty = computed(() => this.itemsSignal().length === 0);
 
@@ -98,9 +109,15 @@ export class CartFacade {
   }
 
   clear(): void {
-    this.couponSignal.set(undefined);
+    this.clearCoupon();
     this.issuesSignal.set([]);
-    this.commit([]);
+    this.commit([], false);
+  }
+
+  /** Drops the coupon and the discount together; one without the other lies. */
+  private clearCoupon(): void {
+    this.couponSignal.set(undefined);
+    this.discountSignal.set(undefined);
   }
 
   applyCoupon(code: string): Observable<boolean> {
@@ -111,8 +128,10 @@ export class CartFacade {
           this.busySignal.set(false);
           if (application.applied) {
             this.couponSignal.set(application.code);
+            this.discountSignal.set(application.discount);
             this.notifications.success(application.message);
           } else {
+            this.clearCoupon();
             this.notifications.info(application.message);
           }
           subscriber.next(application.applied);
@@ -137,6 +156,11 @@ export class CartFacade {
         this.busySignal.set(false);
         this.issuesSignal.set(result.issues);
         this.commit(result.cart.items);
+        // The server's discount is the authoritative one. Adopting only the
+        // items, as this used to, meant a re-price could correct every line and
+        // still leave a stale discount on screen.
+        this.discountSignal.set(result.cart.totals.discount);
+        this.couponSignal.set(result.cart.couponCode);
       }),
       catchError((error: unknown) => {
         this.busySignal.set(false);
@@ -158,8 +182,44 @@ export class CartFacade {
       : item)));
   }
 
-  private commit(items: readonly CartItem[]): void {
+  /**
+   * Writes the lines and, unless told otherwise, re-checks the coupon.
+   *
+   * A discount is a function of the basket, so changing the basket can make it
+   * invalid: `LAUNCH10` needs a hundred shekels, and removing a line can drop
+   * the cart below that. Re-asking the server keeps the figure on screen true
+   * instead of leaving a discount that only disappears at checkout.
+   *
+   * `recheck` is false when the caller has just adopted the server's own
+   * totals, which would otherwise ask the same question twice.
+   */
+  private commit(items: readonly CartItem[], recheck = true): void {
     this.itemsSignal.set(items);
     this.storage.save(items);
+
+    const code = this.couponSignal();
+    if (recheck && code) {
+      this.recheckCoupon(code);
+    }
+  }
+
+  /**
+   * Silently re-applies the current coupon after the basket changed.
+   *
+   * Silent on purpose: the customer did not just type a code, so a toast here
+   * would be noise. If it no longer qualifies the discount is dropped, and the
+   * total they see corrects itself.
+   */
+  private recheckCoupon(code: string): void {
+    this.api.applyCoupon(this.cart(), code).subscribe({
+      next: (application) => {
+        if (application.applied) {
+          this.discountSignal.set(application.discount);
+        } else {
+          this.clearCoupon();
+        }
+      },
+      error: () => this.clearCoupon(),
+    });
   }
 }

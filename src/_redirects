@@ -1,0 +1,10 @@
+# Single-page app fallback.
+#
+# The router uses real paths, so a customer who reloads on /store, or opens a
+# product link someone sent them, asks the static host for a file that does not
+# exist. Without this rule the host answers 404 and the site looks broken for
+# every URL except the home page.
+#
+# Netlify and Render both read this file. The 200 matters: a 302 would change
+# the address bar and lose the route.
+/*    /index.html   200
