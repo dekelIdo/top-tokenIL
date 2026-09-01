@@ -3,6 +3,7 @@ export * from './components/app-header.component';
 export * from './components/badges.component';
 export * from './components/brand-logo.component';
 export * from './components/bundle-ladder.component';
+export * from './components/coin-tier.component';
 export * from './components/content.component';
 export * from './components/game-card.component';
 export * from './components/hero.component';

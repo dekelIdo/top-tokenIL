@@ -5,93 +5,81 @@ import { combineLatest, map, of, switchMap } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 import { AnalyticsService } from '../../core/analytics';
+import { STOREFRONT } from '../../core/brand';
 import { LocalizePipe } from '../../core/i18n';
 import { PageRequest, Product, ProductType } from '../../domain';
-import { PromotionApiService, ReviewApiService, SupportApiService } from '../../data/api';
+import { ReviewApiService, SupportApiService } from '../../data/api';
 import { CatalogFacade } from '../../state';
 import {
-  BundleLadderComponent, FaqAccordionComponent, GameCardComponent, HeroComponent,
-  IconComponent, ProductCardComponent, ReviewCardComponent, SkeletonGridComponent,
-  TrustBadgesComponent,
+  BundleLadderComponent, FaqAccordionComponent, HeroComponent, IconComponent,
+  ProductCardComponent, ReviewCardComponent, SkeletonGridComponent,
 } from '../../ui';
 
-const REVIEW_PAGE: PageRequest = { page: 1, pageSize: 3 };
+const REVIEW_PAGE: PageRequest = { page: 1, pageSize: 2 };
 
 /**
- * The landing page, built as a purchase funnel rather than a brochure.
+ * The landing page.
  *
- * The order answers a customer's questions in the order they actually ask them:
- * what is this and what does it cost, which bundle should I buy, what else do
- * you sell, how does delivery work, can I trust you, and what if something goes
- * wrong. Each section exists because it removes one objection.
+ * Six blocks, not nine. The page previously ran hero, ladder, products, games,
+ * how-it-works, trust, deals, reviews, FAQ and a final call, each in its own
+ * full-width band with its own heading. That is a deck, not a shop: it made the
+ * page enormous and every section look like the last one.
  *
- * The bundle ladder is the commercial centre of the page. ZuzCOINS competes on
- * price, so the interface shows the price-per-million relationship directly
- * instead of asserting good value in copy.
+ * What is left earns its place:
  *
- * Everything is real catalog data. No invented statistic, review count or
- * guarantee appears anywhere on this page.
+ *   1. Hero, with a real price in it
+ *   2. Bundles, which is the product and the price argument in one block
+ *   3. Everything else we sell for this game
+ *   4. How buying works, folded together with the reassurance that used to be
+ *      its own band of four identical cards
+ *   5. What people asked, and what a couple of them said
+ *   6. The last call
+ *
+ * The games rail is gone. The shop sells one game, and a rail of one is worse
+ * than no rail.
  */
 @Component({
   selector: 'tt-home-page',
   standalone: true,
   imports: [
     CommonModule, RouterLink, LocalizePipe,
-    BundleLadderComponent, GameCardComponent, HeroComponent, IconComponent,
-    ProductCardComponent, ReviewCardComponent, FaqAccordionComponent,
-    TrustBadgesComponent, SkeletonGridComponent,
+    BundleLadderComponent, HeroComponent, IconComponent,
+    ProductCardComponent, ReviewCardComponent, FaqAccordionComponent, SkeletonGridComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <ng-container *ngIf="vm$ | async as vm; else loading">
-      <tt-hero [product]="vm.featured[0]" [ladder]="vm.ladder"></tt-hero>
+      <tt-hero [ladder]="vm.ladder"></tt-hero>
 
-      <!-- 1. The price argument, immediately after the hero. -->
-      <section class="tt-container tt-section" *ngIf="vm.ladder as ladder">
-        <header class="tt-section__head">
+      <!-- 2. The bundles. The product and the price argument in one block. -->
+      <section class="tt-container tt-section" id="bundles" *ngIf="vm.ladder as ladder">
+        <header class="band">
           <div>
-            <p class="tt-eyebrow">כמה זה עולה</p>
-            <h2>ככל שקונים יותר, המחיר למיליון יורד</h2>
-            <p class="sub tt-muted">
-              המחיר לכל מיליון מוצג לצד כל חבילה, כדי שתראו בדיוק מה משתלם.
-            </p>
+            <h2>חבילות קוינס</h2>
+            <p class="lede">ככל שהחבילה גדולה יותר, המחיר לכל מיליון יורד. הכול מוצג לצד כל חבילה.</p>
           </div>
-          <a class="more" [routerLink]="['/products', ladder.product.slug]">
-            כל החבילות <tt-icon name="chevron" [size]="16" dir="auto"></tt-icon>
+          <a class="ghost-link" [routerLink]="['/products', ladder.product.slug]">
+            כל האפשרויות <tt-icon name="chevron" [size]="15" dir="auto"></tt-icon>
           </a>
         </header>
 
-        <div class="ladder-wrap">
-          <tt-bundle-ladder [detail]="ladder" [productSlug]="ladder.product.slug"></tt-bundle-ladder>
-
-          <aside class="ladder-note">
-            <h3>למה המחיר למיליון חשוב</h3>
-            <p class="tt-muted">
-              חבילה גדולה כמעט תמיד זולה יותר לכל מיליון. במקום להשוות מספרים בראש,
-              המחיר ליחידה מופיע ליד כל אפשרות, והחבילה המשתלמת ביותר מסומנת.
-            </p>
-            <a class="tt-btn tt-btn--buy" [routerLink]="['/products', ladder.product.slug]">
-              לבחירת חבילה
-              <tt-icon name="arrow" [size]="18" dir="auto"></tt-icon>
-            </a>
-          </aside>
-        </div>
+        <tt-bundle-ladder [detail]="ladder" [productSlug]="ladder.product.slug"></tt-bundle-ladder>
       </section>
 
-      <!-- 2. What else is on the shelf. -->
-      <section class="tt-container tt-section">
-        <header class="tt-section__head">
+      <!-- 3. The rest of the shelf for this game. -->
+      <section class="tt-container tt-section" *ngIf="vm.products.length > 0">
+        <header class="band">
           <div>
-            <p class="tt-eyebrow">נבחרו עבורכם</p>
-            <h2>מוצרים מומלצים</h2>
+            <h2>עוד ל{{ gameName }}</h2>
+            <p class="lede">קודים, נקודות ושירותים לאותו חשבון.</p>
           </div>
-          <a class="more" routerLink="/store">
-            לכל המוצרים <tt-icon name="chevron" [size]="16" dir="auto"></tt-icon>
+          <a class="ghost-link" routerLink="/store">
+            לחנות <tt-icon name="chevron" [size]="15" dir="auto"></tt-icon>
           </a>
         </header>
 
-        <div class="tt-grid reserve-grid">
-          <tt-product-card *ngFor="let product of vm.featured"
+        <div class="tt-grid">
+          <tt-product-card *ngFor="let product of vm.products"
                            [product]="product"
                            [lookups]="vm.lookups">
           </tt-product-card>
@@ -101,294 +89,217 @@ const REVIEW_PAGE: PageRequest = { page: 1, pageSize: 3 };
 
     <ng-template #loading>
       <tt-hero></tt-hero>
-      <section class="tt-container tt-section">
-        <tt-skeleton-grid [count]="4"></tt-skeleton-grid>
-      </section>
+      <section class="tt-container tt-section"><tt-skeleton-grid [count]="4"></tt-skeleton-grid></section>
     </ng-template>
 
-    <!-- 3. Which game. A rail, because there are few and they are wide. -->
-    <section class="tt-section tt-section--raised">
+    <!-- 4. How buying works, with the reassurance folded in rather than given a
+         band of four identical cards of its own. -->
+    <section class="tt-section steps-band">
       <div class="tt-container">
-        <header class="tt-section__head">
-          <div>
-            <p class="tt-eyebrow">לפי משחק</p>
-            <h2>מה משחקים היום</h2>
-          </div>
-          <a class="more" routerLink="/games">
-            כל המשחקים <tt-icon name="chevron" [size]="16" dir="auto"></tt-icon>
-          </a>
-        </header>
+        <h2 class="steps-band__title">שלושה צעדים, בלי הפתעות</h2>
 
-        <div class="rail reserve-rail">
-          <tt-game-card *ngFor="let game of games$ | async" [game]="game"></tt-game-card>
-        </div>
+        <ol class="steps">
+          <li>
+            <span class="steps__n">1</span>
+            <h3>בוחרים חבילה</h3>
+            <p>המחיר, הפלטפורמה ואזור החנות מופיעים לפני התשלום.</p>
+          </li>
+          <li>
+            <span class="steps__n">2</span>
+            <h3>משלמים</h3>
+            <p>פרטי האשראי עוברים לספק הסליקה. אצלנו הם לא נשמרים.</p>
+          </li>
+          <li>
+            <span class="steps__n">3</span>
+            <h3>מקבלים</h3>
+            <p>לכל הזמנה יש דף מעקב עם הסטטוס, מהתשלום ועד האספקה.</p>
+          </li>
+        </ol>
+
+        <p class="promise">
+          <tt-icon name="shield" [size]="17"></tt-icon>
+          לא מבקשים סיסמה לחשבון המשחק, לא קוד אימות ולא קודי גיבוי. בשום שלב.
+        </p>
       </div>
     </section>
 
-    <!-- 4. How it actually works. The commonest objection is "what happens
-         after I pay", so it is answered before the customer has to ask. -->
-    <section class="tt-container tt-section">
-      <header class="tt-section__head">
-        <div>
-          <p class="tt-eyebrow">איך זה עובד</p>
-          <h2>מהתשלום ועד שהמוצר אצלכם</h2>
-        </div>
-      </header>
-
-      <ol class="steps">
-        <li>
-          <span class="steps__num">1</span>
-          <h3>בוחרים חבילה</h3>
-          <p>פלטפורמה, אזור חנות ומחיר מופיעים על כל אפשרות לפני שמשלמים.</p>
-        </li>
-        <li>
-          <span class="steps__num">2</span>
-          <h3>ממלאים פרטים</h3>
-          <p>רק מה שצריך כדי לספק את המוצר. לא מבקשים סיסמה ולא קוד אימות, בשום שלב.</p>
-        </li>
-        <li>
-          <span class="steps__num">3</span>
-          <h3>משלמים</h3>
-          <p>פרטי האשראי נמסרים לספק הסליקה ולא נשמרים אצלנו.</p>
-        </li>
-        <li>
-          <span class="steps__num">4</span>
-          <h3>מקבלים עדכון</h3>
-          <p>לכל הזמנה יש דף מעקב עם הסטטוס העדכני, מהתשלום ועד האספקה.</p>
-        </li>
-      </ol>
-    </section>
-
-    <!-- 5. Reassurance, once. -->
-    <section class="tt-container tt-section tt-section--tight">
-      <tt-trust-badges></tt-trust-badges>
-    </section>
-
-    <!-- 6. Live offers, if there are any. -->
-    <section class="tt-container tt-section" *ngIf="promotions$ | async as promotions">
-      <ng-container *ngIf="promotions.length > 0">
-        <header class="tt-section__head">
-          <div>
-            <p class="tt-eyebrow">פעיל עכשיו</p>
-            <h2>מבצעים</h2>
-          </div>
-          <a class="more" routerLink="/deals">
-            לכל המבצעים <tt-icon name="chevron" [size]="16" dir="auto"></tt-icon>
-          </a>
-        </header>
-
-        <div class="promos">
-          <article class="promo" *ngFor="let promotion of promotions">
-            <tt-icon name="tag" [size]="18"></tt-icon>
-            <div>
-              <h3>{{ promotion.title | t }}</h3>
-              <p>{{ promotion.description | t }}</p>
-            </div>
-          </article>
-        </div>
-      </ng-container>
-    </section>
-
-    <!-- 7. What people said, and what people ask. -->
+    <!-- 5. Questions, and a couple of things customers said. -->
     <section class="tt-container tt-section">
       <div class="split">
         <div>
-          <header class="tt-section__head">
-            <h2>מה לקוחות אומרים</h2>
-            <a class="more" routerLink="/reviews">
-              הכל <tt-icon name="chevron" [size]="16" dir="auto"></tt-icon>
-            </a>
-          </header>
-          <div class="tt-stack reserve-reviews">
-            <tt-review-card *ngFor="let review of (reviews$ | async)" [review]="review"></tt-review-card>
-          </div>
+          <h2>שאלות שחוזרות</h2>
+          <tt-faq-accordion class="reserve-faq" [entries]="(faq$ | async) ?? []"></tt-faq-accordion>
+          <a class="ghost-link" routerLink="/faq">
+            עוד שאלות <tt-icon name="chevron" [size]="15" dir="auto"></tt-icon>
+          </a>
         </div>
 
-        <div>
-          <header class="tt-section__head">
-            <h2>שאלות נפוצות</h2>
-            <a class="more" routerLink="/faq">
-              הכל <tt-icon name="chevron" [size]="16" dir="auto"></tt-icon>
+        <aside class="says" *ngIf="(reviews$ | async) as reviews">
+          <ng-container *ngIf="reviews.length > 0">
+            <h2>מה אמרו</h2>
+            <tt-review-card *ngFor="let review of reviews" [review]="review"></tt-review-card>
+            <a class="ghost-link" routerLink="/reviews">
+              כל הביקורות <tt-icon name="chevron" [size]="15" dir="auto"></tt-icon>
             </a>
-          </header>
-          <tt-faq-accordion class="reserve-faq" [entries]="(faq$ | async) ?? []"></tt-faq-accordion>
-        </div>
+          </ng-container>
+        </aside>
       </div>
     </section>
 
-    <!-- 8. The last ask. -->
+    <!-- 6. The last call. -->
     <section class="tt-container tt-section">
-      <div class="final">
-        <h2>מוכנים להתחיל?</h2>
-        <p class="tt-muted">בחרו משחק, בחרו חבילה, וראו את המחיר לפני שאתם משלמים.</p>
-        <div class="final__cta">
-          <a class="tt-btn tt-btn--buy" routerLink="/store">
-            לחנות <tt-icon name="arrow" [size]="18" dir="auto"></tt-icon>
-          </a>
-          <a class="tt-btn tt-btn--ghost" routerLink="/support">יש לי שאלה</a>
-        </div>
+      <div class="closer">
+        <h2>מוכנים?</h2>
+        <p>בחרו חבילה, ראו את המחיר, וסיימו תוך דקה.</p>
+        <a class="tt-btn tt-btn--buy tt-btn--lg" routerLink="/store">
+          לקניית קוינס <tt-icon name="arrow" [size]="18" dir="auto"></tt-icon>
+        </a>
       </div>
     </section>
   `,
   styles: [`
-    h2 { margin: 0; font-size: var(--tt-text-2xl); letter-spacing: var(--tt-tracking-display); }
-    .tt-section__head p { margin: 0 0 var(--tt-space-1); }
-    .sub { max-inline-size: 52ch; font-size: var(--tt-text-sm); margin-block-start: var(--tt-space-2); }
+    h2 {
+      margin: 0;
+      font-size: clamp(1.5rem, 4.5vw, var(--tt-text-3xl));
+      letter-spacing: var(--tt-tracking-display);
+      line-height: var(--tt-leading-tight);
+    }
 
-    .more {
+    /* A section head with no eyebrow above it. The eyebrow was the same shape on
+       every band and added a line of noise to each. */
+    .band {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: var(--tt-space-4);
+      margin-block-end: var(--tt-space-5);
+      flex-wrap: wrap;
+    }
+    .lede {
+      margin: var(--tt-space-2) 0 0;
+      max-inline-size: 48ch;
+      color: var(--tt-text-muted);
+      font-size: var(--tt-text-sm);
+      line-height: var(--tt-leading);
+    }
+
+    .ghost-link {
       display: inline-flex;
       align-items: center;
-      gap: var(--tt-space-1);
+      gap: 4px;
       color: var(--tt-text-muted);
       font-size: var(--tt-text-sm);
       font-weight: 600;
       white-space: nowrap;
     }
-    .more:hover { color: var(--tt-brand-300); text-decoration: none; }
+    .ghost-link:hover { color: var(--tt-brand-300); text-decoration: none; }
 
-    .ladder-wrap {
-      display: grid;
-      gap: var(--tt-space-5);
-      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-      align-items: start;
+    /* The one place on the page with a different ground, which is what stops the
+       page reading as one long column of identical bands. */
+    .steps-band {
+      background:
+        radial-gradient(80% 120% at 50% 0%, var(--tt-brand-tint), transparent 70%),
+        var(--tt-bg-elevated);
+      border-block: 1px solid var(--tt-border);
     }
-    .ladder-note {
-      padding: var(--tt-space-5);
-      border-radius: var(--tt-radius-lg);
-      background: var(--tt-surface);
-      border: 1px solid var(--tt-border);
-    }
-    .ladder-note h3 { margin: 0 0 var(--tt-space-2); font-size: var(--tt-text-lg); }
-    .ladder-note p { margin: 0 0 var(--tt-space-4); font-size: var(--tt-text-sm); line-height: var(--tt-leading); }
-
-    /* Games rail: scrolls horizontally, snaps, hides its scrollbar. */
-    .rail {
-      display: grid;
-      grid-auto-flow: column;
-      grid-auto-columns: minmax(240px, 1fr);
-      gap: var(--tt-space-4);
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      padding-block-end: var(--tt-space-2);
-      scrollbar-width: none;
-    }
-    .rail::-webkit-scrollbar { display: none; }
-    .rail > * { scroll-snap-align: start; }
+    .steps-band__title { margin-block-end: var(--tt-space-5); }
 
     .steps {
       display: grid;
-      gap: var(--tt-space-4);
-      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: var(--tt-space-5);
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
       margin: 0;
       padding: 0;
       list-style: none;
-      counter-reset: step;
     }
-    .steps li {
-      padding: var(--tt-space-4);
-      border-radius: var(--tt-radius-lg);
-      background: var(--tt-surface);
-      border: 1px solid var(--tt-border);
-    }
-    .steps__num {
-      display: grid;
-      place-items: center;
-      inline-size: 30px;
-      block-size: 30px;
-      margin-block-end: var(--tt-space-3);
-      border-radius: var(--tt-radius-md);
-      background: var(--tt-brand-tint);
-      color: var(--tt-brand-300);
+    /* No card, no border, no background. The number carries the structure. */
+    .steps__n {
+      display: block;
       font-family: var(--tt-font-numeric);
-      font-weight: 800;
+      font-size: var(--tt-text-3xl);
+      font-weight: 900;
+      line-height: 1;
+      color: var(--tt-brand-500);
+      margin-block-end: var(--tt-space-2);
     }
     .steps h3 { margin: 0 0 var(--tt-space-1); font-size: var(--tt-text-md); }
     .steps p { margin: 0; color: var(--tt-text-muted); font-size: var(--tt-text-sm); line-height: var(--tt-leading-snug); }
 
-    .promos {
-      display: grid;
-      gap: var(--tt-space-4);
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    }
-    .promo {
+    .promise {
       display: flex;
-      gap: var(--tt-space-3);
-      padding: var(--tt-space-4);
-      border-radius: var(--tt-radius-lg);
-      background: var(--tt-surface);
-      border: 1px solid var(--tt-border);
-      border-inline-start: 3px solid var(--tt-gold-500);
+      align-items: center;
+      gap: var(--tt-space-2);
+      margin: var(--tt-space-6) 0 0;
+      padding-block-start: var(--tt-space-4);
+      border-block-start: 1px solid var(--tt-border);
+      color: var(--tt-text-muted);
+      font-size: var(--tt-text-sm);
     }
-    .promo tt-icon { color: var(--tt-gold-400); margin-block-start: 2px; }
-    .promo h3 { margin: 0 0 var(--tt-space-1); font-size: var(--tt-text-md); }
-    .promo p { margin: 0; color: var(--tt-text-muted); font-size: var(--tt-text-sm); }
+    .promise tt-icon { color: var(--tt-brand-400); flex: none; }
 
     .split {
       display: grid;
       gap: var(--tt-space-7);
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
       align-items: start;
     }
+    .split h2 { margin-block-end: var(--tt-space-4); }
+    .split .ghost-link { margin-block-start: var(--tt-space-3); }
+    .says { display: flex; flex-direction: column; gap: var(--tt-space-3); }
+    .reserve-faq { min-block-size: 240px; }
 
-    .final {
+    .closer {
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
       gap: var(--tt-space-3);
-      padding: var(--tt-space-7) var(--tt-space-5);
-      border-radius: var(--tt-radius-xl);
-      background:
-        radial-gradient(circle at 50% 0%, var(--tt-brand-tint), transparent 60%),
-        var(--tt-surface);
-      border: 1px solid var(--tt-border);
+      padding-block: var(--tt-space-7);
     }
-    .final p { margin: 0; }
-    .final__cta { display: flex; gap: var(--tt-space-3); flex-wrap: wrap; justify-content: center; }
+    .closer p { margin: 0; color: var(--tt-text-muted); }
 
-    /* One row of the compact card, so late data does not shift the page. */
-    .reserve-grid { min-block-size: 260px; }
-    .reserve-rail { min-block-size: 172px; }
-    .reserve-reviews { min-block-size: 220px; }
-    .reserve-faq { min-block-size: 260px; }
-
-    @media (max-width: 900px) {
-      .ladder-wrap { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 700px) {
-      h2 { font-size: var(--tt-text-xl); }
+    @media (max-width: 860px) {
+      .split { grid-template-columns: 1fr; gap: var(--tt-space-6); }
     }
   `],
 })
 export class HomePage {
   private readonly catalog = inject(CatalogFacade);
-  private readonly promotionApi = inject(PromotionApiService);
   private readonly reviewApi = inject(ReviewApiService);
   private readonly supportApi = inject(SupportApiService);
   private readonly analytics = inject(AnalyticsService);
 
-  readonly games$ = this.catalog.games$;
-  readonly promotions$ = this.promotionApi.getActivePromotions();
-  readonly reviews$ = this.reviewApi.getReviews(REVIEW_PAGE).pipe(map((page) => page.items));
-  readonly faq$ = this.supportApi.getFaq().pipe(map((entries) => entries.slice(0, 4)));
+  readonly gameName = STOREFRONT.focusGameName;
 
-  readonly vm$ = combineLatest([this.catalog.featured(4), this.catalog.lookups$]).pipe(
-    switchMap(([featured, lookups]) => {
-      // The ladder needs a product with quantity tiers to compare. Chosen by
-      // product type rather than by slug: hard-coding one game's slug is how a
-      // storefront quietly becomes single-game again.
-      const ladderProduct = featured.find(
+  readonly reviews$ = this.reviewApi.getReviews(REVIEW_PAGE).pipe(map((page) => page.items));
+  readonly faq$ = this.supportApi.getFaq().pipe(map((entries) => entries.slice(0, 5)));
+
+  /**
+   * The catalog for the game this shop sells.
+   *
+   * Filtered by game rather than by taking whatever is featured, so the page
+   * cannot quietly start advertising a product from a game the storefront does
+   * not present.
+   */
+  readonly vm$ = combineLatest([
+    this.catalog.productsForGame(STOREFRONT.focusGameSlug),
+    this.catalog.lookups$,
+  ]).pipe(
+    switchMap(([products, lookups]) => {
+      const coins = products.find(
         (product): product is Product => product.type === ProductType.GameCurrency,
       );
 
-      if (!ladderProduct) {
-        return of({ featured, lookups, ladder: null });
+      // Everything except the coin bundles, which have their own block above.
+      const rest = products.filter((product) => product.id !== coins?.id);
+
+      if (!coins) {
+        return of({ products: rest, lookups, ladder: null });
       }
 
-      return this.catalog.productBySlug(ladderProduct.slug).pipe(
-        map((ladder) => ({ featured, lookups, ladder })),
-        // A failed detail request costs the page one module, not the page.
-        catchError(() => of({ featured, lookups, ladder: null })),
+      return this.catalog.productBySlug(coins.slug).pipe(
+        map((ladder) => ({ products: rest, lookups, ladder })),
+        catchError(() => of({ products: rest, lookups, ladder: null })),
       );
     }),
   );

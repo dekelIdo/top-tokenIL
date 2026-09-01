@@ -6,6 +6,7 @@ import { formatQuantity, OfferValue, rankByValue } from '../../core/value';
 import { LocalizePipe } from '../../core/i18n';
 import { Offer, ProductDetail, ProductVariant } from '../../domain';
 import { MoneyPipe } from '../money.pipe';
+import { CoinTierComponent } from './coin-tier.component';
 import { IconComponent } from './icon.component';
 
 /**
@@ -26,7 +27,7 @@ import { IconComponent } from './icon.component';
 @Component({
   selector: 'tt-bundle-ladder',
   standalone: true,
-  imports: [CommonModule, RouterLink, LocalizePipe, MoneyPipe, IconComponent],
+  imports: [CommonModule, RouterLink, LocalizePipe, MoneyPipe, CoinTierComponent, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="ladder" *ngIf="rows.length > 0">
@@ -38,6 +39,7 @@ import { IconComponent } from './icon.component';
            [queryParams]="{ variant: row.variant.id }">
 
           <div class="row__head">
+            <tt-coin-tier class="row__art" [quantity]="row.variant.quantityValue"></tt-coin-tier>
             <span class="qty">{{ label(row) }}</span>
             <span class="tt-badge tt-badge--accent best" *ngIf="row.isBestValue">
               <tt-icon name="bolt" [size]="13"></tt-icon> הכי משתלם
@@ -62,47 +64,65 @@ import { IconComponent } from './icon.component';
   `,
   styles: [`
     :host { display: block; }
-    .ladder { display: flex; flex-direction: column; gap: var(--tt-space-2); }
+
+    /* Stacked on a phone, a row of tiers on anything wider. Five full-width
+       rectangles down a 1200px page was a list, not a pricing table. */
+    .ladder {
+      display: grid;
+      gap: var(--tt-space-2);
+    }
+    @media (min-width: 760px) {
+      .ladder {
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
+        gap: var(--tt-space-3);
+        align-items: end;
+      }
+    }
 
     .row {
       border: 1px solid var(--tt-border);
       border-radius: var(--tt-radius-lg);
       background: var(--tt-surface);
       transition: border-color var(--tt-duration-fast) var(--tt-ease),
-                  background-color var(--tt-duration-fast) var(--tt-ease);
+                  background-color var(--tt-duration-fast) var(--tt-ease),
+                  transform var(--tt-duration) var(--tt-ease);
     }
     .row:hover { border-color: var(--tt-border-strong); background: var(--tt-surface-2); }
-    /* The best tier is marked with the value colour, not a louder border. */
+
+    /* The best tier is marked in the value colour and lifted, so the ranking is
+       visible before a number is read. */
     .row--best {
       border-color: var(--tt-gold-500);
-      background: linear-gradient(180deg, var(--tt-gold-tint), transparent 60%), var(--tt-surface);
+      background: linear-gradient(180deg, var(--tt-gold-tint), transparent 65%), var(--tt-surface);
+    }
+    @media (min-width: 760px) {
+      .row--best { transform: translateY(-10px); box-shadow: var(--tt-ring-gold), var(--tt-shadow-2); }
     }
 
-    .row__link {
-      display: block;
-      padding: var(--tt-space-3) var(--tt-space-4);
-      color: inherit;
-    }
+    .row__link { display: block; padding: var(--tt-space-3) var(--tt-space-4); color: inherit; }
     .row__link:hover { text-decoration: none; }
 
     .row__head {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: var(--tt-space-2);
+      gap: var(--tt-space-3);
       margin-block-end: var(--tt-space-2);
     }
+    .row__art { inline-size: 52px; flex: none; }
+    .row--best .row__art { inline-size: 62px; }
     .qty {
+      flex: none;
       font-family: var(--tt-font-numeric);
       font-variant-numeric: tabular-nums;
       font-size: var(--tt-text-lg);
       font-weight: 800;
       letter-spacing: -0.01em;
     }
-    .best { gap: 3px; }
+    .best { margin-inline-start: auto; gap: 3px; }
 
     .meter {
-      block-size: 6px;
+      block-size: 5px;
       border-radius: var(--tt-radius-pill);
       background: var(--tt-surface-3);
       overflow: hidden;
@@ -122,8 +142,17 @@ import { IconComponent } from './icon.component';
       gap: var(--tt-space-2);
       margin-block-start: var(--tt-space-2);
     }
-    .per-unit { color: var(--tt-text-muted); font-size: var(--tt-text-sm); }
-    .per-unit__label { color: var(--tt-text-faint); font-size: var(--tt-text-xs); }
+    .per-unit { color: var(--tt-text-muted); font-size: var(--tt-text-xs); }
+    .per-unit__label { color: var(--tt-text-faint); }
+
+    /* In a column the tier reads top to bottom: artwork, quantity, price. */
+    @media (min-width: 760px) {
+      .row__head { flex-direction: column; align-items: flex-start; gap: var(--tt-space-2); }
+      .row__art { inline-size: 64px; }
+      .row--best .row__art { inline-size: 76px; }
+      .best { margin-inline-start: 0; }
+      .row__foot { flex-direction: column; align-items: flex-start; gap: 2px; }
+    }
   `],
 })
 export class BundleLadderComponent {

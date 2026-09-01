@@ -25,8 +25,7 @@ import { BrandLogoComponent } from './brand-logo.component';
           </div>
           <nav>
             <h2 class="col-title">חנות</h2>
-            <a routerLink="/store">כל המוצרים</a>
-            <a routerLink="/games">משחקים</a>
+            <a routerLink="/store">כל החבילות</a>
             <a routerLink="/deals">מבצעים</a>
             <a routerLink="/reviews">ביקורות</a>
           </nav>

@@ -6,6 +6,7 @@ import { BehaviorSubject, EMPTY, Observable, combineLatest } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, map, startWith, switchMap } from 'rxjs/operators';
 
 import { AnalyticsService } from '../../core/analytics';
+import { STOREFRONT } from '../../core/brand';
 import { LocalizePipe } from '../../core/i18n';
 import {
   AppError, CatalogQuery, CatalogSort, DEFAULT_PAGE_SIZE, Page, Platform, Product, ProductType,
@@ -40,9 +41,9 @@ interface StoreViewModel {
   template: `
     <div class="tt-container tt-section">
       <header class="head">
-        <span class="tt-eyebrow">קטלוג</span>
-        <h1>כל המוצרים</h1>
-        <p class="tt-muted">קודים דיגיטליים, כרטיסי מתנה, מנויים ומטבעות משחק, עם אזור ושיטת אספקה גלויים מראש.</p>
+        <span class="tt-eyebrow">EA SPORTS FC</span>
+        <h1>קוינס וקודים</h1>
+        <p class="tt-muted">חבילות קוינס, נקודות FC ושירותים לחשבון. המחיר, הפלטפורמה ואזור החנות מופיעים על כל אפשרות.</p>
       </header>
 
       <form class="filters tt-panel" (submit)="$event.preventDefault()">
@@ -62,14 +63,6 @@ interface StoreViewModel {
             <span class="refine__sign" aria-hidden="true"></span>
           </summary>
           <div class="refine__body">
-
-        <label class="tt-field">
-          <span class="tt-label">משחק</span>
-          <select class="tt-select" name="game" [ngModel]="gameId" (ngModelChange)="setGame($event)">
-            <option value="">כל המשחקים</option>
-            <option *ngFor="let game of (lookups$ | async)?.games" [value]="game.id">{{ game.name | t }}</option>
-          </select>
-        </label>
 
         <label class="tt-field">
           <span class="tt-label">פלטפורמה</span>
@@ -209,7 +202,7 @@ interface StoreViewModel {
        contents, so this rule has to be specific enough to win. */
     @media (min-width: 720px) {
       .refine > summary { display: none; }
-      .refine__body { grid-template-columns: repeat(5, 1fr); padding-block-start: 0; }
+      .refine__body { grid-template-columns: repeat(4, 1fr); padding-block-start: 0; }
     }
   `],
 })
@@ -278,10 +271,12 @@ export class StorePage {
   constructor() {
     const params = this.route.snapshot.queryParamMap;
 
-    const gameId = params.get('game');
-    if (gameId) {
-      this.patch({ gameIds: [gameId] });
-    }
+    // The storefront sells one game, so every query is scoped to it. Doing this
+    // here rather than in the facade keeps the catalog service general: the
+    // platform still handles many games, this shop presents one.
+    this.catalog.gameBySlug(STOREFRONT.focusGameSlug).subscribe((game) => {
+      this.patch({ gameIds: [game.id] });
+    });
 
     // The header search navigates here with `?search=`. Without this the box
     // would appear to work and quietly return the whole catalogue.

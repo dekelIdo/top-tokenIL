@@ -8,6 +8,7 @@ import { Money, Platform, Product, Region } from '../../domain';
 import { CatalogLookups } from '../../state/catalog.facade';
 import { MoneyPipe } from '../money.pipe';
 import { PlatformBadgeComponent, RegionBadgeComponent } from './badges.component';
+import { CoinTierComponent } from './coin-tier.component';
 
 /**
  * The catalog's primary card.
@@ -31,14 +32,21 @@ import { PlatformBadgeComponent, RegionBadgeComponent } from './badges.component
   standalone: true,
   imports: [
     CommonModule, RouterLink, LocalizePipe, MoneyPipe,
-    PlatformBadgeComponent, RegionBadgeComponent,
+    PlatformBadgeComponent, RegionBadgeComponent, CoinTierComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <a class="card" [routerLink]="['/products', product.slug]" [attr.aria-label]="product.name | t">
       <div class="media">
-        <img *ngIf="product.images[0] as image"
-             [src]="image.url" [alt]="image.alt" loading="lazy" decoding="async" />
+        <!-- Coin bundles are drawn from their quantity, so the tier is visible
+             rather than being the same picture with a different label. Anything
+             else uses its own illustration. -->
+        <tt-coin-tier *ngIf="largestQuantity as quantity; else artwork"
+                      class="media__art" [quantity]="quantity"></tt-coin-tier>
+        <ng-template #artwork>
+          <img *ngIf="product.images[0] as image"
+               [src]="image.url" [alt]="image.alt" loading="lazy" decoding="async" />
+        </ng-template>
 
         <span class="flag flag--save" *ngIf="saved as amount">
           חוסכים {{ amount | money }}
@@ -104,6 +112,7 @@ import { PlatformBadgeComponent, RegionBadgeComponent } from './badges.component
         var(--tt-surface-2);
       border-block-end: 1px solid var(--tt-border);
     }
+    .media__art { inline-size: 84%; }
     .media img {
       inline-size: 62%;
       max-block-size: 78%;
@@ -194,6 +203,14 @@ import { PlatformBadgeComponent, RegionBadgeComponent } from './badges.component
 export class ProductCardComponent {
   @Input({ required: true }) product!: Product;
   @Input() lookups?: CatalogLookups;
+
+  /** The biggest tier this product sells, which drives the artwork. */
+  get largestQuantity(): number | undefined {
+    const quantities = this.product.variants
+      .map((variant) => variant.quantityValue)
+      .filter((value): value is number => typeof value === 'number' && value > 0);
+    return quantities.length > 0 ? Math.max(...quantities) : undefined;
+  }
 
   /** What a real strike-through saves, or undefined when there is not one. */
   get saved(): Money | undefined {

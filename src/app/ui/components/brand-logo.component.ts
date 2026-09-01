@@ -28,9 +28,9 @@ import { BRAND } from '../../core/brand';
             <stop offset="1" stop-color="var(--tt-gold-600)"/>
           </linearGradient>
         </defs>
-        <ellipse cx="24" cy="24" rx="17" ry="20" [attr.fill]="'url(#' + gradientId + ')'"/>
-        <path d="M16 15h17l-11.5 18H33" fill="none" stroke="#1A1428"
-              stroke-width="4.6" stroke-linecap="square"/>
+        <circle cx="24" cy="24" r="19" [attr.fill]="'url(#' + gradientId + ')'"/>
+        <path d="M15 15h18L19 33h14" fill="none" stroke="#12101C"
+              stroke-width="5" stroke-linecap="square"/>
       </svg>
 
       <span class="word" *ngIf="!compact">

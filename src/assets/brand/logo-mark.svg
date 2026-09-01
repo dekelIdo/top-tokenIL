@@ -1,25 +1,28 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="ZuzCOINS">
   <!--
-    The mark: a coin edge-on, cut by a Z.
+    The ZuzCOINS mark.
 
-    "זוז" is both an old Hebrew silver coin and the verb "to move", so the Z is
-    drawn with a forward lean and the coin is shown mid-turn rather than flat.
-    Two shapes, no gradient mesh, no bevel: it has to survive being 20px tall in
-    a browser tab.
+    A Z cut as a chevron pair, reading as both the letter and a fast-forward
+    arrow. "זוז" is an old Hebrew coin and the verb "move", so the mark carries
+    currency and speed in one shape rather than illustrating a coin.
+
+    Built from two strokes and a disc so it survives 16px in a browser tab.
+    There is no gradient mesh, no bevel and no particle: at favicon size those
+    turn to mud.
   -->
   <defs>
-    <linearGradient id="zc-coin" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="zc-edge" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#FFD873"/>
       <stop offset="1" stop-color="#E0972B"/>
     </linearGradient>
   </defs>
 
-  <!-- Coin body, foreshortened so it reads as turning toward the viewer. -->
-  <ellipse cx="24" cy="24" rx="17" ry="20" fill="url(#zc-coin)"/>
-  <ellipse cx="24" cy="24" rx="17" ry="20" fill="none" stroke="#8A5A0E" stroke-opacity=".35" stroke-width="1.5"/>
+  <!-- The value disc, offset so the Z overhangs it. -->
+  <circle cx="24" cy="24" r="19" fill="url(#zc-edge)"/>
 
-  <!-- The Z, struck through the coin face. -->
-  <path d="M16 15h17l-11.5 18H33"
-        fill="none" stroke="#1A1428" stroke-width="4.6"
+  <!-- The Z, drawn as two horizontals and a diagonal with squared ends. The
+       diagonal leans forward, which is what makes it read as motion. -->
+  <path d="M15 15h18L19 33h14"
+        fill="none" stroke="#12101C" stroke-width="5"
         stroke-linecap="square" stroke-linejoin="miter"/>
 </svg>

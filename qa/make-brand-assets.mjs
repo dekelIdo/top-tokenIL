@@ -31,10 +31,24 @@ const mark = (size) => `
         <stop offset="1" stop-color="${GOLD_B}"/>
       </linearGradient>
     </defs>
-    <rect width="64" height="64" rx="${Math.round(size >= 180 ? 14 : 15)}" fill="${INK}"/>
-    <ellipse cx="32" cy="32" rx="20" ry="23" fill="url(#c)"/>
-    <path d="M22 21h21l-14 22h14" fill="none" stroke="#1A1428"
-          stroke-width="5.6" stroke-linecap="square"/>
+    <rect width="64" height="64" rx="${Math.round(size >= 180 ? 15 : 16)}" fill="${INK}"/>
+    <circle cx="32" cy="32" r="23" fill="url(#c)"/>
+    <path d="M21 21h22L26 43h17" fill="none" stroke="#12101C"
+          stroke-width="6" stroke-linecap="square"/>
+  </svg>`;
+
+/** The mark without its tile, for placing directly on the brand ground. */
+const markOnTile = (size) => `
+  <svg width="${size}" height="${size}" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="d" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="${GOLD_A}"/>
+        <stop offset="1" stop-color="${GOLD_B}"/>
+      </linearGradient>
+    </defs>
+    <circle cx="32" cy="32" r="23" fill="url(#d)"/>
+    <path d="M21 21h22L26 43h17" fill="none" stroke="#12101C"
+          stroke-width="6" stroke-linecap="square"/>
   </svg>`;
 
 const browser = await chromium.launch();
@@ -118,28 +132,12 @@ const og = `
     <div style="position:absolute;width:360px;height:360px;border-radius:50%;
       bottom:-140px;right:-60px;background:${GOLD_B};filter:blur(130px);opacity:.16"></div>
 
-    <!-- A stack of coins bleeding off the leading edge. The right half is text,
-         which in RTL left the left half empty; this is the product category
-         rather than an ornament, so it earns the space. -->
-    <svg width="460" height="460" viewBox="0 0 240 240"
-         style="position:absolute;left:-40px;top:50%;transform:translateY(-50%);opacity:.92">
-      <defs>
-        <linearGradient id="stack" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="${GOLD_A}"/><stop offset="1" stop-color="${GOLD_B}"/>
-        </linearGradient>
-      </defs>
-      <ellipse cx="120" cy="196" rx="78" ry="22" fill="${VIOLET}" opacity=".22"/>
-      <g fill="url(#stack)" stroke="#8A5A0E" stroke-opacity=".45" stroke-width="2">
-        <ellipse cx="120" cy="168" rx="70" ry="21"/>
-        <rect x="50" y="146" width="140" height="22" stroke="none"/>
-        <ellipse cx="120" cy="146" rx="70" ry="21"/>
-        <rect x="50" y="124" width="140" height="22" stroke="none"/>
-        <ellipse cx="120" cy="124" rx="70" ry="21"/>
-        <rect x="50" y="102" width="140" height="22" stroke="none"/>
-        <ellipse cx="120" cy="102" rx="70" ry="21"/>
-      </g>
-      <ellipse cx="120" cy="102" rx="44" ry="13" fill="#fff" opacity=".28"/>
-    </svg>
+    <!-- The mark, oversized and bleeding off the leading edge. The right half
+         is text, which in RTL left the left half empty; the brand symbol earns
+         that space better than an illustration of the product does. -->
+    <div style="position:absolute;left:-70px;top:50%;transform:translateY(-50%);opacity:.95">
+      ${markOnTile(400)}
+    </div>
 
     <div style="position:relative;display:flex;align-items:center;gap:20px;margin-bottom:36px">
       ${mark(76)}

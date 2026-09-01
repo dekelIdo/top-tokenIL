@@ -217,6 +217,13 @@ img { max-width: 100%; display: block; }
   padding-inline: var(--tt-space-3);
 }
 
+/* The primary action on a phone needs a real target, not a text-sized pill. */
+.tt-btn--lg {
+  min-block-size: 52px;
+  padding-inline: var(--tt-space-6);
+  font-size: var(--tt-text-md);
+}
+
 .tt-btn--block { inline-size: 100%; }
 .tt-btn--sm { padding: 0.4rem 0.85rem; font-size: var(--tt-text-sm); }
 

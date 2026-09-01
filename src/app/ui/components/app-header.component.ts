@@ -37,8 +37,7 @@ import { SearchBoxComponent } from './search-box.component';
         </a>
 
         <nav class="nav" aria-label="ראשי">
-          <a routerLink="/store" routerLinkActive="active">חנות</a>
-          <a routerLink="/games" routerLinkActive="active">משחקים</a>
+          <a routerLink="/store" routerLinkActive="active">קוינס</a>
           <a routerLink="/deals" routerLinkActive="active">מבצעים</a>
           <a routerLink="/support" routerLinkActive="active">תמיכה</a>
         </nav>
@@ -81,10 +80,7 @@ import { SearchBoxComponent } from './search-box.component';
          aria-label="ניווט נייד"
          (click)="menuOpen.set(false)">
       <a routerLink="/store" routerLinkActive="active">
-        <tt-icon name="tag" [size]="18"></tt-icon> חנות
-      </a>
-      <a routerLink="/games" routerLinkActive="active">
-        <tt-icon name="gamepad" [size]="18"></tt-icon> משחקים
+        <tt-icon name="tag" [size]="18"></tt-icon> קוינס
       </a>
       <a routerLink="/deals" routerLinkActive="active">
         <tt-icon name="bolt" [size]="18"></tt-icon> מבצעים

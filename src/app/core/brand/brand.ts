@@ -42,8 +42,8 @@ export const BRAND: BrandIdentity = {
   },
 
   description: {
-    he: 'חנות גיימינג דיגיטלית: מטבעות משחק, קודים, כרטיסי מתנה ומנויים. פלטפורמה, אזור וזמן אספקה גלויים לפני שמשלמים.',
-    en: 'A digital gaming store: game currency, codes, gift cards and subscriptions. Platform, store region and delivery time shown before you pay.',
+    he: 'קוינס ל-EA SPORTS FC במחיר ישראלי. פלטפורמה, אזור חנות וזמן אספקה מופיעים לפני שמשלמים.',
+    en: 'EA SPORTS FC coins at Israeli prices. Platform, store region and delivery time shown before you pay.',
   },
 
   titleSeparator: ' · ',
