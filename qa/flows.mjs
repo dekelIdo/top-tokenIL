@@ -163,7 +163,7 @@ check('retry after decline succeeds and lands on the order page', page.url().inc
 
 await page.waitForTimeout(900);
 const orderRef = await page.locator('.tt-eyebrow').first().innerText();
-check('order page shows an order reference', /TT-\d+/.test(orderRef), orderRef);
+check('order page shows an order reference', /EC-\d+/.test(orderRef), orderRef);
 const timelineSteps = await page.locator('tt-order-status-timeline li').count();
 check('order status timeline renders', timelineSteps >= 5, `${timelineSteps} steps`);
 

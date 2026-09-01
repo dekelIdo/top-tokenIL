@@ -129,6 +129,14 @@ type Mode = 'signIn' | 'register' | 'forgot';
             </div>
           </div>
 
+          <!-- The order page already says this about orders; sign-in needed it
+               too. Without it a customer signs in, refreshes, finds themselves
+               signed out and concludes the site is broken. -->
+          <p class="notice tt-alert tt-alert--warning" *ngIf="sessionIsTemporary">
+            האתר בפיתוח וההתחברות נשמרת בזיכרון הדפדפן בלבד, ולכן רענון הדף מנתק אתכם.
+            בגרסה עם שרת ההתחברות תישמר.
+          </p>
+
           <p class="fine tt-faint">
             אנחנו לא מבקשים סיסמה של חשבון המשחק, קוד אימות או קודי גיבוי. לעולם.
           </p>
@@ -349,6 +357,15 @@ export class AccountPage {
    * told which environment variables the operator forgot to set.
    */
   readonly showConfigHint = !environment.production;
+
+  /**
+   * Whether a sign-in survives a reload.
+   *
+   * Keyed on the data mode, not on the production flag: the public build is a
+   * production build running against the in-memory mock, so gating this on
+   * `production` would hide the warning on the one site that needs it.
+   */
+  readonly sessionIsTemporary = environment.apiMode === 'mock';
 
   constructor() {
     this.analytics.pageView('/account', 'Account');

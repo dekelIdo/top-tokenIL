@@ -57,7 +57,7 @@ export class MockSupportApiService extends SupportApiService {
 
   createTicket(request: CreateSupportTicketRequest): Observable<SupportTicket> {
     const id = this.backend.nextId('tick');
-    return this.backend.respond<SupportTicket>({
+    const ticket: SupportTicket = {
       id,
       reference: `SUP-${id.slice(-6)}`,
       topic: request.topic,
@@ -66,7 +66,10 @@ export class MockSupportApiService extends SupportApiService {
       subject: request.subject,
       message: request.message,
       createdAt: this.backend.now(),
-    }, 600);
+    };
+    // Kept, so the reference number the customer is given refers to something.
+    this.backend.supportTickets.set(id, ticket);
+    return this.backend.respond<SupportTicket>(ticket, 600);
   }
 }
 

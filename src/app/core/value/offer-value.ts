@@ -3,7 +3,7 @@ import { Money, Offer, Price, ProductVariant } from '../../domain';
 /**
  * The value engine.
  *
- * ZuzCOINS competes on price, so the interface has to make the price advantage
+ * EASYCOINS competes on price, so the interface has to make the price advantage
  * legible in about a second. That means answering a question a raw price tag
  * cannot: *is this bundle actually good value compared with the others on the
  * page?*

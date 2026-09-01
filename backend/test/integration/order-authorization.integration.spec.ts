@@ -39,7 +39,7 @@ describe('order authorization', () => {
   });
 
   afterAll(async () => {
-    await prisma.order.deleteMany({ where: { orderNumber: { startsWith: 'TT-AUTH' } } });
+    await prisma.order.deleteMany({ where: { orderNumber: { startsWith: 'EC-AUTH' } } });
     await prisma.checkoutSession.deleteMany({ where: { id: { startsWith: 'cs-auth-' } } });
     await app?.close();
     await prisma.$disconnect();
@@ -78,7 +78,7 @@ describe('order authorization', () => {
     await prisma.order.create({
       data: {
         id: orderId,
-        orderNumber: `TT-AUTH-${run}-${options.suffix}`,
+        orderNumber: `EC-AUTH-${run}-${options.suffix}`,
         checkoutSessionId: sessionKey,
         sessionId: options.sessionId ?? null,
         customerId: options.customerId ?? null,
@@ -204,7 +204,7 @@ describe('order authorization', () => {
 
       expect(response.body.id).toBe(orderId);
       // The contract calls this `reference`; the column is `orderNumber`.
-      expect(response.body.reference).toBe(`TT-AUTH-${run}-mine`);
+      expect(response.body.reference).toBe(`EC-AUTH-${run}-mine`);
     });
 
     it('lets the owning session read an order placed without an account', async () => {
@@ -247,8 +247,8 @@ describe('order authorization', () => {
 
       expect(mine.body.total).toBe(2);
       const references = mine.body.items.map((o: { reference: string }) => o.reference);
-      expect(references).toEqual(expect.arrayContaining([`TT-AUTH-${run}-list1`, `TT-AUTH-${run}-list2`]));
-      expect(references).not.toContain(`TT-AUTH-${run}-list3`);
+      expect(references).toEqual(expect.arrayContaining([`EC-AUTH-${run}-list1`, `EC-AUTH-${run}-list2`]));
+      expect(references).not.toContain(`EC-AUTH-${run}-list3`);
     });
 
     it('returns an empty page for a caller with no session, not an error', async () => {

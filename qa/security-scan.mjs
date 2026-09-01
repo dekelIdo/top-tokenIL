@@ -47,7 +47,7 @@ const sources = sourceFiles.map((file) => ({ file, text: readFileSync(file, 'utf
  * Fields that must never exist anywhere, under any circumstances.
  *
  * Card data and any credential belonging to somebody else's system: a game
- * account password, a 2FA secret, a recovery code. ZuzCOINS has no legitimate
+ * account password, a 2FA secret, a recovery code. EASYCOINS has no legitimate
  * reason to hold any of these, and the checkout vocabulary is a closed list
  * precisely so it cannot.
  */
@@ -56,7 +56,7 @@ const FORBIDDEN_FIELDS = [
 ];
 
 /**
- * The customer's own ZuzCOINS account password.
+ * The customer's own EASYCOINS account password.
  *
  * Legitimate since accounts were added, but only in the files that authenticate.
  * Anywhere else, a field called `password` is a mistake worth failing the build

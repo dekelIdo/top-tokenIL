@@ -54,7 +54,7 @@ import { FaqAccordionComponent, IconComponent } from '../../ui';
 
         <label class="tt-field">
           <span class="tt-label">מספר הזמנה (אם יש)</span>
-          <input class="tt-input" name="reference" [(ngModel)]="orderReference" placeholder="TT-000123" />
+          <input class="tt-input" name="reference" [(ngModel)]="orderReference" placeholder="EC-000123" />
         </label>
 
         <label class="tt-field">

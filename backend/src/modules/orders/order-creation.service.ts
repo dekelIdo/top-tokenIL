@@ -432,7 +432,7 @@ export class OrderCreationService {
     const [row] = await tx.$queryRaw<{ nextval: bigint }[]>`
       SELECT nextval('order_number_seq') AS nextval
     `;
-    return `TT-${row.nextval.toString().padStart(6, '0')}`;
+    return `EC-${row.nextval.toString().padStart(6, '0')}`;
   }
 
   private orderIdFrom(body: unknown): string {

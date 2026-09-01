@@ -156,7 +156,9 @@ export interface PasswordProblem {
 const COMMON = new Set([
   'password', '12345678', '123456789', '1234567890', 'qwerty123', 'password1',
   'iloveyou', 'abc12345', '11111111', '123123123', 'football', 'princess',
-  'zuzcoins', 'qwertyuiop', 'admin123',
+  // Both brand names: the shop's own name is the first thing a customer
+  // tries, and the old one stays banned for anyone who already used it.
+  'easycoins', 'zuzcoins', 'qwertyuiop', 'admin123',
 ]);
 
 export function checkPasswordStrength(password: string): PasswordProblem | null {

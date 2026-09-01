@@ -56,7 +56,7 @@ interface FeaturedOffer {
   template: `
     <header class="bar" [class.bar--scrolled]="scrolled()">
       <div class="tt-container inner">
-        <a class="brand" routerLink="/" aria-label="ZuzCOINS, לדף הבית">
+        <a class="brand" routerLink="/" aria-label="EASYCOINS, לדף הבית">
           <tt-brand-logo></tt-brand-logo>
         </a>
 

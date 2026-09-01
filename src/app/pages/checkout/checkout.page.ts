@@ -180,11 +180,20 @@ import {
               פרטי האשראי עוברים ישירות לספק הסליקה ולא נשמרים אצלנו.
             </p>
 
-            <button type="button" class="tt-btn tt-btn--quiet tt-btn--block"
-                    *ngIf="checkout.paymentPending()"
-                    (click)="checkStatus()">
-              בדיקת מצב התשלום
-            </button>
+            <ng-container *ngIf="checkout.paymentPending()">
+              <button type="button" class="tt-btn tt-btn--quiet tt-btn--block"
+                      (click)="checkStatus()">
+                בדיקת מצב התשלום
+              </button>
+              <!-- A way out. Without this the timeout branch is a dead end: the
+                   pay button is disabled, the status never moves, and the only
+                   escape is closing the tab. -->
+              <button type="button" class="tt-btn tt-btn--quiet tt-btn--block"
+                      [disabled]="checkout.busy()"
+                      (click)="cancelPayment()">
+                ביטול התשלום
+              </button>
+            </ng-container>
 
             <p class="tt-hint">
               מספר ההזמנה נוצר פעם אחת בלבד. גם אם תלחצו שוב או תרעננו את הדף, לא תיווצר הזמנה כפולה.
@@ -319,7 +328,10 @@ export class CheckoutPage {
 
   constructor() {
     this.analytics.pageView('/checkout', 'Checkout');
-    this.checkout.reset();
+    // No reset here. start() resumes an unfinished session for this tab and
+    // opens a new one otherwise; resetting first threw the session away, so a
+    // refresh after submitting details created a second one, and against a real
+    // backend that means a second order.
     this.checkout.start().subscribe();
   }
 
@@ -420,6 +432,10 @@ export class CheckoutPage {
 
   checkStatus(): void {
     this.checkout.refreshPaymentStatus().subscribe();
+  }
+
+  cancelPayment(): void {
+    this.checkout.cancelPayment().subscribe();
   }
 
   private confirm(): void {

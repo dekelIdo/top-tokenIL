@@ -31,7 +31,7 @@ describe('session lifecycle', () => {
   });
 
   afterAll(async () => {
-    await prisma.order.deleteMany({ where: { orderNumber: { startsWith: 'TT-LIFE' } } });
+    await prisma.order.deleteMany({ where: { orderNumber: { startsWith: 'EC-LIFE' } } });
     await prisma.checkoutSession.deleteMany({ where: { id: { startsWith: 'cs-life-' } } });
     await app?.close();
     await prisma.$disconnect();
@@ -75,7 +75,7 @@ describe('session lifecycle', () => {
     await prisma.order.create({
       data: {
         id: orderId,
-        orderNumber: `TT-LIFE-${suffix}`,
+        orderNumber: `EC-LIFE-${suffix}`,
         checkoutSessionId: key,
         sessionId,
         customerId: null,

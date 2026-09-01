@@ -43,14 +43,14 @@ everything in those files ships to every visitor.
 2. Select the project, or create one.
 3. Configure the **OAuth consent screen** first, if it has not been done:
    - User type: **External**
-   - App name: **ZuzCOINS**
+   - App name: **EASYCOINS**
    - Support email and developer contact email: the owner's address
    - Scopes: `openid`, `email`, `profile` — nothing more is used
    - While the app is in **Testing**, only accounts listed under *Test users*
      can sign in. Press **Publish app** when it should work for real customers.
 4. **Credentials → Create credentials → OAuth client ID**
 5. Application type: **Web application**
-6. Name it something recognisable, for example `ZuzCOINS storefront`.
+6. Name it something recognisable, for example `EASYCOINS storefront`.
 
 ### Authorized JavaScript origins
 
@@ -126,7 +126,7 @@ Restart the service. `GET /api/v1/auth/methods` should now return
 
 1. Open `/account` on the storefront. **המשך עם Google** should be visible above
    the email field.
-2. Press it. Google should show the consent screen with the name **ZuzCOINS**.
+2. Press it. Google should show the consent screen with the name **EASYCOINS**.
 3. Approve. You should land back on `/account`, signed in.
 4. Sign out and sign in again. The second time should not ask for consent.
 

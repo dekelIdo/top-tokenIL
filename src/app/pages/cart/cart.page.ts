@@ -99,7 +99,10 @@ import {
             <label class="tt-field coupon">
               <span class="tt-label">קוד קופון</span>
               <div class="tt-row">
-                <input class="tt-input" [(ngModel)]="couponCode" name="coupon" placeholder="LAUNCH10" />
+                <!-- Enter applies it. Typing a code and pressing return is the
+                     obvious thing to do, and it used to do nothing. -->
+                <input class="tt-input" [(ngModel)]="couponCode" name="coupon" placeholder="LAUNCH10"
+                       (keyup.enter)="couponCode && !cart.busy() && applyCoupon()" />
                 <button type="button" class="tt-btn tt-btn--ghost tt-btn--sm"
                         [disabled]="!couponCode || cart.busy()" (click)="applyCoupon()">
                   החלה

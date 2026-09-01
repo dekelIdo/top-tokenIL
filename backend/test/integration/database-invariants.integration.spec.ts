@@ -266,7 +266,7 @@ describe('order and payment invariants', () => {
     await prisma.order.create({
       data: {
         id: orderId,
-        orderNumber: `TT-TEST-${suffix}`,
+        orderNumber: `EC-TEST-${suffix}`,
         checkoutSessionId: sessionId,
         contactEmail: 'qa@example.com',
         regionId: offer.regionId,
@@ -296,7 +296,7 @@ describe('order and payment invariants', () => {
       prisma.order.create({
         data: {
           id: 'ord-test-one-duplicate',
-          orderNumber: 'TT-TEST-DUP',
+          orderNumber: 'EC-TEST-DUP',
           checkoutSessionId: sessionId,
           contactEmail: 'qa@example.com',
           regionId: offer.regionId,
@@ -326,7 +326,7 @@ describe('order and payment invariants', () => {
                           region_id, currency, subtotal_minor, discount_minor, total_minor,
                           refunded_minor, pricing_snapshot, checkout_values, metadata,
                           created_at, updated_at)
-      VALUES ('ord-test-math', 'TT-TEST-MATH', 'cs-test-math', 'qa@example.com', 'PENDING_PAYMENT',
+      VALUES ('ord-test-math', 'EC-TEST-MATH', 'cs-test-math', 'qa@example.com', 'PENDING_PAYMENT',
               '${offer.regionId}', 'ILS', 10000, 1000, 9999, 0,
               '{}'::jsonb, '{}'::jsonb, '{}'::jsonb, now(), now())
     `);

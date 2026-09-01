@@ -4,7 +4,7 @@ import { delay } from 'rxjs/operators';
 
 import {
   AppError, CheckoutSession, FulfillmentStatus, Offer, Order, OrderStatus, PaymentIntent,
-  localized, notFoundError,
+  SupportTicket, localized, notFoundError,
 } from '../../domain';
 
 /**
@@ -25,6 +25,15 @@ export class MockBackendService {
   readonly checkoutSessions = new Map<string, CheckoutSession>();
   readonly paymentIntents = new Map<string, PaymentIntent>();
   readonly orders = new Map<string, Order>();
+
+  /**
+   * Support tickets.
+   *
+   * They were built, handed back with a reference number and then dropped on
+   * the floor. The screen tells the customer the message is held in the
+   * browser, so it has to actually be held somewhere.
+   */
+  readonly supportTickets = new Map<string, SupportTicket>();
 
   private sequence = 0;
   private readonly fulfillmentTimers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -48,10 +57,10 @@ export class MockBackendService {
     return `${prefix}_${this.sequence.toString().padStart(6, '0')}`;
   }
 
-  /** Human-facing order reference, e.g. TT-000123. */
+  /** Human-facing order reference, e.g. EC-000123. */
   nextOrderReference(): string {
     this.sequence += 1;
-    return `TT-${this.sequence.toString().padStart(6, '0')}`;
+    return `EC-${this.sequence.toString().padStart(6, '0')}`;
   }
 
   now(): string {

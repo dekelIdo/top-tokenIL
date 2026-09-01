@@ -141,7 +141,7 @@ describe('order creation', () => {
         .expect(201);
 
       expect(response.body.id).toMatch(/^ord_/);
-      expect(response.body.reference).toMatch(/^TT-\d{6}$/);
+      expect(response.body.reference).toMatch(/^EC-\d{6}$/);
       expect(response.body.status).toBe('PENDING_PAYMENT');
       expect(response.body.totals.total.amountMinor).toBe(checkout.totalMinor);
       expect(response.body.items).toHaveLength(1);

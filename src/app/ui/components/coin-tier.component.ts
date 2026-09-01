@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 /**
- * The ZuzCOINS currency object.
+ * The EASYCOINS currency object.
  *
  * This is the brand's product asset, and it has been through two wrong answers
  * already. A cartoon pile of coins was the generic thing every currency shop
@@ -111,9 +111,9 @@ interface Token {
           <!-- The brand Z, struck into the face. Omitted on the small
                background tokens, where it would only be noise. -->
           <g *ngIf="token.face" [attr.transform]="faceTransform(token)">
-            <path d="M15 14 H47 V21.5 L29 41 H47 V49.5 H15 V42 L33 22.5 H15 Z"
+            <path d="M14 12h10v40H14ZM14 12h34v10H14ZM14 27h26v10H14ZM14 42h34v10H14Z"
                   fill="#000000" fill-opacity="0.28" transform="translate(0,1.2)"/>
-            <path d="M15 14 H47 V21.5 L29 41 H47 V49.5 H15 V42 L33 22.5 H15 Z"
+            <path d="M14 12h10v40H14ZM14 12h34v10H14ZM14 27h26v10H14ZM14 42h34v10H14Z"
                   fill="#8A5C12" fill-opacity="0.85"/>
           </g>
         </g>
@@ -156,10 +156,10 @@ export class CoinTierComponent {
 
   /** Unique per instance so two illustrations cannot share a gradient id. */
   private readonly uid = Math.random().toString(36).slice(2, 8);
-  readonly faceId = `zc-face-${this.uid}`;
-  readonly edgeId = `zc-edge-${this.uid}`;
-  readonly sheenId = `zc-sheen-${this.uid}`;
-  readonly glowId = `zc-glow-${this.uid}`;
+  readonly faceId = `ec-face-${this.uid}`;
+  readonly edgeId = `ec-edge-${this.uid}`;
+  readonly sheenId = `ec-sheen-${this.uid}`;
+  readonly glowId = `ec-glow-${this.uid}`;
 
   /**
    * Where the tier boundaries sit.

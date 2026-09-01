@@ -96,7 +96,7 @@ describe('order and payment lifecycle', () => {
   it('creates an order in PENDING_PAYMENT', fakeAsync(() => {
     const { order } = openOrder(GIFT_50);
     expect(order.status).toBe(OrderStatus.PendingPayment);
-    expect(order.reference).toMatch(/^TT-\d{6}$/);
+    expect(order.reference).toMatch(/^EC-\d{6}$/);
   }));
 
   it('opens an intent that requires customer action', fakeAsync(() => {

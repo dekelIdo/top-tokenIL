@@ -52,7 +52,8 @@ const POLL_INTERVAL_MS = 2500;
         </div>
 
         <ng-template #realError>
-          <tt-error-state [error]="appError" title="לא הצלחנו לטעון את ההזמנה"></tt-error-state>
+          <tt-error-state [error]="appError" (retry)="retry()"
+                          title="לא הצלחנו לטעון את ההזמנה"></tt-error-state>
         </ng-template>
       </ng-container>
 
@@ -197,4 +198,19 @@ export class OrderStatusPage {
   fulfillmentFor(order: Order, orderItemId: string): Fulfillment | undefined {
     return order.fulfillments.find((fulfillment) => fulfillment.orderItemId === orderItemId);
   }
+
+  /**
+   * Clears the error so the view re-subscribes.
+   *
+   * The stream ends in catchError -> EMPTY, which completes it, so nothing
+   * retries by itself. Dropping the error swaps the template back to the
+   * content branch, and because the stream is shared with refCount the last
+   * unsubscribe tears it down and the next subscribe runs it again. Without
+   * this the error component still drew a "try again" button that did nothing
+   * when pressed.
+   */
+  retry(): void {
+    this.error.set(undefined);
+  }
+
 }

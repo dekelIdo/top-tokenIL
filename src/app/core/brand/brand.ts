@@ -30,15 +30,17 @@ export interface BrandIdentity {
 }
 
 export const BRAND: BrandIdentity = {
-  name: 'ZuzCOINS',
-  nameParts: ['Zuz', 'COINS'],
-  monogram: 'ZC',
+  name: 'EASYCOINS',
+  nameParts: ['EASY', 'COINS'],
+  monogram: 'EC',
 
-  // "זוז" is an old Hebrew silver coin and also the verb "move". The brand
-  // leans on both: value, and getting it to you quickly.
+  // The name is the promise. Buying game currency is normally a small ordeal:
+  // working out which bundle, what it really costs per coin, whether the seller
+  // is real. The brand claims the opposite, so the tagline says the thing the
+  // shop is actually competing on rather than describing the product.
   tagline: {
-    he: 'המטבעות זזים מהר',
-    en: 'Coins that move fast',
+    he: 'קוינס בלי כאב ראש',
+    en: 'Coins without the hassle',
   },
 
   description: {

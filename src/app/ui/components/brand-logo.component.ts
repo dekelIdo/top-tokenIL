@@ -4,12 +4,12 @@ import { CommonModule } from '@angular/common';
 import { BRAND } from '../../core/brand';
 
 /**
- * The ZuzCOINS lockup: mark plus wordmark.
+ * The EASYCOINS lockup: mark plus wordmark.
  *
  * The name is read from the brand configuration rather than typed into the
  * template, so renaming the company does not mean editing the header.
  *
- * The wordmark weights its two halves differently: "Zuz" carries the identity
+ * The wordmark weights its two halves differently: "EASY" carries the promise
  * and is set solid, "COINS" is the category and steps back. That is what stops
  * it reading as an evenly-weighted word, which is what generic wordmarks do.
  */
@@ -20,9 +20,9 @@ import { BRAND } from '../../core/brand';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <span class="lockup" [class.compact]="compact">
-      <!-- The mark is an italic Z on a 9-degree shear with the stroke torn
-           away behind it. It reads as a letter and as movement, and unlike a
-           coin it survives being drawn at 24 pixels. -->
+      <!-- An E built from three bars whose ends are cut as coin edges,
+           leaning forward. Three bars plus a spine is a silhouette that holds
+           at sixteen pixels; a letter inside a circle is not. -->
       <svg class="mark" [attr.width]="markSize" [attr.height]="markSize"
            viewBox="0 0 64 64" aria-hidden="true">
         <defs>
@@ -32,10 +32,12 @@ import { BRAND } from '../../core/brand';
             <stop offset="1" stop-color="var(--tt-gold-600)"/>
           </linearGradient>
         </defs>
-        <g transform="translate(6,0) skewX(-9)" [attr.fill]="'url(#' + gradientId + ')'">
-          <path d="M15 14 H47 V21.5 L29 41 H47 V49.5 H15 V42 L33 22.5 H15 Z"/>
-          <rect x="1" y="14" width="8" height="7.5" opacity="0.5"/>
-          <rect x="5" y="26" width="5.5" height="5" opacity="0.26"/>
+        <g transform="translate(5,0) skewX(-8)" [attr.fill]="'url(#' + gradientId + ')'">
+          <rect x="14" y="12" width="10" height="40" rx="3"/>
+          <rect x="14" y="12" width="34" height="10" rx="5"/>
+          <rect x="14" y="27" width="26" height="10" rx="5"/>
+          <rect x="14" y="42" width="34" height="10" rx="5"/>
+          <rect x="3" y="12" width="7" height="10" rx="5" opacity="0.45"/>
         </g>
       </svg>
 
@@ -74,5 +76,5 @@ export class BrandLogoComponent {
   readonly tailPart = BRAND.nameParts[1];
 
   /** Unique per instance so two lockups on one page cannot share a gradient id. */
-  readonly gradientId = `zc-mark-${Math.random().toString(36).slice(2, 9)}`;
+  readonly gradientId = `ec-mark-${Math.random().toString(36).slice(2, 9)}`;
 }
