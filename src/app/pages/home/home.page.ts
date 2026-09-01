@@ -346,7 +346,8 @@ const REVIEW_PAGE: PageRequest = { page: 1, pageSize: 3 };
     .final p { margin: 0; }
     .final__cta { display: flex; gap: var(--tt-space-3); flex-wrap: wrap; justify-content: center; }
 
-    .reserve-grid { min-block-size: 340px; }
+    /* One row of the compact card, so late data does not shift the page. */
+    .reserve-grid { min-block-size: 260px; }
     .reserve-rail { min-block-size: 172px; }
     .reserve-reviews { min-block-size: 220px; }
     .reserve-faq { min-block-size: 260px; }

@@ -2,11 +2,12 @@ import {
   ChangeDetectionStrategy, Component, HostListener, inject, signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 
 import { CartFacade } from '../../state/cart.facade';
 import { BrandLogoComponent } from './brand-logo.component';
 import { IconComponent } from './icon.component';
+import { SearchBoxComponent } from './search-box.component';
 
 /**
  * The site header.
@@ -25,7 +26,7 @@ import { IconComponent } from './icon.component';
   standalone: true,
   imports: [
     CommonModule, RouterLink, RouterLinkActive,
-    BrandLogoComponent, IconComponent,
+    BrandLogoComponent, IconComponent, SearchBoxComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -42,18 +43,7 @@ import { IconComponent } from './icon.component';
           <a routerLink="/support" routerLinkActive="active">תמיכה</a>
         </nav>
 
-        <!-- A template reference rather than ngModel: the value is only needed
-             on submit, and importing FormsModule here would pull it into the
-             eagerly loaded bundle for one input. That alone pushed the initial
-             bundle past its budget. -->
-        <form class="search" role="search" (submit)="submitSearch(q.value); $event.preventDefault()">
-          <tt-icon name="search" [size]="18" class="search__icon"></tt-icon>
-          <input #q
-                 type="search"
-                 name="q"
-                 placeholder="חיפוש מוצר או משחק"
-                 aria-label="חיפוש בחנות" />
-        </form>
+        <tt-search-box class="search"></tt-search-box>
 
         <div class="actions">
           <a class="action" routerLink="/account" routerLinkActive="active" aria-label="האזור האישי">
@@ -151,40 +141,7 @@ import { IconComponent } from './icon.component';
       background: var(--tt-brand-500);
     }
 
-    .search {
-      position: relative;
-      flex: 1;
-      max-inline-size: 420px;
-      margin-inline-start: auto;
-    }
-    .search__icon {
-      position: absolute;
-      inset-inline-start: var(--tt-space-3);
-      inset-block-start: 50%;
-      transform: translateY(-50%);
-      color: var(--tt-text-faint);
-      pointer-events: none;
-    }
-    .search input {
-      inline-size: 100%;
-      padding: 0.55rem var(--tt-space-3);
-      padding-inline-start: 2.4rem;
-      border-radius: var(--tt-radius-pill);
-      border: 1px solid var(--tt-border);
-      background: var(--tt-surface);
-      color: var(--tt-text);
-      font: inherit;
-      font-size: var(--tt-text-sm);
-      transition: border-color var(--tt-duration-fast) var(--tt-ease),
-                  background-color var(--tt-duration-fast) var(--tt-ease);
-    }
-    .search input::placeholder { color: var(--tt-text-faint); }
-    .search input:focus {
-      outline: none;
-      border-color: var(--tt-border-brand);
-      background: var(--tt-surface-2);
-    }
-
+    .search { flex: 1; max-inline-size: 420px; margin-inline-start: auto; }
     .actions { display: flex; align-items: center; gap: var(--tt-space-2); }
 
     .action {
@@ -282,7 +239,6 @@ import { IconComponent } from './icon.component';
 })
 export class AppHeaderComponent {
   private readonly cart = inject(CartFacade);
-  private readonly router = inject(Router);
 
   readonly menuOpen = signal(false);
   readonly scrolled = signal(false);
@@ -295,10 +251,4 @@ export class AppHeaderComponent {
     this.scrolled.set(window.scrollY > 8);
   }
 
-  submitSearch(raw: string): void {
-    const term = raw.trim();
-    // An empty search goes to the store rather than nowhere, which is what
-    // pressing enter on a blank field is asking for.
-    void this.router.navigate(['/store'], term ? { queryParams: { search: term } } : {});
-  }
 }

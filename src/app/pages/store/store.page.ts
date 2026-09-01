@@ -56,7 +56,7 @@ interface StoreViewModel {
              customer saw filters and no products. They collapse behind a
              summary below 720px and are forced open above it, which needs no
              JavaScript and stays keyboard accessible. -->
-        <details class="refine">
+        <details class="refine" [open]="filtersOpen()" (toggle)="onFiltersToggle($event)">
           <summary>
             <span>סינון</span>
             <span class="refine__sign" aria-hidden="true"></span>
@@ -128,6 +128,7 @@ interface StoreViewModel {
                           (action)="clear()">
           </tt-empty-state>
 
+          <h2 class="tt-visually-hidden">תוצאות החיפוש</h2>
           <div class="tt-grid" *ngIf="vm.page.items.length > 0">
             <tt-product-card *ngFor="let product of vm.page.items; trackBy: trackById"
                              [product]="product"
@@ -197,7 +198,7 @@ interface StoreViewModel {
     }
     .count { margin-block-end: var(--tt-space-3); }
     /* One skeleton row's worth of space, so the first response does not jump. */
-    .tt-grid { min-block-size: 358px; }
+    .tt-grid { min-block-size: 260px; }
     .more { display: flex; justify-content: center; margin-block-start: var(--tt-space-5); }
     @media (max-width: 719px) {
       .head h1 { font-size: var(--tt-text-2xl); }
@@ -208,7 +209,6 @@ interface StoreViewModel {
        contents, so this rule has to be specific enough to win. */
     @media (min-width: 720px) {
       .refine > summary { display: none; }
-      .refine:not([open]) > .refine__body { display: grid; }
       .refine__body { grid-template-columns: repeat(5, 1fr); padding-block-start: 0; }
     }
   `],
@@ -257,6 +257,23 @@ export class StorePage {
     // Emitting undefined first keeps the skeleton on screen until data arrives.
     startWith(undefined as unknown as StoreViewModel),
   );
+
+  /**
+   * Whether the filter panel is expanded.
+   *
+   * Open by default on a wide screen and closed on a phone, where five selects
+   * would otherwise fill the entire first screen and push every product below
+   * the fold. Bound to the `open` attribute rather than styled open, because
+   * the browser hides a closed `details` body with `content-visibility` and a
+   * CSS override cannot reveal it.
+   */
+  readonly filtersOpen = signal(
+    typeof window !== 'undefined' && window.matchMedia('(min-width: 720px)').matches,
+  );
+
+  onFiltersToggle(event: Event): void {
+    this.filtersOpen.set((event.target as HTMLDetailsElement).open);
+  }
 
   constructor() {
     const params = this.route.snapshot.queryParamMap;

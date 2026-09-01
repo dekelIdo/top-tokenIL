@@ -92,15 +92,24 @@ img { max-width: 100%; display: block; }
 
 .tt-grid {
   display: grid;
-  gap: var(--tt-space-4);
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--tt-space-3);
+  /* 150px lets two cards sit side by side at 360px. Above roughly 700px the
+     tracks grow to a comfortable card width on their own. */
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+@media (min-width: 700px) {
+  .tt-grid {
+    gap: var(--tt-space-4);
+    grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+  }
 }
 
 /* For rows that hold only a few items. `.tt-grid` uses auto-fill so a full
    catalogue keeps a consistent card size; with three items that leaves empty
    tracks and a lopsided row, so these sections collapse them instead. */
 .tt-grid--fit {
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
 }
 
 .tt-stack {

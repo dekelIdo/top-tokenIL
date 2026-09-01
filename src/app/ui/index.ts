@@ -12,5 +12,6 @@ export * from './components/quantity-selector.component';
 export * from './components/star-rating.component';
 export * from './components/toast-host.component';
 export * from './components/trust-badges.component';
+export * from './components/search-box.component';
 export * from './components/state.component';
 export * from './money.pipe';

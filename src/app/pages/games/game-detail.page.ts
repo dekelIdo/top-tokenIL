@@ -41,6 +41,7 @@ import { signal } from '@angular/core';
                           message="אין כרגע מוצרים למשחק הזה. אפשר לעיין בשאר החנות.">
           </tt-empty-state>
 
+          <h2 class="tt-visually-hidden">מוצרים למשחק הזה</h2>
           <div class="tt-grid" *ngIf="vm.products.length > 0">
             <tt-product-card *ngFor="let product of vm.products"
                              [product]="product"
