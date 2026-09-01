@@ -6,7 +6,7 @@ import { formatQuantity, OfferValue, rankByValue } from '../../core/value';
 import { LocalizePipe } from '../../core/i18n';
 import { Offer, ProductDetail, ProductVariant } from '../../domain';
 import { MoneyPipe } from '../money.pipe';
-import { CoinTierComponent } from './coin-tier.component';
+import { CoinPackComponent } from './coin-pack.component';
 import { IconComponent } from './icon.component';
 
 /**
@@ -32,7 +32,7 @@ import { IconComponent } from './icon.component';
 @Component({
   selector: 'tt-bundle-ladder',
   standalone: true,
-  imports: [CommonModule, RouterLink, LocalizePipe, MoneyPipe, CoinTierComponent, IconComponent],
+  imports: [CommonModule, RouterLink, LocalizePipe, MoneyPipe, CoinPackComponent, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="rail" *ngIf="rows.length > 0">
@@ -48,9 +48,7 @@ import { IconComponent } from './icon.component';
               <tt-icon name="bolt" [size]="12"></tt-icon> הערך הגבוה ביותר
             </span>
 
-            <tt-coin-tier class="tier__art"
-                          [quantity]="row.variant.quantityValue"
-                          [steps]="i + 1"></tt-coin-tier>
+            <tt-coin-pack class="tier__art" [steps]="i + 1"></tt-coin-pack>
 
             <span class="qty tt-numeric">{{ label(row) }}</span>
 
@@ -133,8 +131,8 @@ import { IconComponent } from './icon.component';
       white-space: nowrap;
     }
 
-    .tier__art { inline-size: 58px; }
-    .tier--best .tier__art { inline-size: 70px; }
+    .tier__art { inline-size: 74px; align-self: center; }
+    .tier--best .tier__art { inline-size: 88px; }
 
     .qty {
       font-size: var(--tt-text-xl);
@@ -199,8 +197,8 @@ import { IconComponent } from './icon.component';
       .ladder::-webkit-scrollbar { display: none; }
       .tier { scroll-snap-align: start; }
       .tier__link { padding: var(--tt-space-3); }
-      .tier__art { inline-size: 46px; }
-      .tier--best .tier__art { inline-size: 54px; }
+      .tier__art { inline-size: 64px; }
+      .tier--best .tier__art { inline-size: 74px; }
       .qty { font-size: var(--tt-text-lg); }
     }
 
@@ -211,8 +209,8 @@ import { IconComponent } from './icon.component';
         transform: translateY(-10px);
         box-shadow: var(--tt-ring-gold), var(--tt-shadow-2);
       }
-      .tier__art { inline-size: 66px; }
-      .tier--best .tier__art { inline-size: 80px; }
+      .tier__art { inline-size: 84px; }
+      .tier--best .tier__art { inline-size: 100px; }
     }
   `],
 })

@@ -8,7 +8,7 @@ import { Money, Platform, Product, Region } from '../../domain';
 import { CatalogLookups } from '../../state/catalog.facade';
 import { MoneyPipe } from '../money.pipe';
 import { PlatformBadgeComponent, RegionBadgeComponent } from './badges.component';
-import { CoinTierComponent } from './coin-tier.component';
+import { CoinPackComponent } from './coin-pack.component';
 import { IconComponent } from './icon.component';
 
 /**
@@ -35,7 +35,7 @@ import { IconComponent } from './icon.component';
   standalone: true,
   imports: [
     CommonModule, RouterLink, LocalizePipe, MoneyPipe,
-    PlatformBadgeComponent, RegionBadgeComponent, CoinTierComponent, IconComponent,
+    PlatformBadgeComponent, RegionBadgeComponent, CoinPackComponent, IconComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -43,8 +43,8 @@ import { IconComponent } from './icon.component';
       <div class="media">
         <!-- Coin bundles draw their own tier, so the artwork carries the size
              of the bundle. Anything else uses its own illustration. -->
-        <tt-coin-tier *ngIf="largestQuantity as quantity; else artwork"
-                      class="media__art" [quantity]="quantity"></tt-coin-tier>
+        <tt-coin-pack *ngIf="largestQuantity as quantity; else artwork"
+                      class="media__art" [steps]="packSteps(quantity)"></tt-coin-pack>
         <ng-template #artwork>
           <img *ngIf="product.images[0] as image"
                [src]="image.url" [alt]="image.alt" loading="lazy" decoding="async" />
@@ -104,15 +104,15 @@ import { IconComponent } from './icon.component';
 
     .media {
       position: relative;
-      /* Cropped tighter than before. The artwork identifies the product; it is
-         not the reason anyone is looking at the card. */
-      aspect-ratio: 16 / 8;
+      /* Portrait-ish, because the artwork is a pack and a pack is taller than
+         it is wide. At 16/8 the card was letterboxing the product. */
+      aspect-ratio: 4 / 3;
       display: grid;
       place-items: center;
       overflow: hidden;
       background: var(--tt-bg-elevated);
     }
-    .media__art { inline-size: 76%; }
+    .media__art { inline-size: 58%; }
     .media img {
       inline-size: 56%;
       max-block-size: 82%;
@@ -230,6 +230,25 @@ import { IconComponent } from './icon.component';
 export class ProductCardComponent {
   @Input({ required: true }) product!: Product;
   @Input() lookups?: CatalogLookups;
+
+  /**
+   * Which pack composition to draw, from the product's largest bundle.
+   *
+   * The same thresholds the price ladder ranks by, so a product tile and its
+   * row in the ladder never disagree about how big the bundle is.
+   */
+  packSteps(quantity: number): number {
+    if (quantity <= 250_000) {
+      return 1;
+    }
+    if (quantity <= 500_000) {
+      return 2;
+    }
+    if (quantity <= 1_000_000) {
+      return 3;
+    }
+    return quantity <= 2_000_000 ? 4 : 5;
+  }
 
   /** The biggest tier this product sells, which drives the artwork. */
   get largestQuantity(): number | undefined {

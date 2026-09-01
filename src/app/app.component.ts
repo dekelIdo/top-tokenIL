@@ -2,7 +2,12 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 import { LocaleService } from './core/i18n';
-import { AppFooterComponent, AppHeaderComponent, ToastHostComponent } from './ui';
+// Imported by file rather than through the barrel. The shell is eager, and a
+// barrel import pulls every component the barrel re-exports into the initial
+// bundle with it, including the ones only a lazy route ever renders.
+import { AppFooterComponent } from './ui/components/app-footer.component';
+import { AppHeaderComponent } from './ui/components/app-header.component';
+import { ToastHostComponent } from './ui/components/toast-host.component';
 
 /**
  * Application shell. It owns nothing but layout: header, routed content, footer,
