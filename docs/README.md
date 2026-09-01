@@ -1,4 +1,4 @@
-# Top Token: documentation
+# EASYCOINS: documentation
 
 ## Read in this order
 

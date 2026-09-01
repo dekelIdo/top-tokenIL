@@ -1,4 +1,4 @@
-# Top Token: Phase 1 architecture audit
+# EASYCOINS: Phase 1 architecture audit
 
 Snapshot of the repository **before** the architecture rebuild (commit `206554f`).
 
@@ -53,7 +53,7 @@ Snapshot of the repository **before** the architecture rebuild (commit `206554f`
 - `CatalogComponent.amountRange` filters on hard-coded coin buckets `'0-250k' | '250k-1m' | '1m+'`; gift cards and subscriptions have no "amount".
 - `platform` is a free-form `string` compared against `'PlayStation'` literals harvested from the data at runtime. There is no typed platform domain.
 - Naming encodes FIFA coins into the platform layer: `TokenService`, `token-card`, `getPackages`, `fifa-coin.png`, `/catalog/package/:id`.
-- `index.html` title: `TopToken - טוקנים ל-FIFA`.
+- `index.html` title: `EASYCOINS - טוקנים ל-FIFA`.
 
 ### 3.5 Region is entirely absent
 No region concept anywhere. For PlayStation Store vouchers this is the most expensive omission: a customer can buy an IL voucher for a US account with no signal. Region must be first-class on the offer and shown before checkout.

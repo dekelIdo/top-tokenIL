@@ -1,4 +1,4 @@
-# Top Token: order, payment and inventory state machine
+# EASYCOINS: order, payment and inventory state machine
 
 The legal relationships between an order, its payment and the stock it holds.
 Everything here is enforced in code by `PaymentStateService`, which is the only

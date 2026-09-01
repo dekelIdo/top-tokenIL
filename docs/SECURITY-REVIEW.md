@@ -1,4 +1,4 @@
-# Top Token: phase 2 security review
+# EASYCOINS: phase 2 security review
 
 Every claim below is checked mechanically by `node qa/security-scan.mjs`
 (14 checks: 7 static source checks, 7 runtime checks against the running app).

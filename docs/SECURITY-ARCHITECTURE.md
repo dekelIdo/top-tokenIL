@@ -1,4 +1,4 @@
-# Top Token: security architecture
+# EASYCOINS: security architecture
 
 The production security design. Complements `docs/SECURITY-REVIEW.md`, which
 records what is *verified today* in the frontend by `qa/security-scan.mjs`.
@@ -157,7 +157,7 @@ script-src 'self';
 style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
 font-src 'self' https://fonts.gstatic.com;
 img-src 'self' data:;
-connect-src 'self' https://api.toptoken.example;
+connect-src 'self' https://api.easycoins.example;
 frame-ancestors 'none';
 base-uri 'self';
 form-action 'self';

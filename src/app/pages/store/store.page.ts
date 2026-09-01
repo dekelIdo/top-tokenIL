@@ -19,6 +19,7 @@ import {
   AmountSelectorComponent,
   BundleLadderComponent, EmptyStateComponent, ErrorStateComponent, FilterBarComponent,
   FilterChange, FilterGroup, ProductCardComponent, SkeletonGridComponent,
+  ValueStripComponent,
 } from '../../ui';
 
 interface StoreViewModel {
@@ -40,15 +41,21 @@ interface StoreViewModel {
   imports: [
     CommonModule, LocalizePipe,
     ProductCardComponent, SkeletonGridComponent, EmptyStateComponent, ErrorStateComponent,
-    BundleLadderComponent, AmountSelectorComponent, FilterBarComponent,
+    BundleLadderComponent, AmountSelectorComponent, FilterBarComponent, ValueStripComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="tt-container tt-section">
+      <!-- One heading. The eyebrow said EA SPORTS FC, the title said it again,
+           and then the selector below asked the real question a third time.
+           The question the customer came to answer is the title. -->
       <header class="head">
         <span class="tt-eyebrow">EA SPORTS FC</span>
-        <h1>קוינס ל־EA SPORTS FC</h1>
-        <p class="tt-muted">כל הכמויות זמינות. המחיר לכל מיליון יורד ככל שקונים יותר.</p>
+        <h1>כמה קוינס אתם צריכים?</h1>
+        <p class="tt-muted">בחרו סכום. אנחנו מרכיבים אותו מהחבילות שיוצאות הכי משתלם.</p>
+        <!-- Trust belongs in the first screen, not below the fold. Four facts
+             the shop actually keeps; nothing invented. -->
+        <tt-value-strip class="head__trust" [points]="trustPoints" [compact]="true"></tt-value-strip>
       </header>
 
       <ng-container *ngIf="ladder$ | async as ladder">
@@ -111,6 +118,12 @@ interface StoreViewModel {
   styles: [`
     .head { margin-block-end: var(--tt-space-5); }
     .head h1 { margin-block: var(--tt-space-1) var(--tt-space-2); }
+    .head__trust {
+      display: block;
+      margin-block-start: var(--tt-space-4);
+      padding-block-start: var(--tt-space-4);
+      border-block-start: 1px solid var(--tt-border);
+    }
     /* A toolbar, not a panel. The filters used to sit in a bordered card that
        took two hundred pixels above the first product, which on a catalogue
        this size meant a customer saw controls and no goods. Now it is a row on
@@ -208,6 +221,13 @@ export class StorePage {
 
   /** Cleared after the first query; see the debounce in `vm$`. */
   private firstQuery = true;
+
+  /** Compact trust row for the store head. Facts only. */
+  readonly trustPoints = [
+    { icon: 'lock' as const, title: 'תשלום מאובטח', note: 'האשראי עובר לספק הסליקה.' },
+    { icon: 'truck' as const, title: 'מעקב הזמנה', note: 'דף סטטוס לכל הזמנה.' },
+    { icon: 'headset' as const, title: 'תמיכה בעברית', note: 'שאלה על הזמנה או מוצר.' },
+  ];
 
   readonly error = signal<AppError | undefined>(undefined);
 

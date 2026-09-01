@@ -1,4 +1,4 @@
-# Top Token: Angular upgrade path
+# EASYCOINS: Angular upgrade path
 
 The project is on **Angular 16.2.12** with TypeScript 5.1. This document
 proposes an upgrade; **nothing has been upgraded**, per the Phase 3 instruction

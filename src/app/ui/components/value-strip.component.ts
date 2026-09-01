@@ -28,7 +28,7 @@ export interface ValuePoint {
   imports: [CommonModule, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <ul class="strip">
+    <ul class="strip" [class.strip--compact]="compact">
       <li class="point" *ngFor="let point of points">
         <span class="plate" [class.plate--money]="point.money" aria-hidden="true">
           <span class="plate__face"></span>
@@ -98,16 +98,47 @@ export interface ValuePoint {
       line-height: var(--tt-leading-snug);
     }
 
+    /* A row of facts sized to their content, not stretched across the page.
+       At full width three equal columns put four hundred pixels between each
+       glyph and read as three unrelated things. */
+    .strip--compact {
+      grid-template-columns: none;
+      grid-auto-flow: column;
+      grid-auto-columns: max-content;
+      justify-content: start;
+      gap: var(--tt-space-7);
+    }
+    @media (max-width: 620px) {
+      .strip--compact {
+        grid-auto-flow: row;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        justify-content: stretch;
+        gap: var(--tt-space-3);
+      }
+    }
+    .strip--compact .point { flex-direction: column; align-items: center; text-align: center; gap: var(--tt-space-2); }
+    .strip--compact .plate { inline-size: 38px; block-size: 38px; }
+    .strip--compact .point__text span { display: none; }
+
     /* Two across on a phone rather than one: four full-width rows of a glyph
        and two words is a lot of screen for very little. */
     @media (max-width: 620px) {
-      .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--tt-space-3); }
-      .plate { inline-size: 38px; block-size: 38px; }
-      .point { gap: var(--tt-space-2); }
+      .strip:not(.strip--compact) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--tt-space-3); }
+      .strip:not(.strip--compact) .plate { inline-size: 38px; block-size: 38px; }
+      .strip:not(.strip--compact) .point { gap: var(--tt-space-2); }
     }
   `],
 })
 export class ValueStripComponent {
+  /**
+   * Tighter layout for a page header rather than a section of its own.
+   *
+   * Three points in the default two-column grid leave an orphan on the second
+   * row. Compact lays them out as equal columns with the glyph above the text,
+   * which reads as one row of facts instead of a broken grid.
+   */
+  @Input() compact = false;
+
   @Input() points: readonly ValuePoint[] = [
     { icon: 'tag', title: 'מחיר סופי', note: 'מה שרואים לפני התשלום זה מה שמשלמים.', money: true },
     { icon: 'lock', title: 'תשלום מאובטח', note: 'פרטי האשראי עוברים לספק הסליקה.' },

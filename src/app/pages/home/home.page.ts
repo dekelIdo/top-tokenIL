@@ -74,6 +74,7 @@ const REVIEW_PAGE: PageRequest = { page: 1, pageSize: 2 };
         <div class="tt-container">
           <section class="buy__pick" *ngIf="vm.ladder as ladder">
             <tt-amount-selector [detail]="ladder"
+                                heading="כמה קוינס אתם צריכים?"
                                 [busy]="adding()"
                                 (confirm)="addPlan($event)">
             </tt-amount-selector>

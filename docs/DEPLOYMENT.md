@@ -1,4 +1,4 @@
-# Top Token: deployment
+# EASYCOINS: deployment
 
 How to deploy the backend and the storefront to Render, written so the first
 real deployment is a checklist rather than an improvisation.
