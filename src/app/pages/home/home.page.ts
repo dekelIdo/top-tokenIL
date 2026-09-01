@@ -1,16 +1,18 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { combineLatest, map, of, switchMap } from 'rxjs';
+import { combineLatest, concat, map, of, switchMap } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 import { AnalyticsService } from '../../core/analytics';
 import { STOREFRONT } from '../../core/brand';
+import { CoinPlan } from '../../core/value';
 import { LocalizePipe } from '../../core/i18n';
 import { PageRequest, Product, ProductType } from '../../domain';
 import { ReviewApiService, SupportApiService } from '../../data/api';
-import { CatalogFacade } from '../../state';
+import { CartFacade, CatalogFacade } from '../../state';
 import {
+  AmountSelectorComponent,
   BundleLadderComponent, FaqAccordionComponent, HeroComponent, IconComponent,
   ProductCardComponent, ReviewCardComponent, SkeletonGridComponent,
 } from '../../ui';
@@ -43,7 +45,7 @@ const REVIEW_PAGE: PageRequest = { page: 1, pageSize: 2 };
   standalone: true,
   imports: [
     CommonModule, RouterLink, LocalizePipe,
-    BundleLadderComponent, HeroComponent, IconComponent,
+    BundleLadderComponent, HeroComponent, IconComponent, AmountSelectorComponent,
     ProductCardComponent, ReviewCardComponent, FaqAccordionComponent, SkeletonGridComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -51,7 +53,17 @@ const REVIEW_PAGE: PageRequest = { page: 1, pageSize: 2 };
     <ng-container *ngIf="vm$ | async as vm; else loading">
       <tt-hero [ladder]="vm.ladder"></tt-hero>
 
-      <!-- 2. The bundles. The product and the price argument in one block. -->
+      <!-- 2. The question the shop exists to answer, directly under the hero.
+           It was only reachable from the store, which meant the homepage could
+           show a price but not let anyone act on it. -->
+      <section class="tt-container tt-section chooser" *ngIf="vm.ladder as ladder">
+        <tt-amount-selector [detail]="ladder"
+                            [busy]="adding()"
+                            (confirm)="addPlan($event)">
+        </tt-amount-selector>
+      </section>
+
+      <!-- 3. The bundles. The product and the price argument in one block. -->
       <section class="tt-container tt-section" id="bundles" *ngIf="vm.ladder as ladder">
         <header class="band">
           <div>
@@ -167,6 +179,17 @@ const REVIEW_PAGE: PageRequest = { page: 1, pageSize: 2 };
 
     /* A section head with no eyebrow above it. The eyebrow was the same shape on
        every band and added a line of noise to each. */
+    /* Set on a raised ground so the purchase control separates from the bands
+       of catalogue below it without being put in a box. */
+    .chooser {
+      background:
+        radial-gradient(70% 120% at 50% 0%, var(--tt-brand-tint), transparent 68%),
+        var(--tt-bg-elevated);
+      border-block-end: 1px solid var(--tt-border);
+      max-inline-size: none;
+      padding-inline: var(--tt-gutter);
+    }
+
     .band {
       display: flex;
       align-items: end;
@@ -265,6 +288,7 @@ const REVIEW_PAGE: PageRequest = { page: 1, pageSize: 2 };
 })
 export class HomePage {
   private readonly catalog = inject(CatalogFacade);
+  private readonly cart = inject(CartFacade);
   private readonly reviewApi = inject(ReviewApiService);
   private readonly supportApi = inject(SupportApiService);
   private readonly analytics = inject(AnalyticsService);
@@ -303,6 +327,31 @@ export class HomePage {
       );
     }),
   );
+
+  /** Set while a plan is being added, so the button cannot be double-pressed. */
+  readonly adding = signal(false);
+
+  /**
+   * Adds every bundle in the plan to the cart.
+   *
+   * The plan is a list of offers the server priced; this only posts them.
+   * Sequential rather than parallel: the cart merges by offer, and several
+   * writes at once against one line is how a quantity gets lost.
+   */
+  addPlan(plan: CoinPlan): void {
+    if (this.adding()) {
+      return;
+    }
+    this.adding.set(true);
+
+    concat(...plan.lines.map((line) => this.cart.add({
+      offerId: line.offer.id,
+      quantity: line.count,
+    }))).subscribe({
+      complete: () => this.adding.set(false),
+      error: () => this.adding.set(false),
+    });
+  }
 
   constructor() {
     this.analytics.pageView('/', 'Home');

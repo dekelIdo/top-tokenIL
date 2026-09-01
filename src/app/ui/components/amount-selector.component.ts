@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
 import { CoinPlan, coinRange, formatQuantity, planForQuantity } from '../../core/value';
 import { Offer, ProductDetail, ProductVariant } from '../../domain';
 import { MoneyPipe } from '../money.pipe';
-import { CoinTierComponent } from './coin-tier.component';
+import { CoinPackComponent } from './coin-pack.component';
 import { IconComponent } from './icon.component';
 
 /**
@@ -29,7 +29,7 @@ import { IconComponent } from './icon.component';
 @Component({
   selector: 'tt-amount-selector',
   standalone: true,
-  imports: [CommonModule, MoneyPipe, CoinTierComponent, IconComponent],
+  imports: [CommonModule, MoneyPipe, CoinPackComponent, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="picker" *ngIf="plan() as current">
@@ -84,7 +84,7 @@ import { IconComponent } from './icon.component';
       </div>
 
       <aside class="quote">
-        <tt-coin-tier class="quote__art" [steps]="artSteps()"></tt-coin-tier>
+        <tt-coin-pack class="quote__art" [steps]="artSteps()"></tt-coin-pack>
 
         <p class="quote__rounded" *ngIf="current.provided > current.requested">
           <tt-icon name="info" [size]="14"></tt-icon>
@@ -250,7 +250,7 @@ import { IconComponent } from './icon.component';
       border-radius: var(--tt-radius-lg);
       background: linear-gradient(180deg, var(--tt-gold-tint), transparent 55%), var(--tt-surface);
     }
-    .quote__art { inline-size: 130px; align-self: center; }
+    .quote__art { inline-size: 108px; align-self: center; }
 
     .quote__rounded {
       display: flex;

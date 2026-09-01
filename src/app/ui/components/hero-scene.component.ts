@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-import { CoinTierComponent } from './coin-tier.component';
+import { CoinPackComponent } from './coin-pack.component';
 
 /**
  * The hero scene.
@@ -26,7 +26,7 @@ import { CoinTierComponent } from './coin-tier.component';
 @Component({
   selector: 'tt-hero-scene',
   standalone: true,
-  imports: [CommonModule, CoinTierComponent],
+  imports: [CommonModule, CoinPackComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="scene" aria-hidden="true">
@@ -35,12 +35,12 @@ import { CoinTierComponent } from './coin-tier.component';
       <span class="shaft shaft--b"></span>
 
       <div class="stage">
-        <tt-coin-tier class="object" [tier]="tier"></tt-coin-tier>
+        <tt-coin-pack class="object" [steps]="5"></tt-coin-pack>
 
         <!-- The same object, mirrored into the floor and faded out. This is the
              single cheapest thing that makes a rendered object look like it is
              standing on something. -->
-        <tt-coin-tier class="mirror" [tier]="tier"></tt-coin-tier>
+        <tt-coin-pack class="mirror" [steps]="5"></tt-coin-pack>
       </div>
 
       <span class="horizon"></span>
@@ -60,7 +60,7 @@ import { CoinTierComponent } from './coin-tier.component';
       display: grid;
       place-items: center;
       inline-size: 100%;
-      aspect-ratio: 4 / 3;
+      aspect-ratio: 5 / 6;
       overflow: hidden;
       /* Feathered at the edges. With a hard clip the haze and the shafts ended
          on a straight line and the whole scene read as a rectangle pasted onto
@@ -128,16 +128,20 @@ import { CoinTierComponent } from './coin-tier.component';
       flex-direction: column;
       align-items: center;
     }
-    .object { inline-size: 100%; }
+    .object { inline-size: 82%; }
 
     .mirror {
-      inline-size: 100%;
-      margin-block-start: -14%;
+      inline-size: 82%;
+      margin-block-start: -16%;
       transform: scaleY(-1);
-      opacity: 0.22;
-      filter: blur(1.5px);
-      -webkit-mask-image: linear-gradient(to top, transparent 12%, rgba(0, 0, 0, 0.9) 62%);
-      mask-image: linear-gradient(to top, transparent 12%, rgba(0, 0, 0, 0.9) 62%);
+      opacity: 0.16;
+      filter: blur(2.5px);
+      /* Only the base reflects. Mirroring the whole pack put its dark card body
+         on the floor as a solid rectangle, which read as a rendering fault
+         rather than as a reflection. The fade now finishes well before the card
+         starts, so what lands on the floor is the coins and the frame's foot. */
+      -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent 34%);
+      mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent 34%);
       pointer-events: none;
     }
 
@@ -187,11 +191,13 @@ import { CoinTierComponent } from './coin-tier.component';
          button off the first screen, which is a bad trade for a picture. The
          object is scaled up inside a shallower band and the empty margin at the
          top of its own drawing is what gets clipped, not the object. */
-      .scene { aspect-ratio: 2.5 / 1; }
-      .object { inline-size: 62%; }
-      .mirror { inline-size: 62%; margin-block-start: -13%; opacity: 0.14; }
-      .haze { inline-size: 70%; block-size: 96%; inset-block-start: 2%; }
-      .horizon { inline-size: 34%; inset-block-end: 14%; }
+      /* A pack is tall, so the mobile band cannot be a letterbox. Wide enough
+         to sit above the message without pushing the price off the screen. */
+      .scene { aspect-ratio: 16 / 11; }
+      .object { inline-size: 46%; }
+      .mirror { inline-size: 46%; margin-block-start: -14%; opacity: 0.12; }
+      .haze { inline-size: 62%; block-size: 92%; inset-block-start: 2%; }
+      .horizon { inline-size: 28%; inset-block-end: 15%; }
       .shaft, .mote { display: none; }
       .mirror { opacity: 0.16; }
     }
