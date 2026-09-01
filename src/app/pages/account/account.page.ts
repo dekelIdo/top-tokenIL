@@ -1,104 +1,348 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { catchError, of } from 'rxjs';
 
 import { AnalyticsService } from '../../core/analytics';
-import { NotificationService } from '../../core/error';
-import { localized } from '../../domain';
-import { CustomerFacade } from '../../state';
+import { environment } from '../../../environments/environment';
+import { AuthMethods, CustomerApiService } from '../../data/api';
+import { toAppError } from '../../domain';
+import { IconComponent } from '../../ui';
+
+type Mode = 'signIn' | 'register' | 'forgot';
 
 /**
- * Account.
+ * The account screen: sign in, register, or manage the account.
  *
- * Sign-in is a one-time link sent by email. There is no password field on this
- * page and there will not be one: the storefront must never be able to receive,
- * hold or transmit a credential.
+ * One screen with a mode toggle rather than three routes and a wizard. The
+ * audience arrives from a phone, often from a social link, and every extra step
+ * between them and a purchase costs conversions. Google first for the people who
+ * do not want another password, email and password underneath for those who do.
+ *
+ * The sign-in code from the earlier passwordless system is still here, one tap
+ * away under "forgot", because accounts created under it have no password.
  */
 @Component({
   selector: 'tt-account-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="tt-container tt-section narrow">
-      <h1>האזור האישי</h1>
-
       <ng-container *ngIf="authState$ | async as state">
-        <section class="tt-card tt-card--pad" *ngIf="state.kind === 'ANONYMOUS'">
-          <h2>כניסה</h2>
-          <p class="tt-muted">
-            הזינו את כתובת האימייל שלכם ונשלח קישור כניסה חד-פעמי. אנחנו לא משתמשים בסיסמאות.
+
+        <!-- Signed out -->
+        <ng-container *ngIf="state.kind === 'ANONYMOUS'">
+          <header class="head">
+            <h1>{{ mode() === 'register' ? 'פתיחת חשבון' : 'כניסה לחשבון' }}</h1>
+            <p class="tt-muted">
+              {{ mode() === 'register'
+                ? 'חשבון שומר את ההזמנות שלכם ומאפשר לעקוב אחרי האספקה.'
+                : 'כדי לראות את ההזמנות שלכם ואת סטטוס האספקה.' }}
+            </p>
+          </header>
+
+          <div class="tt-card tt-card--pad panel">
+            <p class="notice tt-alert tt-alert--warning" *ngIf="failedFromRedirect">
+              הכניסה לא הושלמה. אפשר לנסות שוב.
+            </p>
+
+            <!-- Google, only when the server actually has credentials. -->
+            <ng-container *ngIf="methods() as available">
+              <a class="google" *ngIf="available.google" [href]="googleUrl">
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                  <path fill="#4285F4" d="M23 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.2a5.3 5.3 0 0 1-2.3 3.5v2.9h3.7c2.2-2 3.4-5 3.4-8.6Z"/>
+                  <path fill="#34A853" d="M12 24c3.1 0 5.7-1 7.6-2.8l-3.7-2.9c-1 .7-2.3 1.1-3.9 1.1-3 0-5.5-2-6.4-4.7H1.8v3C3.7 21.4 7.6 24 12 24Z"/>
+                  <path fill="#FBBC05" d="M5.6 14.7a7.2 7.2 0 0 1 0-4.6v-3H1.8a12 12 0 0 0 0 10.6l3.8-3Z"/>
+                  <path fill="#EA4335" d="M12 4.8c1.7 0 3.2.6 4.4 1.7l3.3-3.3C17.7 1.2 15.1 0 12 0 7.6 0 3.7 2.6 1.8 6.1l3.8 3C6.5 6.7 9 4.8 12 4.8Z"/>
+                </svg>
+                המשך עם Google
+              </a>
+
+              <div class="divider" *ngIf="available.google"><span>או</span></div>
+            </ng-container>
+
+            <form (submit)="submit($event)" novalidate>
+              <label class="tt-field">
+                <span class="tt-label" for="acc-email">אימייל</span>
+                <input id="acc-email" class="tt-input" type="email" name="email" autocomplete="email"
+                       inputmode="email" [(ngModel)]="email" required placeholder="you@example.com" />
+              </label>
+
+              <label class="tt-field" *ngIf="mode() !== 'forgot'">
+                <span class="tt-label" for="acc-password">סיסמה</span>
+                <input id="acc-password" class="tt-input" type="password" name="password"
+                       [attr.autocomplete]="mode() === 'register' ? 'new-password' : 'current-password'"
+                       [(ngModel)]="password" required minlength="8" placeholder="לפחות 8 תווים" />
+                <span class="tt-hint" *ngIf="mode() === 'register'">לפחות 8 תווים.</span>
+              </label>
+
+              <p class="tt-alert tt-alert--danger" *ngIf="error()">{{ error() }}</p>
+              <p class="tt-alert tt-alert--success" *ngIf="sent()">{{ sent() }}</p>
+
+              <button type="submit" class="tt-btn tt-btn--primary tt-btn--block" [disabled]="busy()">
+                {{ busy() ? 'רגע…' : submitLabel }}
+              </button>
+            </form>
+
+            <div class="switch">
+              <button type="button" class="link" *ngIf="mode() !== 'register'" (click)="setMode('register')">
+                אין לכם חשבון? פתחו חשבון
+              </button>
+              <button type="button" class="link" *ngIf="mode() !== 'signIn'" (click)="setMode('signIn')">
+                כבר יש לכם חשבון? התחברו
+              </button>
+              <button type="button" class="link" *ngIf="mode() === 'signIn'" (click)="setMode('forgot')">
+                שכחתי סיסמה
+              </button>
+            </div>
+          </div>
+
+          <p class="fine tt-faint">
+            אנחנו לא מבקשים סיסמה של חשבון המשחק, קוד אימות או קודי גיבוי. לעולם.
           </p>
+        </ng-container>
 
-          <form class="tt-field" (submit)="requestLink($event)">
-            <label class="tt-label" for="account-email">אימייל</label>
-            <input id="account-email" class="tt-input" type="email" name="email" [(ngModel)]="email" required
-                   placeholder="you@example.com" />
-            <button type="submit" class="tt-btn tt-btn--primary" [disabled]="sending()">
-              שליחת קישור כניסה
-            </button>
-          </form>
+        <!-- Signed in -->
+        <ng-container *ngIf="state.kind === 'AUTHENTICATED'">
+          <header class="head">
+            <h1>{{ state.customer.displayName || state.customer.email }}</h1>
+            <p class="tt-muted">{{ state.customer.email }}</p>
+          </header>
 
-          <p class="tt-alert" *ngIf="sent()">
-            אם הכתובת קיימת במערכת, נשלח אליה קישור כניסה. כרגע האתר בפיתוח והכניסה עדיין אינה פעילה,
-            ולכן לא יישלח מייל בפועל.
-          </p>
-        </section>
+          <nav class="tiles">
+            <a class="tile" routerLink="/account/orders">
+              <tt-icon name="box" [size]="20"></tt-icon>
+              <span>
+                <strong>ההזמנות שלי</strong>
+                <span class="tt-faint">סטטוס תשלום ואספקה</span>
+              </span>
+              <tt-icon name="chevron" [size]="16" dir="auto"></tt-icon>
+            </a>
 
-        <section class="tt-card tt-card--pad" *ngIf="state.kind === 'AUTHENTICATED'">
-          <h2>שלום {{ state.customer.displayName || state.customer.email }}</h2>
+            <a class="tile" routerLink="/support">
+              <tt-icon name="shield" [size]="20"></tt-icon>
+              <span>
+                <strong>תמיכה</strong>
+                <span class="tt-faint">שאלה על הזמנה או על מוצר</span>
+              </span>
+              <tt-icon name="chevron" [size]="16" dir="auto"></tt-icon>
+            </a>
+          </nav>
+
+          <section class="tt-card tt-card--pad">
+            <h2>אבטחה</h2>
+            <p class="tt-muted small">
+              שינוי סיסמה מנתק את כל המכשירים המחוברים.
+            </p>
+            <a class="tt-btn tt-btn--ghost" routerLink="/support">שינוי סיסמה</a>
+          </section>
+
+          <section class="tt-card tt-card--pad">
+            <h2>פרטיות</h2>
+            <p class="tt-muted small">
+              אפשר לבקש מחיקה של החשבון. הזמנות שבוצעו נשמרות כרשומה חשבונאית,
+              ולכן המחיקה מטופלת ידנית ולא מוחקת אותן אוטומטית.
+            </p>
+            <div class="tt-row">
+              <a class="tt-btn tt-btn--ghost" routerLink="/privacy">מדיניות הפרטיות</a>
+              <button type="button" class="tt-btn tt-btn--quiet danger" (click)="requestDeletion()">
+                בקשת מחיקת חשבון
+              </button>
+            </div>
+          </section>
+
           <button type="button" class="tt-btn tt-btn--ghost" (click)="signOut()">התנתקות</button>
-        </section>
+        </ng-container>
       </ng-container>
-
-      <section class="tt-card tt-card--pad links">
-        <h2>קיצורי דרך</h2>
-        <a routerLink="/account/orders">ההזמנות שלי</a>
-        <a routerLink="/support">פנייה לתמיכה</a>
-        <a routerLink="/faq">שאלות נפוצות</a>
-        <a routerLink="/refund-policy">מדיניות החזרים</a>
-      </section>
     </div>
   `,
   styles: [`
-    .narrow { max-inline-size: 640px; }
-    h1 { margin-block-end: var(--tt-space-5); }
-    h2 { font-size: var(--tt-text-lg); }
+    .narrow { max-inline-size: 520px; }
+    .head { margin-block-end: var(--tt-space-5); }
+    .head h1 { margin: 0 0 var(--tt-space-1); font-size: var(--tt-text-2xl); }
+    .head p { margin: 0; }
+
+    .panel { display: flex; flex-direction: column; gap: var(--tt-space-4); }
+
+    .google {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--tt-space-2);
+      /* A comfortable thumb target; this is the primary route for most people. */
+      min-block-size: 48px;
+      border-radius: var(--tt-radius-md);
+      background: #ffffff;
+      color: #1f1f1f;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .google:hover { text-decoration: none; filter: brightness(0.96); }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: var(--tt-space-3);
+      color: var(--tt-text-faint);
+      font-size: var(--tt-text-xs);
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      block-size: 1px;
+      background: var(--tt-border);
+    }
+
+    form { display: flex; flex-direction: column; gap: var(--tt-space-3); }
+    .tt-field { display: flex; flex-direction: column; gap: var(--tt-space-1); }
+    .tt-hint { color: var(--tt-text-faint); font-size: var(--tt-text-xs); }
+
+    .switch { display: flex; flex-direction: column; gap: var(--tt-space-2); align-items: flex-start; }
+    .link {
+      background: none;
+      border: 0;
+      padding: 0;
+      color: var(--tt-brand-300);
+      font: inherit;
+      font-size: var(--tt-text-sm);
+      cursor: pointer;
+      text-align: start;
+    }
+    .link:hover { text-decoration: underline; }
+
+    .fine { margin-block-start: var(--tt-space-4); text-align: center; }
+
+    .tiles { display: flex; flex-direction: column; gap: var(--tt-space-2); margin-block-end: var(--tt-space-5); }
+    .tile {
+      display: flex;
+      align-items: center;
+      gap: var(--tt-space-3);
+      min-block-size: 64px;
+      padding-inline: var(--tt-space-4);
+      border-radius: var(--tt-radius-lg);
+      background: var(--tt-surface);
+      border: 1px solid var(--tt-border);
+      color: inherit;
+    }
+    .tile:hover { border-color: var(--tt-border-strong); text-decoration: none; }
+    .tile > span { display: flex; flex-direction: column; flex: 1; }
+    .tile strong { font-size: var(--tt-text-sm); }
+    .tile tt-icon:first-child { color: var(--tt-brand-400); }
+
     section { margin-block-end: var(--tt-space-4); }
-    .tt-field { gap: var(--tt-space-3); }
-    .links { display: flex; flex-direction: column; gap: var(--tt-space-2); align-items: flex-start; }
+    section h2 { margin: 0 0 var(--tt-space-2); font-size: var(--tt-text-lg); }
+    .small { font-size: var(--tt-text-sm); line-height: var(--tt-leading); }
+    .danger { color: var(--tt-danger); }
   `],
 })
 export class AccountPage {
-  private readonly customer = inject(CustomerFacade);
-  private readonly notifications = inject(NotificationService);
+  private readonly customerApi = inject(CustomerApiService);
   private readonly analytics = inject(AnalyticsService);
+  private readonly route = inject(ActivatedRoute);
 
-  readonly authState$ = this.customer.authState$;
-  readonly sending = signal(false);
-  readonly sent = signal(false);
+  readonly authState$ = this.customerApi.getAuthState();
+  readonly methods = signal<AuthMethods | null>(null);
+
+  readonly mode = signal<Mode>('signIn');
+  readonly busy = signal(false);
+  readonly error = signal<string | null>(null);
+  readonly sent = signal<string | null>(null);
+
   email = '';
+  password = '';
+
+  /** Set when Google bounced the customer back here after a failure. */
+  readonly failedFromRedirect = this.route.snapshot.queryParamMap.get('auth') === 'failed';
+
+  /**
+   * A full page navigation, not an XHR. The backend owns the redirect to Google
+   * and sets the session cookie on the way back, so the browser has to leave.
+   */
+  readonly googleUrl = `${environment.apiBaseUrl}/${environment.apiVersion}/auth/google?returnTo=/account`;
 
   constructor() {
     this.analytics.pageView('/account', 'Account');
+    this.customerApi
+      .getAuthMethods()
+      .pipe(catchError(() => of({ password: true, google: false, emailCode: true } as AuthMethods)))
+      .subscribe((methods) => this.methods.set(methods));
   }
 
-  requestLink(event: Event): void {
+  get submitLabel(): string {
+    if (this.mode() === 'register') {
+      return 'פתיחת חשבון';
+    }
+    return this.mode() === 'forgot' ? 'שליחת קישור איפוס' : 'כניסה';
+  }
+
+  setMode(mode: Mode): void {
+    this.mode.set(mode);
+    this.error.set(null);
+    this.sent.set(null);
+  }
+
+  submit(event: Event): void {
     event.preventDefault();
-    if (!this.email.includes('@')) {
+    if (this.busy()) {
       return;
     }
-    this.sending.set(true);
-    this.customer.requestSignInLink(this.email).subscribe(() => {
-      this.sending.set(false);
-      this.sent.set(true);
+
+    this.error.set(null);
+    this.sent.set(null);
+    this.busy.set(true);
+
+    const done = () => this.busy.set(false);
+    const fail = (cause: unknown) => {
+      this.busy.set(false);
+      this.error.set(toAppError(cause).userMessage.he);
+    };
+
+    if (this.mode() === 'forgot') {
+      this.customerApi.requestPasswordReset(this.email).subscribe({
+        next: () => {
+          done();
+          // Says nothing about whether the address exists.
+          this.sent.set('אם הכתובת רשומה אצלנו, נשלח אליה קישור לאיפוס הסיסמה.');
+        },
+        error: fail,
+      });
+      return;
+    }
+
+    if (this.mode() === 'register') {
+      this.customerApi.register(this.email, this.password).subscribe({
+        next: () => {
+          done();
+          this.password = '';
+          this.sent.set('החשבון נפתח. אפשר להמשיך לקנות.');
+        },
+        error: fail,
+      });
+      return;
+    }
+
+    this.customerApi.login(this.email, this.password).subscribe({
+      next: () => {
+        done();
+        // Cleared the moment it is no longer needed; it is never stored.
+        this.password = '';
+      },
+      error: fail,
+    });
+  }
+
+  requestDeletion(): void {
+    if (!confirm('לשלוח בקשה למחיקת החשבון? תנותקו מכל המכשירים.')) {
+      return;
+    }
+    this.customerApi.requestAccountDeletion().subscribe({
+      error: (cause: unknown) => this.error.set(toAppError(cause).userMessage.he),
     });
   }
 
   signOut(): void {
-    this.customer.signOut().subscribe(() => {
-      this.notifications.info(localized('התנתקתם.', 'You are signed out.'));
-    });
+    this.customerApi.signOut().subscribe();
   }
 }

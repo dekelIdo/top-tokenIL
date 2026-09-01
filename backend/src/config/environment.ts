@@ -63,6 +63,20 @@ export interface AppConfig {
    */
   readonly notificationTransport: NotificationTransport;
 
+  /**
+   * Google sign-in. Both must be present for it to be offered at all; a half
+   * configured provider is worse than none, because the button appears and then
+   * fails. `isConfigured` on the service is the single check everything else
+   * reads.
+   */
+  readonly googleClientId?: string;
+  readonly googleClientSecret?: string;
+  /** Must match a redirect URI registered in the Google Cloud console exactly. */
+  readonly googleRedirectUri: string;
+
+  /** Where the backend sends a customer after a federated sign-in completes. */
+  readonly appBaseUrl: string;
+
   /** How often housekeeping releases expired holds. Zero disables the sweep. */
   readonly housekeepingIntervalSeconds: number;
 
@@ -216,6 +230,26 @@ export function validateEnvironment(source: NodeJS.ProcessEnv = process.env): Ap
     );
   }
 
+  // --- Federated sign-in ---------------------------------------------------
+  const googleClientId = source.GOOGLE_CLIENT_ID || undefined;
+  const googleClientSecret = source.GOOGLE_CLIENT_SECRET || undefined;
+
+  if (Boolean(googleClientId) !== Boolean(googleClientSecret)) {
+    // One without the other is a misconfiguration that would present a sign-in
+    // button which cannot work. Refuse to start rather than ship it.
+    problems.push(
+      'GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set together, or both left empty',
+    );
+  }
+
+  const appBaseUrl = source.APP_BASE_URL || 'http://localhost:4200';
+  const googleRedirectUri =
+    source.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/v1/auth/google/callback';
+
+  if (isDeployed && googleClientId && !googleRedirectUri.startsWith('https://')) {
+    problems.push('GOOGLE_REDIRECT_URI must be an https URL in staging and production');
+  }
+
   const housekeepingIntervalSeconds = toInt(source.HOUSEKEEPING_INTERVAL_SECONDS, 60);
   if (housekeepingIntervalSeconds < 0 || housekeepingIntervalSeconds > 3600) {
     problems.push('HOUSEKEEPING_INTERVAL_SECONDS must be between 0 and 3600');
@@ -250,6 +284,10 @@ export function validateEnvironment(source: NodeJS.ProcessEnv = process.env): Ap
     paymentMode,
     paymentWebhookSecret: paymentWebhookSecret || 'development-only-webhook-secret',
     notificationTransport,
+    googleClientId,
+    googleClientSecret,
+    googleRedirectUri,
+    appBaseUrl,
     housekeepingIntervalSeconds,
     operators,
     logLevel,

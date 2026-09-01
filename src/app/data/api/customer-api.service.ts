@@ -1,14 +1,50 @@
 import { Observable } from 'rxjs';
 import { AuthState, Customer } from '../../domain';
 
+/** Which sign-in methods the backend can actually offer right now. */
+export interface AuthMethods {
+  readonly password: boolean;
+  /** False until Google credentials exist on the server. */
+  readonly google: boolean;
+  readonly emailCode: boolean;
+}
+
 /**
- * SECURITY: there is intentionally no `login(password)` method. When real
- * authentication ships it will be an email one-time code or a backend-driven
- * OAuth redirect; the frontend must never receive, hold or transmit a password.
+ * Customer identity.
+ *
+ * SECURITY: a password is passed straight to the backend over TLS and is never
+ * held anywhere on the client. It is not written to `localStorage`, not kept in
+ * a service field, and not logged. The backend hashes it with scrypt and the
+ * database refuses to store anything that is not a hash.
+ *
+ * An earlier revision of this file had no password method at all, on the
+ * reasoning that the frontend should never touch one. Real accounts were added
+ * later as a product requirement, so the rule became the narrower and more
+ * accurate one above: transmitting a password to authenticate is ordinary;
+ * storing or logging one is not.
+ *
+ * Google sign-in deliberately has no method here. It is a browser redirect to
+ * the backend, which owns the exchange, so no token ever reaches this code.
  */
 export abstract class CustomerApiService {
   abstract getAuthState(): Observable<AuthState>;
+
+  /** What the server supports, so the UI never offers a button that cannot work. */
+  abstract getAuthMethods(): Observable<AuthMethods>;
+
+  abstract register(email: string, password: string): Observable<void>;
+  abstract login(email: string, password: string): Observable<AuthState>;
+
+  abstract requestPasswordReset(email: string): Observable<void>;
+  abstract resetPassword(token: string, password: string): Observable<AuthState>;
+  abstract changePassword(currentPassword: string, newPassword: string): Observable<void>;
+
+  /** The existing one-time code, kept as a recovery route. */
   abstract requestEmailSignIn(email: string): Observable<void>;
+
   abstract updateProfile(patch: Partial<Pick<Customer, 'displayName' | 'phone' | 'preferredLocale' | 'preferredRegion'>>): Observable<Customer>;
   abstract signOut(): Observable<void>;
+
+  /** Records a deletion request. Not an immediate erase; orders are retained. */
+  abstract requestAccountDeletion(): Observable<void>;
 }

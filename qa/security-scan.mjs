@@ -8,7 +8,7 @@
  */
 import { chromium } from '@playwright/test';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, extname } from 'node:path';
+import { join, extname, sep } from 'node:path';
 import { startServer } from './serve.mjs';
 
 process.on('unhandledRejection', (error) => {
@@ -43,27 +43,73 @@ const sources = sourceFiles.map((file) => ({ file, text: readFileSync(file, 'utf
 // Credential-shaped identifiers that must not exist as *fields*.
 // Matching declarations only, so prose ("we never ask for your password") and
 // reassurance copy do not register as findings.
-const CREDENTIAL_FIELDS = [
-  /(^|[\s{,(])(readonly\s+)?(password|passwd|cvv|cvc|cardNumber|pan|expiryDate|otpCode|recoveryCode|backupCode|twoFactorSecret)\s*\??\s*:/im,
+/**
+ * Fields that must never exist anywhere, under any circumstances.
+ *
+ * Card data and any credential belonging to somebody else's system: a game
+ * account password, a 2FA secret, a recovery code. ZuzCOINS has no legitimate
+ * reason to hold any of these, and the checkout vocabulary is a closed list
+ * precisely so it cannot.
+ */
+const FORBIDDEN_FIELDS = [
+  /(^|[\s{,(])(readonly\s+)?(cvv|cvc|cardNumber|pan|expiryDate|otpCode|recoveryCode|backupCode|twoFactorSecret|psnPassword|eaPassword|gamePassword)\s*\??\s*:/im,
 ];
+
+/**
+ * The customer's own ZuzCOINS account password.
+ *
+ * Legitimate since accounts were added, but only in the files that authenticate.
+ * Anywhere else, a field called `password` is a mistake worth failing the build
+ * over, so the allowlist is deliberately short and explicit.
+ */
+const ACCOUNT_PASSWORD_FIELD =
+  /(^|[\s{,(])(readonly\s+)?(password|newPassword|currentPassword)\s*\??\s*:/im;
+
+const PASSWORD_ALLOWED = [
+  'data/api/customer-api.service.ts',
+  'data/http/http-content-api.service.ts',
+  'data/mock/mock-content-api.service.ts',
+  'pages/account/account.page.ts',
+].map((path) => path.split('/').join(sep));
+
 const stripComments = (text) => text
   .replace(/\/\*[\s\S]*?\*\//g, '')
   .replace(/^\s*\/\/.*$/gm, '');
-const credentialHits = [];
+
+const forbiddenHits = [];
+const strayPasswordHits = [];
 for (const { file, text } of sources) {
   const code = stripComments(text);
-  for (const pattern of CREDENTIAL_FIELDS) {
+
+  for (const pattern of FORBIDDEN_FIELDS) {
     if (pattern.test(code)) {
-      credentialHits.push(`${file}`);
+      forbiddenHits.push(file);
     }
   }
+
+  if (ACCOUNT_PASSWORD_FIELD.test(code) && !PASSWORD_ALLOWED.some((allowed) => file.endsWith(allowed))) {
+    strayPasswordHits.push(file);
+  }
 }
-check('no credential-shaped fields anywhere in src', credentialHits.length === 0,
-  credentialHits.slice(0, 4).join(' | '));
+
+check('no card data or third-party credential field anywhere in src', forbiddenHits.length === 0,
+  forbiddenHits.slice(0, 4).join(' | '));
+
+check('the account password appears only in the files that authenticate',
+  strayPasswordHits.length === 0, strayPasswordHits.slice(0, 4).join(' | '));
+
+// A password must never reach browser storage, in any file, ever.
+const storedPassword = sources.filter(({ text }) =>
+  /(localStorage|sessionStorage)\.[a-zA-Z]+\([^)]*password/i.test(stripComments(text)));
+check('no password is written to browser storage', storedPassword.length === 0,
+  storedPassword.map(({ file }) => file).slice(0, 3).join(' | '));
 
 // Password inputs in templates.
 const passwordInputs = sources.filter(({ text }) => /type=["']password["']/.test(text));
-check('no password input in any template', passwordInputs.length === 0,
+const strayPasswordInputs = passwordInputs.filter(
+  ({ file }) => !file.endsWith(`pages${sep}account${sep}account.page.ts`));
+
+check('a password input appears only on the account screen', strayPasswordInputs.length === 0,
   passwordInputs.map((s) => s.file).join(', '));
 
 // Secret-looking literals.

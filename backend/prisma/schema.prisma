@@ -178,6 +178,10 @@ enum SupportTicketStatus {
   CLOSED
 }
 
+enum AuthProvider {
+  GOOGLE
+}
+
 enum CustomerStatus {
   ACTIVE
   SUSPENDED
@@ -232,9 +236,9 @@ model Platform {
   shortName Json           @map("short_name")
   sortOrder Int            @default(0) @map("sort_order")
 
-  offers          Offer[]
-  checkoutItems   CheckoutItem[]
-  orderItems      OrderItem[]
+  offers        Offer[]
+  checkoutItems CheckoutItem[]
+  orderItems    OrderItem[]
 
   @@map("platforms")
 }
@@ -299,18 +303,18 @@ model Product {
 }
 
 model ProductVariant {
-  id            String   @id
-  productId     String   @map("product_id")
+  id            String  @id
+  productId     String  @map("product_id")
   name          Json
-  sku           String   @unique
+  sku           String  @unique
   // Int, not NUMERIC as docs/DATABASE-DESIGN.md suggests: every quantity we
   // sell is a whole unit (coins, points, months, a shekel denomination), and an
   // integer avoids Prisma's Decimal type leaking into JSON serialisation.
-  quantityValue Int?     @map("quantity_value")
-  quantityUnit  Json?    @map("quantity_unit")
-  metadata      Json     @default("{}")
-  sortOrder     Int      @default(0) @map("sort_order")
-  active        Boolean  @default(true)
+  quantityValue Int?    @map("quantity_value")
+  quantityUnit  Json?   @map("quantity_unit")
+  metadata      Json    @default("{}")
+  sortOrder     Int     @default(0) @map("sort_order")
+  active        Boolean @default(true)
 
   product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
   offers     Offer[]
@@ -329,7 +333,7 @@ model Offer {
   platformId           String            @map("platform_id")
   regionId             String            @map("region_id")
   priceAmountMinor     Int               @map("price_amount_minor")
-  priceCurrency        String            @db.Char(3) @map("price_currency")
+  priceCurrency        String            @map("price_currency") @db.Char(3)
   compareAtMinor       Int?              @map("compare_at_minor")
   fulfillmentMethod    FulfillmentMethod @map("fulfillment_method")
   checkoutRequirements Json              @default("[]") @map("checkout_requirements")
@@ -339,10 +343,10 @@ model Offer {
   createdAt            DateTime          @default(now()) @map("created_at")
   updatedAt            DateTime          @updatedAt @map("updated_at")
 
-  product       Product        @relation(fields: [productId], references: [id])
-  variant       ProductVariant @relation(fields: [variantId], references: [id])
-  platform      Platform       @relation(fields: [platformId], references: [id])
-  region        Region         @relation(fields: [regionId], references: [id])
+  product       Product                @relation(fields: [productId], references: [id])
+  variant       ProductVariant         @relation(fields: [variantId], references: [id])
+  platform      Platform               @relation(fields: [platformId], references: [id])
+  region        Region                 @relation(fields: [regionId], references: [id])
   inventory     Inventory?
   reservations  InventoryReservation[]
   cartItems     CartItem[]
@@ -362,13 +366,13 @@ model Offer {
 // ---------------------------------------------------------------------------
 
 model Inventory {
-  offerId String @id @map("offer_id")
-  status  InventoryStatus
+  offerId           String          @id @map("offer_id")
+  status            InventoryStatus
   /// NULL means unlimited — a manual service has no unit count.
-  quantityAvailable Int?     @map("quantity_available")
-  quantityReserved  Int      @default(0) @map("quantity_reserved")
-  quantitySold      Int      @default(0) @map("quantity_sold")
-  updatedAt         DateTime @updatedAt @map("updated_at")
+  quantityAvailable Int?            @map("quantity_available")
+  quantityReserved  Int             @default(0) @map("quantity_reserved")
+  quantitySold      Int             @default(0) @map("quantity_sold")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
 
   offer Offer @relation(fields: [offerId], references: [id], onDelete: Cascade)
 
@@ -402,20 +406,28 @@ model InventoryReservation {
 /// No password column exists and none may ever be added. Authentication is an
 /// emailed one-time code; there is nothing here to phish, reuse or leak.
 model Customer {
-  id                  String         @id
-  email               String         @unique
-  displayName         String?        @map("display_name")
-  phone               String?
-  preferredLocale     String         @default("he") @map("preferred_locale")
-  preferredRegion     RegionCode     @default(IL) @map("preferred_region")
-  status              CustomerStatus @default(ACTIVE)
-  emailVerified       Boolean        @default(false) @map("email_verified")
-  marketingConsent    Boolean        @default(false) @map("marketing_consent")
-  marketingConsentAt  DateTime?      @map("marketing_consent_at")
-  createdAt           DateTime       @default(now()) @map("created_at")
-  updatedAt           DateTime       @updatedAt @map("updated_at")
+  id                 String         @id
+  email              String         @unique
+  displayName        String?        @map("display_name")
+  phone              String?
+  preferredLocale    String         @default("he") @map("preferred_locale")
+  preferredRegion    RegionCode     @default(IL) @map("preferred_region")
+  status             CustomerStatus @default(ACTIVE)
+  emailVerified      Boolean        @default(false) @map("email_verified")
+  /// Nullable on purpose. Customers created before passwords existed, and
+  /// customers who only ever sign in with Google, legitimately have none.
+  /// A null hash means "this account has no password", never "any password".
+  passwordHash       String?        @map("password_hash")
+  passwordUpdatedAt  DateTime?      @map("password_updated_at")
+  lastLoginAt        DateTime?      @map("last_login_at")
+  marketingConsent   Boolean        @default(false) @map("marketing_consent")
+  marketingConsentAt DateTime?      @map("marketing_consent_at")
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
 
   sessions         CustomerSession[]
+  identities       AuthIdentity[]
+  passwordResets   PasswordReset[]
   carts            Cart[]
   checkoutSessions CheckoutSession[]
   orders           Order[]
@@ -427,6 +439,48 @@ model Customer {
 
 /// One-time sign-in codes. Only the hash is stored; the plaintext exists solely
 /// in the email that carried it.
+/// A federated sign-in linked to a customer, one row per provider account.
+///
+/// Kept separate from `customers` so a person can have both a password and a
+/// Google login, and so adding a second provider later is a row rather than a
+/// migration. Nothing here is a credential: the provider authenticates, and we
+/// store only the opaque account id it gives us.
+model AuthIdentity {
+  id                String       @id
+  customerId        String       @map("customer_id")
+  provider          AuthProvider
+  /// The provider's own immutable id for the account. Never the email, which
+  /// can change and be reassigned.
+  providerAccountId String       @map("provider_account_id")
+  /// Email as the provider reported it, for support and for audit only.
+  providerEmail     String?      @map("provider_email")
+  createdAt         DateTime     @default(now()) @map("created_at")
+  lastUsedAt        DateTime?    @map("last_used_at")
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  /// One provider account maps to exactly one customer.
+  @@unique([provider, providerAccountId], name: "identity_provider_account")
+  @@index([customerId])
+  @@map("auth_identities")
+}
+
+/// A password reset token. Only its hash is stored, like a session token.
+model PasswordReset {
+  id         String    @id
+  customerId String    @map("customer_id")
+  tokenHash  String    @unique @map("token_hash")
+  expiresAt  DateTime  @map("expires_at")
+  consumedAt DateTime? @map("consumed_at")
+  requestIp  String?   @map("request_ip")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, consumedAt])
+  @@map("password_resets")
+}
+
 model AuthCode {
   id         String    @id
   email      String
@@ -448,15 +502,15 @@ model AuthCode {
 /// order to the browser that created it, which is how order authorization works
 /// before someone signs in.
 model CustomerSession {
-  id          String    @id
-  customerId  String?   @map("customer_id")
-  tokenHash   String    @unique @map("token_hash")
-  userAgent   String?   @map("user_agent")
-  ip          String?
-  expiresAt   DateTime  @map("expires_at")
-  revokedAt   DateTime? @map("revoked_at")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  lastSeenAt  DateTime  @default(now()) @map("last_seen_at")
+  id         String    @id
+  customerId String?   @map("customer_id")
+  tokenHash  String    @unique @map("token_hash")
+  userAgent  String?   @map("user_agent")
+  ip         String?
+  expiresAt  DateTime  @map("expires_at")
+  revokedAt  DateTime? @map("revoked_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  lastSeenAt DateTime  @default(now()) @map("last_seen_at")
 
   customer         Customer?         @relation(fields: [customerId], references: [id], onDelete: Cascade)
   carts            Cart[]
@@ -528,12 +582,12 @@ model CheckoutSession {
   createdAt            DateTime              @default(now()) @map("created_at")
   updatedAt            DateTime              @updatedAt @map("updated_at")
 
-  customer     Customer?              @relation(fields: [customerId], references: [id])
-  session      CustomerSession?       @relation(fields: [sessionId], references: [id])
-  region       Region                 @relation(fields: [regionId], references: [id])
-  items        CheckoutItem[]
-  reservations InventoryReservation[]
-  order        Order?
+  customer       Customer?              @relation(fields: [customerId], references: [id])
+  session        CustomerSession?       @relation(fields: [sessionId], references: [id])
+  region         Region                 @relation(fields: [regionId], references: [id])
+  items          CheckoutItem[]
+  reservations   InventoryReservation[]
+  order          Order?
   paymentIntents PaymentIntent[]
 
   @@index([status, expiresAt])
@@ -665,15 +719,15 @@ model PaymentIntent {
 }
 
 model PaymentEvent {
-  id              String        @id
-  paymentIntentId String        @map("payment_intent_id")
+  id              String            @id
+  paymentIntentId String            @map("payment_intent_id")
   provider        PaymentProviderId
-  providerEventId String        @map("provider_event_id")
+  providerEventId String            @map("provider_event_id")
   type            String
-  statusBefore    PaymentStatus? @map("status_before")
-  statusAfter     PaymentStatus? @map("status_after")
-  payloadRedacted Json          @map("payload_redacted")
-  receivedAt      DateTime      @default(now()) @map("received_at")
+  statusBefore    PaymentStatus?    @map("status_before")
+  statusAfter     PaymentStatus?    @map("status_after")
+  payloadRedacted Json              @map("payload_redacted")
+  receivedAt      DateTime          @default(now()) @map("received_at")
 
   paymentIntent PaymentIntent @relation(fields: [paymentIntentId], references: [id], onDelete: Cascade)
 
@@ -687,27 +741,27 @@ model PaymentEvent {
 // ---------------------------------------------------------------------------
 
 model Fulfillment {
-  id               String            @id
-  orderId          String            @map("order_id")
-  orderItemId      String            @unique @map("order_item_id")
-  method           FulfillmentMethod
-  status           FulfillmentStatus @default(PENDING)
-  provider         String?
-  providerJobId    String?           @map("provider_job_id")
-  attempts         Int               @default(0)
-  estimatedReadyAt DateTime?         @map("estimated_ready_at")
-  deliveredAt      DateTime?         @map("delivered_at")
+  id                  String            @id
+  orderId             String            @map("order_id")
+  orderItemId         String            @unique @map("order_item_id")
+  method              FulfillmentMethod
+  status              FulfillmentStatus @default(PENDING)
+  provider            String?
+  providerJobId       String?           @map("provider_job_id")
+  attempts            Int               @default(0)
+  estimatedReadyAt    DateTime?         @map("estimated_ready_at")
+  deliveredAt         DateTime?         @map("delivered_at")
   /// Withheld until the order is paid; the service refuses to read it earlier.
-  deliveryPayload  Json?             @map("delivery_payload")
+  deliveryPayload     Json?             @map("delivery_payload")
   /// What the customer must do for delivery to be possible: the exact transfer-
   /// market listings for a coin order. Unlike `deliveryPayload` this is shown
   /// *before* delivery, because the customer performs the listing. It carries no
   /// secret: a player name and a price, never a credential.
-  customerInstruction Json?          @map("customer_instruction")
-  failureReason    Json?             @map("failure_reason")
-  operatorId       String?           @map("operator_id")
-  createdAt        DateTime          @default(now()) @map("created_at")
-  updatedAt        DateTime          @updatedAt @map("updated_at")
+  customerInstruction Json?             @map("customer_instruction")
+  failureReason       Json?             @map("failure_reason")
+  operatorId          String?           @map("operator_id")
+  createdAt           DateTime          @default(now()) @map("created_at")
+  updatedAt           DateTime          @updatedAt @map("updated_at")
 
   order     Order              @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderItem OrderItem          @relation(fields: [orderItemId], references: [id], onDelete: Cascade)

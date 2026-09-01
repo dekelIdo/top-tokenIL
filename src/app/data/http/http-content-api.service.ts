@@ -7,7 +7,7 @@ import {
   Promotion, Review, ReviewSummary, SupportTicket,
 } from '../../domain';
 import {
-  CustomerApiService, PromotionApiService, ReviewApiService, SupportApiService,
+  AuthMethods, CustomerApiService, PromotionApiService, ReviewApiService, SupportApiService,
 } from '../api';
 import { ApiClient } from './api-client.service';
 import * as Dto from './dto';
@@ -66,8 +66,37 @@ export class HttpCustomerApiService extends CustomerApiService {
     return this.api.get<Dto.MeDto>('/me').pipe(map(Map.toAuthState));
   }
 
+  getAuthMethods(): Observable<AuthMethods> {
+    return this.api.get<AuthMethods>('/auth/methods');
+  }
+
+  register(email: string, password: string): Observable<void> {
+    return this.api.post<void>('/auth/register', { email, password });
+  }
+
+  login(email: string, password: string): Observable<AuthState> {
+    return this.api.post<Dto.MeDto>('/auth/login', { email, password }).pipe(map(Map.toAuthState));
+  }
+
+  requestPasswordReset(email: string): Observable<void> {
+    return this.api.post<void>('/auth/password/forgot', { email });
+  }
+
+  resetPassword(token: string, password: string): Observable<AuthState> {
+    return this.api.post<Dto.MeDto>('/auth/password/reset', { token, password })
+      .pipe(map(Map.toAuthState));
+  }
+
+  changePassword(currentPassword: string, newPassword: string): Observable<void> {
+    return this.api.post<void>('/auth/password/change', { currentPassword, newPassword });
+  }
+
   requestEmailSignIn(email: string): Observable<void> {
     return this.api.post<void>('/auth/request-code', { email });
+  }
+
+  requestAccountDeletion(): Observable<void> {
+    return this.api.post<void>('/account/delete', {});
   }
 
   updateProfile(

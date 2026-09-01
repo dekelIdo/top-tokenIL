@@ -4,10 +4,11 @@ import { map } from 'rxjs/operators';
 
 import {
   ANONYMOUS, AuthState, CreateSupportTicketRequest, Customer, FaqEntry, Page, PageRequest,
-  ProductId, Promotion, Review, ReviewSummary, SupportTicket, SupportTicketStatus, paginate,
+  ProductId, Promotion, RegionCode, Review, ReviewSummary, SupportTicket, SupportTicketStatus,
+  paginate,
 } from '../../domain';
 import {
-  CustomerApiService, PromotionApiService, ReviewApiService, SupportApiService,
+  AuthMethods, CustomerApiService, PromotionApiService, ReviewApiService, SupportApiService,
 } from '../api';
 import { FAQ_ENTRIES, PROMOTIONS, REVIEWS } from './content.seed';
 import { MockBackendService } from './mock-backend.service';
@@ -86,8 +87,67 @@ export class MockCustomerApiService extends CustomerApiService {
     return this.state.asObservable();
   }
 
+  /**
+   * Mock mode advertises password sign-in and no Google, matching a backend with
+   * no Google credentials. That way the account screen looks the same offline
+   * as it does against a freshly deployed server.
+   */
+  getAuthMethods(): Observable<AuthMethods> {
+    return this.backend.respond({ password: true, google: false, emailCode: true }, 80);
+  }
+
+  register(email: string, password: string): Observable<void> {
+    // The mock signs the customer straight in, which is what the real backend
+    // does for a new address. The password is used to decide nothing and is not
+    // retained anywhere.
+    void password;
+    this.state.next({ kind: 'AUTHENTICATED', customer: this.customerFor(email) });
+    return this.backend.respond(undefined, 300);
+  }
+
+  login(email: string, password: string): Observable<AuthState> {
+    void password;
+    const next: AuthState = { kind: 'AUTHENTICATED', customer: this.customerFor(email) };
+    this.state.next(next);
+    return this.backend.respond(next, 300);
+  }
+
+  requestPasswordReset(email: string): Observable<void> {
+    return this.backend.respond(email, 300).pipe(map(() => undefined));
+  }
+
+  resetPassword(token: string, password: string): Observable<AuthState> {
+    void token;
+    void password;
+    const next = this.state.value;
+    return this.backend.respond(next, 300);
+  }
+
+  changePassword(currentPassword: string, newPassword: string): Observable<void> {
+    void currentPassword;
+    void newPassword;
+    return this.backend.respond(undefined, 300);
+  }
+
   requestEmailSignIn(email: string): Observable<void> {
     return this.backend.respond(email, 500).pipe(map(() => undefined));
+  }
+
+  requestAccountDeletion(): Observable<void> {
+    this.state.next(ANONYMOUS);
+    return this.backend.respond(undefined, 200);
+  }
+
+  /** A minimal customer for the mock, built from the address given. */
+  private customerFor(email: string): Customer {
+    return {
+      id: 'cust_mock',
+      email,
+      preferredLocale: 'he',
+      preferredRegion: RegionCode.Israel,
+      createdAt: new Date().toISOString(),
+      emailVerified: false,
+    } as Customer;
   }
 
   updateProfile(patch: Partial<Pick<Customer, 'displayName' | 'phone' | 'preferredLocale' | 'preferredRegion'>>): Observable<Customer> {

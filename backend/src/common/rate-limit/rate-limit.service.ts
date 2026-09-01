@@ -98,4 +98,19 @@ export const RATE_LIMITS = {
   otpRequestPerIp: { name: 'auth:request-code:ip', limit: 30, windowSeconds: 60 * 60 },
   /** Six digits is a million options; without this it is a weekend of guessing. */
   otpVerifyPerIp: { name: 'auth:verify-code:ip', limit: 10, windowSeconds: 60 * 60 },
+
+  /**
+   * Password sign-in. Per-email is the tight one because it is what stops a
+   * targeted guessing run against a known customer; per-IP stays looser for the
+   * same carrier-NAT reason as the sign-in codes.
+   */
+  loginPerEmail: { name: 'auth:login:email', limit: 8, windowSeconds: 15 * 60 },
+  loginPerIp: { name: 'auth:login:ip', limit: 40, windowSeconds: 60 * 60 },
+
+  /** Registration is expensive to process and trivial to script. */
+  registerPerIp: { name: 'auth:register:ip', limit: 10, windowSeconds: 60 * 60 },
+
+  /** A reset sends mail to somebody, so per-address is the abuse that matters. */
+  passwordResetPerEmail: { name: 'auth:reset:email', limit: 3, windowSeconds: 60 * 60 },
+  passwordResetPerIp: { name: 'auth:reset:ip', limit: 20, windowSeconds: 60 * 60 },
 } as const satisfies Record<string, RateLimitRule>;

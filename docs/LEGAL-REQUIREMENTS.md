@@ -95,6 +95,31 @@ presented on displayed prices.
 Nothing in the product currently issues an invoice or receipt. That is a gap for
 the phase that connects a real payment provider.
 
+## Customer accounts and the data they hold
+
+Accounts were added after this document was first written. What is stored, and
+why, so the privacy notice can describe it accurately:
+
+| Data | Why it exists | Notes |
+|---|---|---|
+| Email address | Account identity and order delivery | Required |
+| Password hash | Sign-in | scrypt. The database refuses any value that is not a hash |
+| Google account id | Sign-in via Google | Opaque provider id, not a credential. Only stored when the customer uses Google |
+| Display name | Greeting, support | Optional; supplied by Google when used |
+| Phone | Manual-delivery contact | Optional, only when an offer needs it |
+| Last login timestamp | Support and abuse investigation | |
+| Marketing consent flag and its timestamp | Proof of consent | Defaults to false. Nothing subscribes anyone silently |
+
+Not stored: card data of any kind, game-account passwords, 2FA codes, recovery
+codes. The checkout vocabulary is a closed list that structurally cannot carry
+them.
+
+**Account deletion** is a request, not an immediate erase. Orders are financial
+records with a retention obligation, so the request closes the account and every
+session and leaves the erasure to a supervised process. **That process, and the
+retention period behind it, is a policy decision the owner and the accountant
+must make.**
+
 ## What the business owner must supply
 
 Nothing below can be invented, and each blocks a page that is otherwise built:
@@ -111,6 +136,9 @@ Nothing below can be invented, and each blocks a page that is otherwise built:
 10. Chosen payment provider, mail provider and analytics, so the privacy notice can name them
 11. Accountant's answer on invoices, receipts and VAT presentation
 12. Trademark clearance on the ZuzCOINS name (see `BRAND-AND-ASSETS.md`)
+13. The retention period for closed accounts, and who runs the erasure process
+14. Whether marketing email will be sent at all, which decides whether a consent
+    checkbox is needed at registration
 
 ## Claims the product deliberately does not make
 
