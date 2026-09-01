@@ -185,7 +185,9 @@ console.log('\n== Idempotency and duplicate protection ==');
 
 // Navigate in-app: the mock backend lives in memory, so a full page load would
 // legitimately lose the order. Real users reach these pages by clicking too.
-await page.locator('tt-app-header a[href="/account"]').click();
+// The header holds two routes to the account now, the bar action and the
+// drawer row, so this picks the first exactly as the next line does.
+await page.locator('tt-app-header a[href="/account"]').first().click();
 await page.waitForURL('**/account');
 await page.locator('a[href="/account/orders"]').first().click();
 await page.waitForURL('**/account/orders');
@@ -378,7 +380,9 @@ const pay = payButton();
 await Promise.all([pay.click(), pay.click().catch(() => {})]);
 await page.waitForURL('**/order/**', { timeout: 15000 });
 await page.waitForTimeout(1500);
-await page.locator('tt-app-header a[href="/account"]').click();
+// The header holds two routes to the account now, the bar action and the
+// drawer row, so this picks the first exactly as the next line does.
+await page.locator('tt-app-header a[href="/account"]').first().click();
 await page.waitForURL('**/account');
 await page.locator('a[href="/account/orders"]').first().click();
 await page.waitForURL('**/account/orders');
