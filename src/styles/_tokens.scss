@@ -136,10 +136,19 @@
   --tt-text-md: 1rem;
   --tt-text-lg: 1.125rem;
   --tt-text-xl: 1.375rem;
+  // Fixed steps, for anything that is not a display size.
   --tt-text-2xl: 1.75rem;
   --tt-text-3xl: 2.25rem;
   --tt-text-4xl: 3rem;
   --tt-text-5xl: 3.75rem;
+
+  // Fluid display sizes. Section headings were locked at 1.75rem from 360px to
+  // 1920px, so a heading that was right on a phone was undersized on a desktop
+  // and the page lost its top level of hierarchy at exactly the width where
+  // there was room for it.
+  --tt-display-1: clamp(2.1rem, 5.6vw, 3.5rem);
+  --tt-display-2: clamp(1.5rem, 3.2vw, 2.35rem);
+  --tt-display-3: clamp(1.15rem, 1.9vw, 1.5rem);
 
   --tt-leading-tight: 1.15;
   --tt-leading-snug: 1.35;
@@ -159,6 +168,23 @@
   --tt-ease: cubic-bezier(0.22, 0.61, 0.36, 1);       // standard, decelerating
   --tt-ease-out: cubic-bezier(0.16, 1, 0.3, 1);       // emphasised arrival
   --tt-ease-in: cubic-bezier(0.55, 0, 0.55, 0.2);     // exits
+
+  // --- Rhythm --------------------------------------------------------------
+  // The spacing steps above are for components. These three are for the page,
+  // and they are fluid on purpose.
+  //
+  // The scale was being used almost entirely between steps 1 and 5, with the
+  // large steps barely appearing at all, so the page had detail rhythm and no
+  // macro rhythm: everything sat at roughly one distance from everything else.
+  // Worse, section padding and the page gutter were single fixed values doing
+  // the same job at 360px and at 1920px, which is too much air on a phone and
+  // too little on a desktop.
+  //
+  // Fluid removes that compromise. A phone gets a tight, shop-like rhythm; a
+  // wide screen gets the room that makes a layout feel expensive.
+  --tt-section-y: clamp(2.25rem, 5.2vw, 4.75rem);   // section padding, block
+  --tt-gutter: clamp(1rem, 3.2vw, 2.25rem);         // page edge padding
+  --tt-stack: clamp(1.25rem, 2.6vw, 2rem);          // gap between related blocks
 
   // --- Layout --------------------------------------------------------------
   --tt-container: 1240px;

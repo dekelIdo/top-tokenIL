@@ -189,27 +189,81 @@ export class CoinTierComponent {
   }
 
   get glowWidth(): number {
-    return 34 + this.count * 10;
+    return [42, 54, 62, 72, 82][Math.min(4, this.count - 1)];
   }
 
   /**
-   * The cluster, painted back to front.
+   * The composition for this tier, painted back to front.
+   *
+   * Five arrangements, not one arrangement with pieces removed. The tiers used
+   * to be a single cluster sliced by count, which meant a bigger bundle was
+   * literally the smaller bundle with extra tokens switched on: the same
+   * picture, so the eye read "more dots" rather than "more money".
+   *
+   * These differ by arrangement and by mass. The small tiers are loose objects
+   * lying about. From the middle tier up they become stacks, because a stack is
+   * what quantity actually looks like, and the top tiers add a second stack and
+   * a wider spread so the frame fills out. A customer can tell 100K from 2M
+   * with the labels covered, which is the whole job.
    *
    * Fixed positions rather than generated ones, so a given bundle always looks
    * identical. Artwork that shifts between renders reads as a fault.
    */
   get tokens(): readonly Token[] {
-    const all: Token[] = [
-      { cx: 100, cy: 82, r: 46, squash: 0.58, depth: 13, dim: 1, face: true },
-      { cx: 45, cy: 103, r: 29, squash: 0.58, depth: 9, dim: 0.95, face: true },
-      { cx: 157, cy: 97, r: 25, squash: 0.58, depth: 8, dim: 0.87, face: false },
-      { cx: 134, cy: 42, r: 19, squash: 0.58, depth: 6, dim: 0.74, face: false },
-      { cx: 62, cy: 38, r: 15, squash: 0.58, depth: 5, dim: 0.64, face: false },
+    const S = 0.58;
+
+    const compositions: Token[][] = [
+      // One token, sitting low with air around it. An entry bundle should look
+      // like a small thing, not a small version of a big thing.
+      [
+        { cx: 100, cy: 92, r: 40, squash: S, depth: 12, dim: 1, face: true },
+      ],
+
+      // A pair, one leaning past the other. Still loose objects.
+      [
+        { cx: 62, cy: 100, r: 30, squash: S, depth: 10, dim: 0.9, face: true },
+        { cx: 120, cy: 88, r: 42, squash: S, depth: 12, dim: 1, face: true },
+      ],
+
+      // The arrangement changes: a short stack, with one token fallen beside
+      // it. This is the first tier that reads as an amount rather than a few
+      // coins.
+      [
+        { cx: 158, cy: 104, r: 24, squash: S, depth: 8, dim: 0.82, face: false },
+        { cx: 92, cy: 104, r: 42, squash: S, depth: 12, dim: 0.94, face: false },
+        { cx: 92, cy: 88, r: 42, squash: S, depth: 12, dim: 0.97, face: false },
+        { cx: 92, cy: 72, r: 42, squash: S, depth: 12, dim: 1, face: true },
+      ],
+
+      // Taller stack, plus loose tokens front and back. More mass, wider frame.
+      [
+        { cx: 44, cy: 58, r: 16, squash: S, depth: 5, dim: 0.6, face: false },
+        { cx: 154, cy: 62, r: 20, squash: S, depth: 6, dim: 0.7, face: false },
+        { cx: 46, cy: 106, r: 27, squash: S, depth: 9, dim: 0.88, face: false },
+        { cx: 158, cy: 100, r: 25, squash: S, depth: 8, dim: 0.85, face: false },
+        { cx: 100, cy: 108, r: 44, squash: S, depth: 12, dim: 0.92, face: false },
+        { cx: 100, cy: 92, r: 44, squash: S, depth: 12, dim: 0.95, face: false },
+        { cx: 100, cy: 76, r: 44, squash: S, depth: 12, dim: 0.98, face: false },
+        { cx: 100, cy: 60, r: 44, squash: S, depth: 12, dim: 1, face: true },
+      ],
+
+      // Two stacks and a scatter. The frame is full; this is the largest thing
+      // the shop sells and it should look like it.
+      [
+        { cx: 30, cy: 52, r: 13, squash: S, depth: 4, dim: 0.5, face: false },
+        { cx: 172, cy: 56, r: 15, squash: S, depth: 5, dim: 0.58, face: false },
+        { cx: 168, cy: 108, r: 22, squash: S, depth: 7, dim: 0.78, face: false },
+        { cx: 46, cy: 100, r: 30, squash: S, depth: 10, dim: 0.82, face: false },
+        { cx: 46, cy: 86, r: 30, squash: S, depth: 10, dim: 0.86, face: false },
+        { cx: 46, cy: 72, r: 30, squash: S, depth: 10, dim: 0.9, face: true },
+        { cx: 116, cy: 112, r: 44, squash: S, depth: 12, dim: 0.9, face: false },
+        { cx: 116, cy: 96, r: 44, squash: S, depth: 12, dim: 0.93, face: false },
+        { cx: 116, cy: 80, r: 44, squash: S, depth: 12, dim: 0.96, face: false },
+        { cx: 116, cy: 64, r: 44, squash: S, depth: 12, dim: 1, face: true },
+      ],
     ];
 
-    // Reversed so the smallest background tokens paint first and the largest
-    // lands on top of the cluster.
-    return all.slice(0, this.count).slice().reverse();
+    return compositions[Math.min(compositions.length - 1, this.count - 1)];
   }
 
   /**

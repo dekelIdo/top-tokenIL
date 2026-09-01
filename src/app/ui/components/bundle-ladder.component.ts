@@ -179,7 +179,9 @@ import { IconComponent } from './icon.component';
     @media (max-width: 959px) {
       /* Pull out to the viewport edges so a tier can be cut by the screen. */
       .rail {
-        margin-inline: calc(var(--tt-space-4) * -1);
+        /* Matches the page gutter, which is fluid. A hard value here would
+           stop reaching the viewport edge the moment the gutter grew. */
+        margin-inline: calc(var(--tt-gutter) * -1);
       }
       .ladder {
         /* Wide enough to read, narrow enough that the next tier is visibly
@@ -188,7 +190,7 @@ import { IconComponent } from './icon.component';
         gap: var(--tt-space-2);
         overflow-x: auto;
         scroll-snap-type: x mandatory;
-        padding-inline: var(--tt-space-4);
+        padding-inline: var(--tt-gutter);
         padding-block-end: var(--tt-space-2);
         /* Scrollbar hidden: this is a product rail, not a document pane. */
         scrollbar-width: none;

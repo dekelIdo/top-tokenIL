@@ -160,7 +160,7 @@ const REVIEW_PAGE: PageRequest = { page: 1, pageSize: 2 };
   styles: [`
     h2 {
       margin: 0;
-      font-size: clamp(1.5rem, 4.5vw, var(--tt-text-3xl));
+      font-size: var(--tt-display-2);
       letter-spacing: var(--tt-tracking-display);
       line-height: var(--tt-leading-tight);
     }

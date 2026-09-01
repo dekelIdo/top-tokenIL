@@ -36,9 +36,9 @@ h1, h2, h3, h4 {
   letter-spacing: -0.01em;
 }
 
-h1 { font-size: var(--tt-text-3xl); }
-h2 { font-size: var(--tt-text-2xl); }
-h3 { font-size: var(--tt-text-xl); }
+h1 { font-size: var(--tt-display-1); }
+h2 { font-size: var(--tt-display-2); }
+h3 { font-size: var(--tt-display-3); }
 
 p { margin: 0 0 var(--tt-space-3); }
 
@@ -74,11 +74,11 @@ img { max-width: 100%; display: block; }
   inline-size: 100%;
   max-inline-size: var(--tt-container);
   margin-inline: auto;
-  padding-inline: var(--tt-space-4);
+  padding-inline: var(--tt-gutter);
 }
 
 .tt-section {
-  padding-block: var(--tt-space-7);
+  padding-block: var(--tt-section-y);
 }
 
 .tt-section__head {
@@ -418,8 +418,8 @@ img { max-width: 100%; display: block; }
   min-block-size: calc(100vh - var(--tt-header-height) - var(--tt-space-9));
 }
 
-.tt-section--tight { padding-block: var(--tt-space-6); }
-.tt-section--loose { padding-block: var(--tt-space-9); }
+.tt-section--tight { padding-block: calc(var(--tt-section-y) * 0.62); }
+.tt-section--loose { padding-block: calc(var(--tt-section-y) * 1.4); }
 
 /* A section whose ground is lifted, used to break a long run of identical
    blocks without inventing a new layout for each one. */
