@@ -9,7 +9,9 @@ import {
   CheckoutFieldKey, CheckoutFieldValues, CheckoutRequirement, PaymentProviderId, PaymentStatus,
 } from '../../domain';
 import { CartFacade, CatalogFacade, CheckoutFacade } from '../../state';
-import { MoneyPipe, RegionBadgeComponent, IconComponent } from '../../ui';
+import {
+  FulfillmentBadgeComponent, IconComponent, MoneyPipe, RegionBadgeComponent,
+} from '../../ui';
 
 /**
  * Checkout.
@@ -26,7 +28,7 @@ import { MoneyPipe, RegionBadgeComponent, IconComponent } from '../../ui';
 @Component({
   selector: 'tt-checkout-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, LocalizePipe, MoneyPipe, RegionBadgeComponent, IconComponent],
+  imports: [CommonModule, FormsModule, RouterLink, LocalizePipe, MoneyPipe, RegionBadgeComponent, FulfillmentBadgeComponent, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="tt-container tt-section">
@@ -106,8 +108,9 @@ import { MoneyPipe, RegionBadgeComponent, IconComponent } from '../../ui';
                 אנחנו לעולם לא מבקשים סיסמה, קוד אימות או קודי גיבוי, בשום שלב.
               </p>
 
-              <button type="submit" class="tt-btn tt-btn--primary tt-btn--block" [disabled]="checkout.busy()">
-                המשך לתשלום
+              <button type="submit" class="tt-btn tt-btn--primary tt-btn--block pay" [disabled]="checkout.busy()">
+                <span>המשך לתשלום</span>
+                <span class="pay__sum tt-numeric">{{ cart.totals().total | money }}</span>
               </button>
             </form>
           </section>
@@ -166,9 +169,16 @@ import { MoneyPipe, RegionBadgeComponent, IconComponent } from '../../ui';
                     (click)="pay()">
               <ng-container *ngIf="checkout.busy()">מעבד…</ng-container>
               <ng-container *ngIf="!checkout.busy()">
-                {{ checkout.canRetryPayment() ? 'ניסיון תשלום נוסף' : (checkout.intent() ? 'אישור התשלום' : 'התחלת תשלום') }}
+                <span>{{ checkout.canRetryPayment() ? 'ניסיון תשלום נוסף' : (checkout.intent() ? 'אישור התשלום' : 'התחלת תשלום') }}</span>
+                <span class="pay__sum tt-numeric">{{ cart.totals().total | money }}</span>
               </ng-container>
             </button>
+
+            <!-- Stated next to the action, where the hesitation actually is. -->
+            <p class="assure">
+              <tt-icon name="lock" [size]="15"></tt-icon>
+              פרטי האשראי עוברים ישירות לספק הסליקה ולא נשמרים אצלנו.
+            </p>
 
             <button type="button" class="tt-btn tt-btn--quiet tt-btn--block"
                     *ngIf="checkout.paymentPending()"
@@ -183,19 +193,33 @@ import { MoneyPipe, RegionBadgeComponent, IconComponent } from '../../ui';
         </div>
 
         <aside class="summary tt-card tt-card--pad" *ngIf="lookups$ | async as lookups">
-          <h2>סיכום הזמנה</h2>
+          <h2>מה קונים</h2>
           <ul>
             <li *ngFor="let item of cart.items()">
-              <span>
-                {{ item.displayName | t }} · {{ item.displayVariantName | t }}
-                <span class="tt-faint">× {{ item.quantity }}</span>
-                <tt-region-badge [region]="lookups.regions.get(item.regionId)"></tt-region-badge>
+              <span class="line">
+                <span class="line__name">{{ item.displayName | t }}</span>
+                <span class="line__meta">
+                  {{ item.displayVariantName | t }}
+                  <span class="tt-faint">× {{ item.quantity }}</span>
+                  <tt-region-badge [region]="lookups.regions.get(item.regionId)"></tt-region-badge>
+                </span>
               </span>
-              <span>{{ item.totalPrice | money }}</span>
+              <span class="tt-numeric">{{ item.totalPrice | money }}</span>
             </li>
           </ul>
-          <div class="row total"><span>לתשלום</span><span>{{ cart.totals().total | money }}</span></div>
-          <a class="tt-btn tt-btn--quiet tt-btn--block" routerLink="/cart">חזרה לעגלה</a>
+          <div class="row total">
+            <span>לתשלום</span>
+            <span class="tt-price tt-numeric">{{ cart.totals().total | money }}</span>
+          </div>
+
+          <p class="eta" *ngIf="cart.items()[0] as first">
+            <tt-fulfillment-badge [descriptor]="lookups.fulfillment.get(first.fulfillmentMethod)">
+            </tt-fulfillment-badge>
+          </p>
+
+          <a class="back" routerLink="/cart">
+            <tt-icon name="chevron" [size]="14" dir="auto"></tt-icon>חזרה לעגלה
+          </a>
         </aside>
       </div>
     </div>
@@ -203,7 +227,50 @@ import { MoneyPipe, RegionBadgeComponent, IconComponent } from '../../ui';
   styles: [`
     h1 { margin-block-end: var(--tt-space-5); }
     .layout { display: grid; gap: var(--tt-space-5); align-items: start; }
-    @media (min-width: 900px) { .layout { grid-template-columns: 1fr 320px; } }
+    @media (min-width: 900px) {
+      .layout { grid-template-columns: 1fr 340px; }
+      /* Follows the customer down a long form. */
+      .summary { position: sticky; inset-block-start: calc(var(--tt-header-height) + var(--tt-space-4)); }
+    }
+    /* Below the two-column breakpoint the summary leads. A customer should know
+       what they are buying and what it costs before filling anything in. */
+    @media (max-width: 899px) {
+      .summary { order: -1; }
+    }
+
+    /* The amount lives on the action. */
+    .pay { justify-content: space-between; padding-inline: var(--tt-space-4); }
+    .pay__sum { font-weight: 800; font-variant-numeric: tabular-nums; }
+
+    .assure {
+      display: flex;
+      align-items: center;
+      gap: var(--tt-space-2);
+      margin: var(--tt-space-3) 0 0;
+      color: var(--tt-text-faint);
+      font-size: var(--tt-text-xs);
+      line-height: var(--tt-leading-snug);
+    }
+    .assure tt-icon { flex: none; }
+
+    .eta {
+      display: flex;
+      align-items: center;
+      gap: var(--tt-space-2);
+      margin: 0 0 var(--tt-space-3);
+      color: var(--tt-text-muted);
+      font-size: var(--tt-text-xs);
+    }
+    .eta tt-icon { flex: none; color: var(--tt-accent-500); }
+
+    .back {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--tt-text-muted);
+      font-size: var(--tt-text-sm);
+      font-weight: 600;
+    }
     h2 { font-size: var(--tt-text-lg); margin-block-end: var(--tt-space-4); }
     .fields { display: flex; flex-direction: column; gap: var(--tt-space-4); }
     .providers { display: flex; flex-direction: column; gap: var(--tt-space-2); margin-block: var(--tt-space-4); }
@@ -228,6 +295,9 @@ import { MoneyPipe, RegionBadgeComponent, IconComponent } from '../../ui';
     .provider:disabled { opacity: 0.5; cursor: not-allowed; }
     .summary ul { list-style: none; margin: 0 0 var(--tt-space-3); padding: 0; display: flex; flex-direction: column; gap: var(--tt-space-3); }
     .summary li { display: flex; justify-content: space-between; gap: var(--tt-space-3); font-size: var(--tt-text-sm); }
+    .line { display: flex; flex-direction: column; gap: 3px; min-inline-size: 0; }
+    .line__name { font-weight: 600; }
+    .line__meta { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; font-size: var(--tt-text-xs); color: var(--tt-text-muted); }
     .row.total { display: flex; justify-content: space-between; font-weight: 700; padding-block-start: var(--tt-space-2); border-block-start: 1px solid var(--tt-border); margin-block-end: var(--tt-space-3); }
     .tt-check .tt-hint { display: block; }
     .tt-check-field { display: flex; flex-direction: column; gap: var(--tt-space-2); }

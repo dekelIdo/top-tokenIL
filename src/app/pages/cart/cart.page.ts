@@ -2,12 +2,16 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 
 import { AnalyticsService } from '../../core/analytics';
+import { STOREFRONT } from '../../core/brand';
 import { LocalizePipe } from '../../core/i18n';
-import { CartItem } from '../../domain';
+import { CartItem, ProductType } from '../../domain';
 import { CartFacade, CatalogFacade } from '../../state';
 import {
+  BundleLadderComponent,
   EmptyStateComponent, FulfillmentBadgeComponent, MoneyPipe, PlatformBadgeComponent,
   QuantitySelectorComponent, RegionBadgeComponent,
 } from '../../ui';
@@ -25,20 +29,30 @@ import {
   imports: [
     CommonModule, FormsModule, RouterLink, LocalizePipe, MoneyPipe,
     QuantitySelectorComponent, PlatformBadgeComponent, RegionBadgeComponent,
-    FulfillmentBadgeComponent, EmptyStateComponent,
+    FulfillmentBadgeComponent, EmptyStateComponent, BundleLadderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="tt-container tt-section">
       <h1>העגלה שלי</h1>
 
-      <tt-empty-state *ngIf="cart.isEmpty()"
-                      icon="cart"
-                      title="העגלה ריקה"
-                      message="עדיין לא הוספתם מוצרים. אפשר להתחיל מהחנות."
-                      actionLabel="לחנות"
-                      (action)="goToStore()">
-      </tt-empty-state>
+      <!-- An empty cart is the one screen where the customer has already
+           decided to buy something and has nothing to look at. Showing the
+           tiers turns a dead end back into the shop, instead of leaving four
+           hundred pixels of black above the footer. -->
+      <ng-container *ngIf="cart.isEmpty()">
+        <tt-empty-state icon="cart"
+                        title="העגלה ריקה"
+                        message="עדיין לא הוספתם כלום. אלה החבילות הזמינות."
+                        actionLabel="לכל החבילות"
+                        (action)="goToStore()">
+        </tt-empty-state>
+
+        <section class="revive" *ngIf="ladder$ | async as ladder">
+          <h2>חבילות קוינס</h2>
+          <tt-bundle-ladder [detail]="ladder" [productSlug]="ladder.product.slug"></tt-bundle-ladder>
+        </section>
+      </ng-container>
 
       <ng-container *ngIf="!cart.isEmpty()">
         <div class="tt-alert tt-alert--warning" *ngFor="let issue of cart.issues()">
@@ -109,6 +123,9 @@ import {
   `,
   styles: [`
     h1 { margin-block-end: var(--tt-space-5); }
+    .revive { margin-block-start: var(--tt-space-6); }
+    .revive h2 { font-size: var(--tt-text-lg); margin-block-end: var(--tt-space-3); }
+
     .layout { display: grid; gap: var(--tt-space-5); align-items: start; }
     @media (min-width: 900px) { .layout { grid-template-columns: 1fr 320px; } }
     .lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--tt-space-3); }
@@ -131,6 +148,21 @@ export class CartPage {
   private readonly analytics = inject(AnalyticsService);
 
   readonly lookups$ = this.catalog.lookups$;
+
+  /**
+   * The coin tiers, shown only when the cart is empty.
+   *
+   * Resolved from the catalog rather than pinned to a slug, so it disappears on
+   * its own if the shop stops selling game currency. A failure here is not an
+   * error state: the empty message above it is the page.
+   */
+  readonly ladder$ = this.catalog.productsForGame(STOREFRONT.focusGameSlug).pipe(
+    map((products) => products.find((product) => product.type === ProductType.GameCurrency)),
+    switchMap((coins) => (coins
+      ? this.catalog.productBySlug(coins.slug).pipe(catchError(() => of(null)))
+      : of(null))),
+  );
+
   couponCode = '';
 
   constructor() {

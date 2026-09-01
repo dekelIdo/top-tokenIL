@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { combineLatest, map } from 'rxjs';
+import { combineLatest, map, switchMap } from 'rxjs';
 
 import { AnalyticsService } from '../../core/analytics';
+import { STOREFRONT } from '../../core/brand';
 import { LocalizePipe } from '../../core/i18n';
 import { Promotion, PromotionKind } from '../../domain';
 import { PromotionApiService } from '../../data/api';
@@ -69,17 +70,42 @@ export class DealsPage {
   private readonly catalog = inject(CatalogFacade);
   private readonly analytics = inject(AnalyticsService);
 
+  /**
+   * Deals for the game this storefront sells.
+   *
+   * Both halves are scoped. The page previously ran an unfiltered catalog search
+   * and listed every active promotion, which put a PlayStation Plus subscription
+   * on a storefront that sells nothing but FC coins. A promotion with no
+   * `gameIds` is treated as store-wide and kept; one that names other games and
+   * not ours is not ours to advertise.
+   */
   readonly vm$ = combineLatest([
     this.promotionApi.getActivePromotions(),
-    this.catalog.search({ sort: 'price-asc', page: { page: 1, pageSize: 24 } }),
+    this.catalog.gameBySlug(STOREFRONT.focusGameSlug),
     this.catalog.lookups$,
   ]).pipe(
-    map(([promotions, page, lookups]) => ({
-      promotions,
-      lookups,
-      // A product counts as "on deal" when its cheapest offer has a compare-at price.
-      discounted: page.items.filter((product) => product.fromPrice?.compareAt !== undefined),
-    })),
+    switchMap(([promotions, game, lookups]) => this.catalog
+      .search({ gameIds: [game.id], sort: 'price-asc', page: { page: 1, pageSize: 24 } })
+      .pipe(map((page) => ({
+        promotions: promotions.filter((promotion) => {
+          // Named another game and not ours.
+          if (promotion.gameIds?.length && !promotion.gameIds.includes(game.id)) {
+            return false;
+          }
+          // Named specific products, none of which are in this storefront. A
+          // promotion can arrive with no game attribution at all, so matching
+          // on products as well is what actually keeps other games off the
+          // page rather than relying on the data being tagged correctly.
+          if (promotion.productIds?.length) {
+            const ours = new Set(page.items.map((product) => product.id));
+            return promotion.productIds.some((id) => ours.has(id));
+          }
+          return true;
+        }),
+        lookups,
+        // A product is "on deal" when its cheapest offer has a compare-at price.
+        discounted: page.items.filter((product) => product.fromPrice?.compareAt !== undefined),
+      })))),
   );
 
   constructor() {

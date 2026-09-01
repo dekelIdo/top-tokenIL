@@ -62,10 +62,15 @@ export class SkeletonGridComponent {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="wrap">
-      <div class="glyph" aria-hidden="true"><tt-icon [name]="icon" [size]="26"></tt-icon></div>
+      <!-- Cut on the same nine degrees as the brand mark, so a dead end still
+           looks like it belongs to this shop rather than to the framework. -->
+      <div class="glyph" aria-hidden="true">
+        <span class="glyph__plate"></span>
+        <tt-icon [name]="icon" [size]="24"></tt-icon>
+      </div>
       <h2>{{ title }}</h2>
       <p class="tt-muted">{{ message }}</p>
-      <button type="button" class="tt-btn tt-btn--ghost" *ngIf="actionLabel" (click)="action.emit()">
+      <button type="button" class="tt-btn tt-btn--primary" *ngIf="actionLabel" (click)="action.emit()">
         {{ actionLabel }}
       </button>
     </div>
@@ -77,21 +82,30 @@ export class SkeletonGridComponent {
       align-items: center;
       text-align: center;
       gap: var(--tt-space-2);
-      padding: var(--tt-space-7) var(--tt-space-4);
+      /* Was space-7 top and bottom. An empty state is a message, not a room. */
+      padding: var(--tt-space-6) var(--tt-space-4);
     }
     .glyph {
+      position: relative;
       display: grid;
       place-items: center;
-      inline-size: 56px;
-      block-size: 56px;
-      margin-block-end: var(--tt-space-2);
-      border-radius: var(--tt-radius-lg);
-      background: var(--tt-surface-2);
-      border: 1px solid var(--tt-border);
-      color: var(--tt-text-muted);
+      inline-size: 58px;
+      block-size: 52px;
+      margin-block-end: var(--tt-space-3);
+      color: var(--tt-brand-300);
     }
-    h2 { font-size: var(--tt-text-xl); }
-    p { max-inline-size: 44ch; }
+    .glyph__plate {
+      position: absolute;
+      inset: 0;
+      transform: skewX(-9deg);
+      border-radius: var(--tt-radius-sm);
+      background: var(--tt-brand-tint);
+      border: 1px solid var(--tt-border-brand);
+    }
+    .glyph tt-icon { position: relative; }
+    h2 { font-size: var(--tt-text-lg); margin: 0; }
+    p { max-inline-size: 40ch; font-size: var(--tt-text-sm); }
+    .wrap .tt-btn { margin-block-start: var(--tt-space-3); }
   `],
 })
 export class EmptyStateComponent {

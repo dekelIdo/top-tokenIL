@@ -29,6 +29,7 @@ export const PROMOTIONS: readonly Promotion[] = [
       'A 12-month membership for 329 ILS instead of 399 ILS.',
     ),
     amountOff: fromMajor(70),
+    gameIds: ['game-playstation'],
     productIds: ['prod-ps-plus'],
     startsAt: '2026-01-01T00:00:00.000Z',
     active: true,
