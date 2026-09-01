@@ -55,57 +55,56 @@ const REVIEW_PAGE: PageRequest = { page: 1, pageSize: 2 };
     <ng-container *ngIf="vm$ | async as vm; else loading">
       <tt-hero [ladder]="vm.ladder"></tt-hero>
 
-      <!-- 2. What the shop promises, as objects rather than a row of grey
-           glyphs. Only claims that are actually kept. -->
-      <section class="tt-container tt-section--tight">
-        <h2 class="tt-visually-hidden">למה EASYCOINS</h2>
-        <tt-value-strip></tt-value-strip>
-      </section>
-
-      <!-- 3. The question the shop exists to answer, directly under the hero.
-           It was only reachable from the store, which meant the homepage could
-           show a price but not let anyone act on it. -->
-      <section class="tt-container tt-section chooser" *ngIf="vm.ladder as ladder">
-        <tt-amount-selector [detail]="ladder"
-                            [busy]="adding()"
-                            (confirm)="addPlan($event)">
-        </tt-amount-selector>
-      </section>
-
-      <!-- 3. The bundles. The product and the price argument in one block. -->
-      <section class="tt-container tt-section" id="bundles" *ngIf="vm.ladder as ladder">
-        <header class="band">
-          <div>
-            <h2>חבילות קוינס</h2>
-            <p class="lede">ככל שהחבילה גדולה יותר, המחיר לכל מיליון יורד. הכול מוצג לצד כל חבילה.</p>
-          </div>
-          <a class="ghost-link" [routerLink]="['/products', ladder.product.slug]">
-            כל האפשרויות <tt-icon name="chevron" [size]="15" dir="auto"></tt-icon>
-          </a>
-        </header>
-
-        <tt-bundle-ladder [detail]="ladder" [productSlug]="ladder.product.slug"></tt-bundle-ladder>
-      </section>
-
-      <!-- 3. The rest of the shelf for this game. -->
-      <section class="tt-container tt-section" *ngIf="vm.products.length > 0">
-        <header class="band">
-          <div>
-            <h2>עוד ל{{ gameName }}</h2>
-            <p class="lede">קודים, נקודות ושירותים לאותו חשבון.</p>
-          </div>
-          <a class="ghost-link" routerLink="/store">
-            לחנות <tt-icon name="chevron" [size]="15" dir="auto"></tt-icon>
-          </a>
-        </header>
-
-        <div class="tt-grid">
-          <tt-product-card *ngFor="let product of vm.products"
-                           [product]="product"
-                           [lookups]="vm.lookups">
-          </tt-product-card>
+      <!-- The promises, on a rule directly under the hero rather than in a
+           section of their own. They are a caption to the hero, not a chapter. -->
+      <div class="promises">
+        <div class="tt-container">
+          <h2 class="tt-visually-hidden">למה EASYCOINS</h2>
+          <tt-value-strip></tt-value-strip>
         </div>
-      </section>
+      </div>
+
+      <!-- ONE buying band, on its own ground.
+           The purchase control, the tier ladder and the rest of the shelf used
+           to be three sections with identical padding and identical headers,
+           which is what made the page read as a list. They are one act: choose
+           an amount, or choose a bundle, or see what else there is. Putting
+           them on a single raised ground with internal rules says that. -->
+      <div class="buy" id="bundles">
+        <div class="tt-container">
+          <section class="buy__pick" *ngIf="vm.ladder as ladder">
+            <tt-amount-selector [detail]="ladder"
+                                [busy]="adding()"
+                                (confirm)="addPlan($event)">
+            </tt-amount-selector>
+          </section>
+
+          <section class="buy__tiers" *ngIf="vm.ladder as ladder">
+            <header class="band">
+              <h2>או חבילה מוכנה</h2>
+              <a class="ghost-link" [routerLink]="['/products', ladder.product.slug]">
+                כל האפשרויות <tt-icon name="chevron" [size]="15" dir="auto"></tt-icon>
+              </a>
+            </header>
+            <tt-bundle-ladder [detail]="ladder" [productSlug]="ladder.product.slug"></tt-bundle-ladder>
+          </section>
+
+          <section class="buy__shelf" *ngIf="vm.products.length > 0">
+            <header class="band">
+              <h2>עוד ל{{ gameName }}</h2>
+              <a class="ghost-link" routerLink="/store">
+                לחנות <tt-icon name="chevron" [size]="15" dir="auto"></tt-icon>
+              </a>
+            </header>
+            <div class="tt-grid">
+              <tt-product-card *ngFor="let product of vm.products"
+                               [product]="product"
+                               [lookups]="vm.lookups">
+              </tt-product-card>
+            </div>
+          </section>
+        </div>
+      </div>
     </ng-container>
 
     <ng-template #loading>
@@ -144,38 +143,25 @@ const REVIEW_PAGE: PageRequest = { page: 1, pageSize: 2 };
       </div>
     </section>
 
-    <!-- 5. Questions, and a couple of things customers said. -->
-    <section class="tt-container tt-section">
-      <div class="split">
-        <div>
-          <h2>שאלות שחוזרות</h2>
-          <tt-faq-accordion class="reserve-faq" [entries]="(faq$ | async) ?? []"></tt-faq-accordion>
-          <a class="ghost-link" routerLink="/faq">
-            עוד שאלות <tt-icon name="chevron" [size]="15" dir="auto"></tt-icon>
-          </a>
-        </div>
-
-        <aside class="says" *ngIf="(reviews$ | async) as reviews">
-          <ng-container *ngIf="reviews.length > 0">
-            <h2>מה אמרו</h2>
-            <tt-review-card *ngFor="let review of reviews" [review]="review"></tt-review-card>
-            <a class="ghost-link" routerLink="/reviews">
-              כל הביקורות <tt-icon name="chevron" [size]="15" dir="auto"></tt-icon>
-            </a>
-          </ng-container>
-        </aside>
+    <!-- The close: the questions that stop a purchase, and the purchase,
+         side by side. They used to be two centred sections in a row, the second
+         of which was a card containing one sentence and a button. -->
+    <section class="tt-container tt-section close">
+      <div class="close__ask">
+        <h2>שאלות שחוזרות</h2>
+        <tt-faq-accordion [entries]="(faq$ | async) ?? []"></tt-faq-accordion>
+        <a class="ghost-link" routerLink="/faq">
+          עוד שאלות <tt-icon name="chevron" [size]="15" dir="auto"></tt-icon>
+        </a>
       </div>
-    </section>
 
-    <!-- 6. The last call. -->
-    <section class="tt-container tt-section">
-      <div class="closer">
-        <h2>מוכנים?</h2>
-        <p>בחרו חבילה, ראו את המחיר, וסיימו תוך דקה.</p>
+      <aside class="close__act">
+        <p class="close__kicker">מוכנים?</p>
+        <p class="close__line">בוחרים כמות, רואים מחיר, מסיימים.</p>
         <a class="tt-btn tt-btn--buy tt-btn--lg" routerLink="/store">
           לקניית קוינס <tt-icon name="arrow" [size]="18" dir="auto"></tt-icon>
         </a>
-      </div>
+      </aside>
     </section>
   `,
   styles: [`
@@ -188,15 +174,67 @@ const REVIEW_PAGE: PageRequest = { page: 1, pageSize: 2 };
 
     /* A section head with no eyebrow above it. The eyebrow was the same shape on
        every band and added a line of noise to each. */
-    /* Set on a raised ground so the purchase control separates from the bands
-       of catalogue below it without being put in a box. */
-    .chooser {
+    /* The promises sit between two rules, tight against the hero. A band this
+       thin reads as a caption to what is above it, which is what it is. */
+    .promises {
+      padding-block: var(--tt-space-5);
+      border-block-end: 1px solid var(--tt-border);
+    }
+
+    /* The buying band: one ground, three acts, separated by rules rather than
+       by gaps. Alternating the ground is what gives the page chapters; three
+       sections with identical padding gave it a list. */
+    .buy {
       background:
-        radial-gradient(70% 120% at 50% 0%, var(--tt-brand-tint), transparent 68%),
+        radial-gradient(80% 100% at 50% 0%, var(--tt-brand-tint), transparent 62%),
         var(--tt-bg-elevated);
       border-block-end: 1px solid var(--tt-border);
-      max-inline-size: none;
-      padding-inline: var(--tt-gutter);
+      padding-block: var(--tt-section-y);
+    }
+    .buy__tiers, .buy__shelf {
+      margin-block-start: var(--tt-section-y);
+      padding-block-start: var(--tt-space-6);
+      border-block-start: 1px solid var(--tt-border);
+    }
+
+    /* The close. Questions take the width, the purchase takes the corner: an
+       asymmetric pair rather than two centred blocks stacked. */
+    .close {
+      display: grid;
+      gap: var(--tt-space-7);
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr);
+      align-items: start;
+    }
+    .close__ask h2 { margin-block-end: var(--tt-space-4); }
+    .close__ask .ghost-link { margin-block-start: var(--tt-space-4); }
+
+    .close__act {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--tt-space-3);
+      padding-inline-start: var(--tt-space-5);
+      border-inline-start: 2px solid var(--tt-gold-500);
+    }
+    .close__kicker {
+      margin: 0;
+      font-size: var(--tt-display-2);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: var(--tt-tracking-display);
+    }
+    .close__line { margin: 0; color: var(--tt-text-muted); font-size: var(--tt-text-sm); }
+
+    @media (max-width: 860px) {
+      .close { grid-template-columns: 1fr; gap: var(--tt-space-6); }
+      .close__act {
+        padding-inline-start: 0;
+        padding-block-start: var(--tt-space-5);
+        border-inline-start: 0;
+        border-block-start: 1px solid var(--tt-border);
+        align-self: stretch;
+      }
+      .close__act .tt-btn { inline-size: 100%; }
     }
 
     .band {
@@ -269,30 +307,12 @@ const REVIEW_PAGE: PageRequest = { page: 1, pageSize: 2 };
     }
     .promise tt-icon { color: var(--tt-brand-400); flex: none; }
 
-    .split {
-      display: grid;
-      gap: var(--tt-space-7);
-      grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
-      align-items: start;
-    }
-    .split h2 { margin-block-end: var(--tt-space-4); }
-    .split .ghost-link { margin-block-start: var(--tt-space-3); }
-    .says { display: flex; flex-direction: column; gap: var(--tt-space-3); }
-    .reserve-faq { min-block-size: 240px; }
+    
+    
+    
 
-    .closer {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      gap: var(--tt-space-3);
-      padding-block: var(--tt-space-7);
-    }
-    .closer p { margin: 0; color: var(--tt-text-muted); }
+    
 
-    @media (max-width: 860px) {
-      .split { grid-template-columns: 1fr; gap: var(--tt-space-6); }
-    }
   `],
 })
 export class HomePage {
