@@ -61,8 +61,9 @@ interface FeaturedOffer {
         </a>
 
         <nav class="nav" aria-label="ראשי">
-          <a routerLink="/store" routerLinkActive="active">קוינס</a>
+          <a routerLink="/store" routerLinkActive="active">חנות הקוינס</a>
           <a routerLink="/deals" routerLinkActive="active">מבצעים</a>
+          <a routerLink="/delivery" routerLinkActive="active">איך זה עובד</a>
           <a routerLink="/support" routerLinkActive="active">תמיכה</a>
         </nav>
 
@@ -79,6 +80,10 @@ interface FeaturedOffer {
             <tt-icon name="cart"></tt-icon>
             <span class="count" *ngIf="count() > 0" aria-hidden="true">{{ count() }}</span>
           </a>
+
+          <!-- The one gold thing in the bar. A shop's header should say where
+               to buy, and nothing else here competes for that. -->
+          <a class="tt-btn tt-btn--buy buy-cta" routerLink="/store">קניית קוינס</a>
 
           <button type="button"
                   class="action toggle"
@@ -155,8 +160,23 @@ interface FeaturedOffer {
       </div>
 
       <div class="drawer__foot">
-        <span><tt-icon name="lock" [size]="14"></tt-icon> תשלום דרך ספק סליקה</span>
-        <span><tt-icon name="headset" [size]="14"></tt-icon> תמיכה בעברית</span>
+        <!-- The primary action. A shop's menu should end on the thing it sells,
+             not on a list of links. -->
+        <a class="tt-btn tt-btn--buy tt-btn--lg tt-btn--block"
+           routerLink="/store" (click)="closeMenu()">
+          קניית קוינס
+        </a>
+
+        <a class="drawer__cart" routerLink="/cart" (click)="closeMenu()">
+          <tt-icon name="cart" [size]="17"></tt-icon>
+          <span>העגלה שלי</span>
+          <span class="drawer__cartcount" *ngIf="count() > 0">{{ count() }}</span>
+        </a>
+
+        <div class="drawer__assure">
+          <span><tt-icon name="lock" [size]="14"></tt-icon> תשלום דרך ספק סליקה</span>
+          <span><tt-icon name="headset" [size]="14"></tt-icon> תמיכה בעברית</span>
+        </div>
       </div>
     </nav>
   `,
@@ -187,6 +207,13 @@ interface FeaturedOffer {
     .brand:hover { text-decoration: none; }
 
     .nav { display: flex; gap: var(--tt-space-5); }
+    .buy-cta {
+      min-block-size: 40px;
+      padding-inline: var(--tt-space-4);
+      font-size: var(--tt-text-sm);
+      white-space: nowrap;
+      margin-inline-start: var(--tt-space-2);
+    }
     .nav a {
       position: relative;
       color: var(--tt-text-muted);
@@ -207,7 +234,10 @@ interface FeaturedOffer {
       background: var(--tt-brand-500);
     }
 
-    .search { flex: 1; max-inline-size: 420px; margin-inline-start: auto; }
+    /* Narrower than before. The search was taking four hundred and twenty
+       pixels out of the middle of the bar, which left the navigation and the
+       buy action fighting over what was left. */
+    .search { flex: 1; max-inline-size: 320px; margin-inline-start: auto; }
     .actions { display: flex; align-items: center; gap: var(--tt-space-2); }
 
     .action {
@@ -385,18 +415,52 @@ interface FeaturedOffer {
     .drawer__foot {
       display: flex;
       flex-direction: column;
-      gap: var(--tt-space-2);
+      gap: var(--tt-space-3);
       padding: var(--tt-space-4);
       border-block-start: 1px solid var(--tt-border);
+    }
+    .drawer__cart {
+      display: flex;
+      align-items: center;
+      gap: var(--tt-space-3);
+      min-block-size: 48px;
+      padding-inline: var(--tt-space-3);
+      border: 1px solid var(--tt-border);
+      border-radius: var(--tt-radius-md);
+      color: var(--tt-text);
+      font-weight: 600;
+      font-size: var(--tt-text-sm);
+    }
+    .drawer__cart:hover { background: var(--tt-surface-2); text-decoration: none; }
+    .drawer__cart span:nth-of-type(1) { flex: 1; }
+    .drawer__cartcount {
+      display: grid;
+      place-items: center;
+      min-inline-size: 22px;
+      block-size: 22px;
+      padding-inline: 6px;
+      border-radius: var(--tt-radius-pill);
+      background: var(--tt-brand-500);
+      color: var(--tt-text-on-brand);
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .drawer__assure {
+      display: flex;
+      flex-direction: column;
+      gap: var(--tt-space-2);
       color: var(--tt-text-faint);
       font-size: var(--tt-text-xs);
     }
-    .drawer__foot span { display: flex; align-items: center; gap: var(--tt-space-2); }
+    .drawer__assure span { display: flex; align-items: center; gap: var(--tt-space-2); }
 
     /* Below the desktop breakpoint the middle of the bar goes to search and the
        navigation moves into the drawer. */
+    /* Below the desktop breakpoint the bar keeps brand, search and actions;
+       the buy action lives in the drawer, where it is the primary button. */
     @media (max-width: 1000px) {
       .nav { display: none; }
+      .buy-cta { display: none; }
       .toggle { display: grid; }
       .inner { gap: var(--tt-space-3); }
       .search { max-inline-size: none; }
@@ -472,14 +536,29 @@ export class AppHeaderComponent {
 
   closeMenu(): void {
     this.menuOpen.set(false);
+    this.lockScroll(false);
   }
 
   toggleMenu(): void {
     const next = !this.menuOpen();
     this.menuOpen.set(next);
+    this.lockScroll(next);
     if (next) {
       this.opened.next(true);
     }
+  }
+
+  /**
+   * Stops the page behind the drawer from scrolling.
+   *
+   * Without it a swipe over the backdrop scrolls the store underneath, so the
+   * customer closes the menu and finds themselves somewhere else on the page.
+   */
+  private lockScroll(locked: boolean): void {
+    if (typeof document === 'undefined') {
+      return;
+    }
+    document.body.style.overflow = locked ? 'hidden' : '';
   }
 
   @HostListener('document:keydown.escape')
@@ -516,6 +595,7 @@ export class AppHeaderComponent {
     this.isMobile.set(mobile);
     if (!mobile) {
       this.menuOpen.set(false);
+      this.lockScroll(false);
     }
   }
 
