@@ -6,6 +6,7 @@ export * from './components/bundle-ladder.component';
 export * from './components/coin-tier.component';
 export * from './components/content.component';
 export * from './components/game-card.component';
+export * from './components/hero-scene.component';
 export * from './components/hero.component';
 export * from './components/icon.component';
 export * from './components/product-card.component';

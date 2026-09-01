@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 import { STOREFRONT } from '../../core/brand';
 import { rankByValue } from '../../core/value';
 import { ProductDetail } from '../../domain';
-import { CoinTierComponent } from './coin-tier.component';
+import { HeroSceneComponent } from './hero-scene.component';
 import { IconComponent } from './icon.component';
 
 /**
@@ -28,7 +28,7 @@ import { IconComponent } from './icon.component';
 @Component({
   selector: 'tt-hero',
   standalone: true,
-  imports: [CommonModule, RouterLink, CoinTierComponent, IconComponent],
+  imports: [CommonModule, RouterLink, HeroSceneComponent, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="hero">
@@ -79,7 +79,7 @@ import { IconComponent } from './icon.component';
         </div>
 
         <div class="art" aria-hidden="true">
-          <tt-coin-tier tier="hero"></tt-coin-tier>
+          <tt-hero-scene tier="hero"></tt-hero-scene>
         </div>
       </div>
     </section>
@@ -258,29 +258,30 @@ import { IconComponent } from './icon.component';
     }
 
     .art { display: flex; justify-content: center; }
-    .art tt-coin-tier { inline-size: min(100%, 380px); }
+    .art tt-hero-scene { inline-size: min(100%, 440px); }
 
     @media (max-width: 900px) {
       .hero { padding-block: calc(var(--tt-header-height) + var(--tt-space-4)) var(--tt-space-5); }
-      .hero__inner { grid-template-columns: 1fr; }
+      .hero__inner { grid-template-columns: 1fr; display: flex; flex-direction: column; }
 
       /* The artwork bleeds off the trailing edge behind the copy, so the price
          and the button still land on the first screen. Cropping it is what
          makes it read as art direction rather than as a picture dropped into a
          box below the text. */
-      /* Full strength, and pushed further off the trailing edge so it does not
-         need transparency to stay out of the headline's way. Fading metal to
-         seventy percent over a dark ground turns gold to brown, which made an
-         object that had just been given a material look like a smudge. */
+      /* A band above the message, not a crop behind it.
+         Pushed off the trailing edge the object was cut through its middle and
+         sat behind the headline at reduced contrast, which made the one piece
+         of real artwork on the page read as a stain. On a phone it gets its own
+         register instead: full width, whole object, nothing overlapping it. */
       .art {
-        position: absolute;
-        inset-block-start: calc(var(--tt-header-height) - var(--tt-space-2));
-        inset-inline-end: -16%;
-        inline-size: 62%;
+        position: static;
+        order: -1;
+        inline-size: 100%;
+        margin-block-end: var(--tt-space-3);
         opacity: 1;
-        z-index: -1;
-        pointer-events: none;
       }
+      .art tt-hero-scene { inline-size: 100%; }
+
       .copy { position: relative; }
 
       .art { opacity: 0.5; }
