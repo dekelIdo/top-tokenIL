@@ -81,6 +81,18 @@ export interface AppConfig {
   readonly housekeepingIntervalSeconds: number;
 
   /**
+   * Authorises the housekeeping cron endpoint.
+   *
+   * On an always-on host the sweep runs on a timer inside the process and this
+   * is unused. On a serverless host the process does not stay alive to hold a
+   * timer, so the sweep is driven by a scheduler (Vercel Cron) calling an
+   * endpoint, and that endpoint is open to nobody unless this is set. Absent,
+   * the endpoint returns 404, so a deployment that forgets it exposes no way to
+   * trigger a sweep rather than an unauthenticated one.
+   */
+  readonly cronSecret?: string;
+
+  /**
    * Named operator credentials for the admin API, one per person.
    *
    * Named rather than shared, because every operator action is written to the
@@ -289,6 +301,7 @@ export function validateEnvironment(source: NodeJS.ProcessEnv = process.env): Ap
     googleRedirectUri,
     appBaseUrl,
     housekeepingIntervalSeconds,
+    cronSecret: source.CRON_SECRET || undefined,
     operators,
     logLevel,
     requestBodyLimit,

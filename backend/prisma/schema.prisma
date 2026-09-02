@@ -21,7 +21,16 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // Runtime connection. On a serverless host this MUST be a pooled connection
+  // (Supabase's transaction-mode pooler on port 6543), because every cold start
+  // opens its own connection and a direct 5432 connection pool is exhausted in
+  // minutes. On an always-on host the two URLs can be the same value.
   url      = env("DATABASE_URL")
+  // Migrations and introspection need a direct, unpooled connection: the
+  // transaction pooler does not support the session-level statements Prisma runs
+  // to apply a migration. Points at port 5432. Falls back to the runtime URL if
+  // unset, so a non-pooled deployment needs no second variable.
+  directUrl = env("DIRECT_URL")
 }
 
 // ---------------------------------------------------------------------------

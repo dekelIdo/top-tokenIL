@@ -17,7 +17,7 @@ const deployed = {
   // environment has to say explicitly what it wants instead.
   NOTIFICATION_TRANSPORT: 'none',
   COOKIE_SECURE: 'true',
-  CORS_ALLOWED_ORIGINS: 'https://top-tokenil.onrender.com',
+  CORS_ALLOWED_ORIGINS: 'https://easycoins-web.vercel.app',
   // Without at least one operator nobody can deliver an order, so a deployment
   // that omits this is broken in a way that only shows up after a sale.
   ADMIN_TOKENS: `yuval:${'c'.repeat(48)},dekel:${'d'.repeat(48)}`,
@@ -251,3 +251,20 @@ describe('operator credentials', () => {
     expect(problems.join(' ')).not.toContain('yuval:');
   });
 });
+
+describe('serverless configuration', () => {
+  it('reads a cron secret when present', () => {
+    expect(validateEnvironment({ ...deployed, CRON_SECRET: 'x'.repeat(48) }).cronSecret).toBe(
+      'x'.repeat(48),
+    );
+  });
+
+  it('leaves the cron secret undefined when absent, so the endpoint stays closed', () => {
+    expect(validateEnvironment(deployed).cronSecret).toBeUndefined();
+  });
+
+  it('allows housekeeping to be disabled, which is how a serverless host runs it', () => {
+    // The in-process timer is off there; a scheduler drives the sweep instead.
+    expect(validateEnvironment({ ...deployed, HOUSEKEEPING_INTERVAL_SECONDS: '0' }).housekeepingIntervalSeconds).toBe(0);
+  });
+})

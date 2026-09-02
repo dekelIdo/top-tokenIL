@@ -95,7 +95,10 @@ try {
   const child = spawn(command, args, {
     stdio: 'inherit',
     shell: process.platform === 'win32',
-    env: { ...process.env, DATABASE_URL },
+    // DIRECT_URL mirrors DATABASE_URL locally: the embedded PostgreSQL is not
+    // behind a pooler, so migrations and the runtime use the same connection.
+    // In a deployed serverless environment the two differ; see the schema.
+    env: { ...process.env, DATABASE_URL, DIRECT_URL: DATABASE_URL },
   });
 
   const code = await new Promise((resolve) => {
